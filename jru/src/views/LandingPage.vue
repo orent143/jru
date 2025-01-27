@@ -110,6 +110,7 @@ button:hover {
   background-size: 100% 50%; /* Image takes the top half */
   background-position: top; /* Position the image at the top */
   color: white;
+  box-shadow: 0 4px 8px rgb(0, 0, 0);
   width: 100%;
   position: relative;
 }
@@ -152,6 +153,7 @@ button:hover {
 
 .sign-in-btn {
   padding: 7px 40px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.518);
   font-size: 17px;
   color: #002244;
   font-weight:bolder;

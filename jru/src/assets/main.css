@@ -1,0 +1,36 @@
+@import './base.css';
+
+
+
+a,
+.green {
+  text-decoration: none;
+  color: rgb(255, 255, 255);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+
+}
+/* Global Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  overflow: hidden; /* Prevent scroll */
+  height: 100%; /* Ensure body takes full height */
+  margin: 0; /* Remove any default margin */
+}
+/* #app takes up full viewport */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: #ececec00;
+}

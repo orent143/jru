@@ -23,9 +23,10 @@
 
       <!-- Assignments Section -->
       <li>
-        <i class="pi pi-pen-to-square"></i>
-        <strong>Assignments</strong>
-      </li>
+  <i class="pi pi-pen-to-square"></i>
+  <router-link to="/assignment-content"><strong>Assignments</strong></router-link>
+</li>
+
 
       <!-- Tests Dropdown -->
       <li @click="toggleTestsDropdown" :aria-expanded="isTestsDropdownOpen.toString()">

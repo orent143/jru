@@ -5,13 +5,13 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
+  plugins: [vue()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),  // This is correct
+      '@': '/src', // Make sure your path is correct
     },
   },
-})
+  server: {
+    open: 'chrome', // Opens Chrome when starting the server
+  },
+});

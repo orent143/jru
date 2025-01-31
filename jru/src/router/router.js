@@ -4,6 +4,7 @@ import StudentDashboard from '@/views/StudentDashboard.vue';
 import CourseContent from '@/components/student/CourseContent.vue'; // Import the CourseContent view
 import AssignmentDetailsVue from '@/components/student/AssignmentDetails.vue';
 import CourseMaterialDetail from '@/components/student/CourseMaterialDetail.vue';
+import AssignmentContent from '@/views/Assignment.vue';
 
 
 const routes = [
@@ -34,6 +35,11 @@ const routes = [
     component: AssignmentDetailsVue,
     props: true, // Pass the route params as props to the component
   },
+  {
+    path: '/assignment-content',
+    name: 'AssignmentContent',
+    component: AssignmentContent,
+  }  
   // Add other routes as needed
 ];
 

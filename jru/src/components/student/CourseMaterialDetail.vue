@@ -462,11 +462,12 @@ export default {
 .material-detail-container {
   flex: 1;
   padding: 1rem;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  overflow-y: auto;
+  overflow-y: auto; /* This will enable vertical scrolling */
+  max-height: 100%; /* Set a maximum height for the container */
+  
 }
-
 .back-btn {
   display: flex;
   align-items: center;
@@ -483,11 +484,15 @@ export default {
   background-color: #f0f0f0;
 }
 
+
 .material-content {
   display: grid;
   grid-template-columns: 3fr 1fr;
   gap: 2rem;
+  height: 100%; /* Ensure content takes up full height */
+  margin-bottom: 5rem; /* Add bottom margin here */
 }
+
 
 .main-content {
   display: flex;
@@ -499,7 +504,9 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  margin-bottom: 2rem; /* Add bottom margin here */
 }
+
 
 .material-header {
   background-color: #D9D9D9;
@@ -568,6 +575,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-height: 300px; /* Adjust this value to fit your design */
+  overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .comment-input {

@@ -37,7 +37,7 @@
       </li>
       <ul v-if="isTestsDropdownOpen" class="dropdown-menu">
         <li>
-          <router-link to="/exam-dashboard">Quiz</router-link>
+          <router-link to="/quiz-dashboard">Quiz</router-link>
         </li>
         <li>
           <router-link to="/exam-dashboard">Exam</router-link>

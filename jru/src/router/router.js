@@ -8,7 +8,8 @@ import AssignmentDashboard from '@/views/Assignment.vue';
 import AssignmentContent from '@/components/student/AssignmentContent.vue';
 import ExamDashboard from '@/views/Exam.vue';
 import ExamContent from '@/components/student/ExamContent.vue';
-import ExamDetails from '@/components/student/ExamDetails.vue'; // Import the new component
+import ExamDetails from '@/components/student/ExamDetails.vue';
+import QuizDashboard from '@/views/Quiz.vue' // Import the new component
 
 const routes = [
   {
@@ -65,6 +66,11 @@ const routes = [
     name: 'ExamDetails',
     component: ExamDetails,
     props: true,
+  },
+  {
+    path: '/quiz-dashboard',
+    name: 'QuizDashboard',
+    component: QuizDashboard,
   },
 ];
 

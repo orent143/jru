@@ -19,13 +19,17 @@
         </div>
         <div class="profile">
           <i class="pi pi-bell notification-icon"></i> <!-- Notification Icon -->
-          <i class="pi pi-user profile-icon"></i> <!-- Profile Icon -->
+          <li>
+            <!-- Use a router-link to navigate to the profile page -->
+            <router-link to="/">
+              <i class="pi pi-user profile-icon"></i> <!-- Profile Icon -->
+            </router-link>
+          </li>
         </div>
       </div>
     </div>
   </header>
 </template>
-
 
 <script>
 export default {
@@ -122,7 +126,6 @@ export default {
 }
 
 .notification-icon {
-  margin-right: 15px; /* Spacing between notification icon and profile icon */
   margin-left: 10px;
   color: #333; /* Color for the notification icon */
   cursor: pointer; /* Pointer cursor on hover */
@@ -131,7 +134,6 @@ export default {
 
 .profile-icon {
   margin-right: 10px; /* Spacing between notification icon and profile icon */
-  margin-left: 10px;
   color: #333; /* Color for the profile icon */
   cursor: pointer; /* Pointer cursor on hover */
   font-size: 17px; /* Font size for the profile icon */

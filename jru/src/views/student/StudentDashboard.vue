@@ -36,8 +36,8 @@
 </template>
 
 <script>
-import Header from '../components/student/Header.vue';
-import Sidebar from '../components/student/Sidebar.vue';
+import Header from '@/components/student/Header.vue';
+import Sidebar from '@/components/student/Sidebar.vue';
 
 export default {
   components: {

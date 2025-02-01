@@ -51,8 +51,8 @@
 </template>
 
 <script>
-import Header from '../components/student/Header.vue';
-import Sidebar from '../components/student/Sidebar.vue';
+import Header from '@/components/student/Header.vue';
+import Sidebar from '@/components/student/Sidebar.vue';
 
 export default {
     components: {
@@ -115,7 +115,7 @@ export default {
         navigateToQuizDetail(courseId, quizId) {
             // Navigate to the quiz details page
             this.$router.push({
-                name: 'QuizDetail', 
+                name: 'QuizDetails', 
                 params: { courseId: courseId.toString(), quizId: quizId.toString() }
             });
         }

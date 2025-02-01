@@ -54,13 +54,16 @@ export default {
     this.showDropdown = !this.showDropdown; // Toggle the dropdown visibility
   },
   selectRole(role) {
-    this.roleSelected = role; // Set the selected role
-    this.showDropdown = false; // Hide the dropdown after selecting a role
+  this.roleSelected = role; // Set the selected role
+  this.showDropdown = false; // Hide the dropdown after selecting a role
 
-    if (role === 'student') {
-      this.$router.push({ name: 'StudentDashboard' }); // Navigate to student dashboard
-    }
-  },
+  if (role === 'student') {
+    this.$router.push({ name: 'StudentDashboard' }); // Navigate to student dashboard
+  }
+  else if (role === 'faculty') {
+    this.$router.push({ name: 'FacultyDashboard' }); // Navigate to faculty dashboard
+  }
+},
 
     scrollToAdmissions() {
       document.getElementById("admissions").scrollIntoView({ behavior: "smooth" });

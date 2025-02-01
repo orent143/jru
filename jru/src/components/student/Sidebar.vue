@@ -47,7 +47,7 @@
       <!-- Grades Section -->
       <li>
         <i class="pi pi-graduation-cap"></i>
-        <strong>Grades</strong>
+        <router-link to="/grade-dashboard"><strong>Grades</strong></router-link>
       </li>
 
       <!-- Profile Section -->

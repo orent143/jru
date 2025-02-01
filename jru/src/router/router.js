@@ -1,15 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LandingPage from '@/views/LandingPage.vue';
-import StudentDashboard from '@/views/StudentDashboard.vue';
+import StudentDashboard from '@/views/student/StudentDashboard.vue';
 import CourseContent from '@/components/student/CourseContent.vue'; 
 import AssignmentDetailsVue from '@/components/student/AssignmentDetails.vue';
 import CourseMaterialDetail from '@/components/student/CourseMaterialDetail.vue';
-import AssignmentDashboard from '@/views/Assignment.vue';
+import AssignmentDashboard from '@/views/student/Assignment.vue';
 import AssignmentContent from '@/components/student/AssignmentContent.vue';
-import ExamDashboard from '@/views/Exam.vue';
+import ExamDashboard from '@/views/student/Exam.vue';
 import ExamContent from '@/components/student/ExamContent.vue';
 import ExamDetails from '@/components/student/ExamDetails.vue';
-import QuizDashboard from '@/views/Quiz.vue' // Import the new component
+import QuizDashboard from '@/views/student/Quiz.vue' // Import the new component
+import QuizContent from '@/components/student/QuizContent.vue' // Import the new component
+import QuizDetails from '@/components/student/QuizDetails.vue' // Import the new component
+import GradeDashboard from '@/views/student/Grades.vue' // Import the new component
+
+import FacultyDashboard from '@/views/faculty/FacultyDashboard.vue';
 
 const routes = [
   {
@@ -71,6 +76,30 @@ const routes = [
     path: '/quiz-dashboard',
     name: 'QuizDashboard',
     component: QuizDashboard,
+  },
+  {
+    path: '/course/:courseId/quizzes',
+    name: 'QuizContent',
+    component: QuizContent,
+    props: true,
+  },
+  {
+    path: '/course/:courseId/quiz/:quizId',
+    name: 'QuizDetails',
+    component: QuizDetails,
+    props: true,
+  },
+  {
+    path: '/grade-dashboard',
+    name: 'GradeDashboard',
+    component: GradeDashboard,
+  },
+
+
+  {
+    path: '/faculty-dashboard',
+    name: 'FacultyDashboard',
+    component: FacultyDashboard,
   },
 ];
 

@@ -36,8 +36,12 @@
         <i v-else class="pi pi-angle-right"></i>
       </li>
       <ul v-if="isTestsDropdownOpen" class="dropdown-menu">
-        <li>Quiz</li>
-        <li>Exam</li>
+        <li>
+          <router-link to="/exam-dashboard">Quiz</router-link>
+        </li>
+        <li>
+          <router-link to="/exam-dashboard">Exam</router-link>
+        </li>
       </ul>
 
       <!-- Grades Section -->

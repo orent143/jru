@@ -5,7 +5,10 @@ import CourseContent from '@/components/student/CourseContent.vue';
 import AssignmentDetailsVue from '@/components/student/AssignmentDetails.vue';
 import CourseMaterialDetail from '@/components/student/CourseMaterialDetail.vue';
 import AssignmentDashboard from '@/views/Assignment.vue';
-import AssignmentContent from '@/components/student/AssignmentContent.vue'; // ✅ Import fixed
+import AssignmentContent from '@/components/student/AssignmentContent.vue';
+import ExamDashboard from '@/views/Exam.vue';
+import ExamContent from '@/components/student/ExamContent.vue';
+import ExamDetails from '@/components/student/ExamDetails.vue'; // Import the new component
 
 const routes = [
   {
@@ -44,6 +47,23 @@ const routes = [
     path: '/course/:courseId/assignments',
     name: 'AssignmentContent',
     component: AssignmentContent,
+    props: true,
+  },
+  {
+    path: '/exam-dashboard',
+    name: 'ExamDashboard',
+    component: ExamDashboard,
+  },
+  {
+    path: '/course/:courseId/exams',
+    name: 'ExamContent',
+    component: ExamContent,
+    props: true,
+  },
+  {
+    path: '/course/:courseId/exam/:examId',
+    name: 'ExamDetails',
+    component: ExamDetails,
     props: true,
   },
 ];

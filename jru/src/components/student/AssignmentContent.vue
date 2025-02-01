@@ -80,7 +80,7 @@ export default {
           id: 2,
           name: "GEC010",
           assignments: [
-            { id: 1, name: "Case Study Analysis", dueDate: "2024-02-10", completed: true },
+            { id: 1, name: "Case Study Analysis", dueDate: "2024-02-10", completed: false },
           ],
         },
         {

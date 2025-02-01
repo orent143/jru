@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LandingPage from '@/views/LandingPage.vue';
 import StudentDashboard from '@/views/StudentDashboard.vue';
-import CourseContent from '@/components/student/CourseContent.vue'; // Import the CourseContent view
+import CourseContent from '@/components/student/CourseContent.vue'; 
 import AssignmentDetailsVue from '@/components/student/AssignmentDetails.vue';
 import CourseMaterialDetail from '@/components/student/CourseMaterialDetail.vue';
-import AssignmentContent from '@/views/Assignment.vue';
-
+import AssignmentDashboard from '@/views/Assignment.vue';
+import AssignmentContent from '@/components/student/AssignmentContent.vue'; // ✅ Import fixed
 
 const routes = [
   {
@@ -21,26 +21,31 @@ const routes = [
   {
     path: '/course/:courseId/material/:materialId',
     name: 'MaterialDetail',
-    component: CourseMaterialDetail
+    component: CourseMaterialDetail,
   },
   {
     path: '/course/:courseId',
     name: 'CourseContent',
-    component: CourseContent, // Component to load when this route is matched
-    props: true // Makes route params (like courseId) available as props in the component
+    component: CourseContent,
+    props: true,
   },
   {
-    path: '/course/:courseId/assignment/:assignmentId', // Dynamic route for assignment details
+    path: '/course/:courseId/assignment/:assignmentId',
     name: 'AssignmentDetails',
     component: AssignmentDetailsVue,
-    props: true, // Pass the route params as props to the component
+    props: true,
   },
   {
     path: '/assignment-content',
+    name: 'AssignmentDashboard',
+    component: AssignmentDashboard,
+  },
+  {
+    path: '/course/:courseId/assignments',
     name: 'AssignmentContent',
     component: AssignmentContent,
-  }  
-  // Add other routes as needed
+    props: true,
+  },
 ];
 
 const router = createRouter({

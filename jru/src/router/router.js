@@ -16,6 +16,7 @@ import GradeDashboard from '@/views/student/Grades.vue' // Import the new compon
 
 import FacultyDashboard from '@/views/faculty/FacultyDashboard.vue';
 import FacultyCourse from '@/views/faculty/Courses.vue';
+import FacultyCourseContent from '@/components/faculty/coursescontent.vue';
 
 const routes = [
   {
@@ -106,6 +107,12 @@ const routes = [
     path: '/faculty-courses',
     name: 'FacultyCourse',
     component: FacultyCourse,
+  },
+  {
+    path: '/course/:courseId',
+    name: 'FacultyCourseContent',
+    component: FacultyCourseContent,
+    props: true,
   },
 ];
 

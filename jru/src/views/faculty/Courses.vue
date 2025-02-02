@@ -7,18 +7,16 @@
                 <div class="courses">
                     <div class="header">
                         <h1>Courses</h1>
-                        <!-- Styled Create Course Button -->
                         <button @click="showCreateCourseForm = true" class="create-course-btn">Create Course</button>
                     </div>
                     <div class="course-cards">
-                        <div v-for="course in courses" :key="course.id" class="course-card">
+                        <div v-for="course in courses" :key="course.id" class="course-card" @click="goToCourseContent(course.id)">
                             <div class="card-header">
                                 <h2>{{ course.subject }}</h2>
                                 <p>{{ course.section }}</p>
-                                <!-- Card actions placed on the upper-right part -->
                                 <div class="card-actions">
-                                    <button @click="editCourse(course.id)"><i class="pi pi-pencil"></i></button>
-                                    <button @click="deleteCourse(course.id)"><i class="pi pi-trash"></i></button>
+                                    <button @click.stop="editCourse(course.id)"><i class="pi pi-pencil"></i></button>
+                                    <button @click.stop="deleteCourse(course.id)"><i class="pi pi-trash"></i></button>
                                 </div>
                             </div>
                             <div class="schedule-container">
@@ -30,7 +28,6 @@
                         <div class="modal-content">
                             <span class="close" @click="showCreateCourseForm = false">&times;</span>
                             <h2>Create Course</h2>
-                            <!-- Added a new class 'course-form' for the form -->
                             <form @submit.prevent="createCourse" class="course-form">
                                 <label for="subject">Subject:</label>
                                 <input type="text" v-model="newCourse.subject" required>
@@ -48,29 +45,27 @@
     </div>
 </template>
 
-
 <script>
-import Header from '@/components/faculty/header.vue'; // Header component import
-import SideBar from '@/components/faculty/SideBar.vue'; // Sidebar component import
+import Header from '@/components/faculty/header.vue';
+import SideBar from '@/components/faculty/SideBar.vue';
 
 export default {
     name: 'FacultyDashboard',
     components: {
-        Header, // Register Header component
-        SideBar, // Register Sidebar component
+        Header,
+        SideBar,
     },
     data() {
         return {
-            searchQuery: '', // Example search query
-            student: { // Example student data
+            searchQuery: '',
+            student: {
                 name: 'John Doe',
                 id: '12345'
             },
-            isSidebarCollapsed: false, // Sidebar collapsed state
+            isSidebarCollapsed: false,
             courses: [
-                // Example data
-                { id: 1, subject: 'ITELECT4	', section: 'BSCS-3A', schedule: 'Mon 9-11 AM' },
-                { id: 2, subject: 'ITELECT4	', section: 'BSCS-3B', schedule: 'Tue 10-12 AM' }
+                { id: 1, subject: 'ITELECT4', section: 'BSCS-3A', schedule: 'Mon 9-11 AM' },
+                { id: 2, subject: 'ITELECT4', section: 'BSCS-3B', schedule: 'Tue 10-12 AM' }
             ],
             showCreateCourseForm: false,
             newCourse: {
@@ -97,6 +92,9 @@ export default {
         },
         deleteCourse(id) {
             this.courses = this.courses.filter(course => course.id !== id);
+        },
+        goToCourseContent(courseId) {
+            this.$router.push({ name: 'FacultyCourseContent', params: { courseId } });
         }
     }
 };

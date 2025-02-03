@@ -21,13 +21,16 @@
         <div class="course-hero">
           <div class="content-left">
             <section class="announcements">
-              <h3>Students Enrolled:</h3>
-              <ul>
-                <li v-for="student in course.students" :key="student.id">
-                  {{ student.name }}
-                </li>
-              </ul>
-            </section>
+  <h3>Students Enrolled:</h3>
+  <div class="student-header">
+    <ul>
+      <li v-for="student in course.students" :key="student.id">
+        {{ student.name }}
+      </li>
+    </ul>
+    <button class="view-btn" @click="viewStudents">View All</button>
+  </div>
+</section>
           </div>
 
           <div class="content-right">
@@ -155,6 +158,12 @@ export default {
     }
   },
   methods: {
+    viewStudents() {
+      this.$router.push({
+        name: 'StudentList',
+        params: { courseId: this.$route.params.courseId.toString() }
+      });
+    },
     toggleSidebar() {
       this.isSidebarCollapsed = !this.isSidebarCollapsed;
     },
@@ -169,9 +178,9 @@ export default {
     },
     addMaterial(newMaterial) {
       this.course.materials.push(newMaterial);
-      this.showAddMaterialModal = false; // Close the modal after adding the material
+      this.showAddMaterialModal = false;
     }
-  }
+  } // Remove the extra semicolon that was causing the issue
 };
 </script>
 
@@ -382,7 +391,24 @@ export default {
   font-size: 1.5rem;
   color: #2c3e50;
 }
+.student-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
+.view-btn {
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.view-btn:hover {
+  background-color: #1a252f;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .course-content {

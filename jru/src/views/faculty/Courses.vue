@@ -210,6 +210,7 @@ export default {
     border-radius: 10px;
     cursor: pointer;
     font-weight: 500;
+    
 }
 .modal {
     position: fixed;

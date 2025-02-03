@@ -18,6 +18,7 @@ import FacultyDashboard from '@/views/faculty/FacultyDashboard.vue';
 import FacultyCourse from '@/views/faculty/Courses.vue';
 import FacultyCourseContent from '@/components/faculty/coursescontent.vue';
 import FacultyCourseMaterialDetail from '@/components/faculty/FacultyCourseMaterial.vue';
+import StudentList from '@/components/faculty/StudentList.vue';
 
 const routes = [
   {
@@ -120,7 +121,13 @@ const routes = [
     name: 'FacultyCourseMaterialDetail',
     component: FacultyCourseMaterialDetail,
     props: true,
-  }
+  },
+  {
+    path: '/course/:courseId/students',  // Add this new route
+    name: 'StudentList',
+    component: StudentList,
+    props: true
+  },
 ];
 
 const router = createRouter({

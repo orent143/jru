@@ -168,6 +168,28 @@
                 ]
               }
             ]
+          },
+          {
+            id: 2,
+            name: 'GEC010',
+            sections: [{ id: 1, name: 'BSCS-3A' }],
+            assignments: [
+              {
+                id: 1,
+                name: 'Case Study Analysis',
+                description: 'Complete the following programming exercises...',
+                datePosted: '2024-01-20',
+                dueDate: '2024-02-01',
+                status: 'Not submitted',
+                attachments: [
+                  { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
+                ],
+                comments: [
+                  { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
+                ]
+              },
+              
+            ]
           }
           // Include other courses and assignments here
         ]

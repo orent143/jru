@@ -124,8 +124,16 @@ export default {
 }
 
 .modal-buttons .submit {
-  background: green;
+  padding: 10px 20px;
+  background-color: #007BF6;
   color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
 }
 </style>
   

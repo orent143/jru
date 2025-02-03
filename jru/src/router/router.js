@@ -9,14 +9,15 @@ import AssignmentContent from '@/components/student/AssignmentContent.vue';
 import ExamDashboard from '@/views/student/Exam.vue';
 import ExamContent from '@/components/student/ExamContent.vue';
 import ExamDetails from '@/components/student/ExamDetails.vue';
-import QuizDashboard from '@/views/student/Quiz.vue' // Import the new component
-import QuizContent from '@/components/student/QuizContent.vue' // Import the new component
-import QuizDetails from '@/components/student/QuizDetails.vue' // Import the new component
-import GradeDashboard from '@/views/student/Grades.vue' // Import the new component
+import QuizDashboard from '@/views/student/Quiz.vue';
+import QuizContent from '@/components/student/QuizContent.vue';
+import QuizDetails from '@/components/student/QuizDetails.vue';
+import GradeDashboard from '@/views/student/Grades.vue';
 
 import FacultyDashboard from '@/views/faculty/FacultyDashboard.vue';
 import FacultyCourse from '@/views/faculty/Courses.vue';
 import FacultyCourseContent from '@/components/faculty/coursescontent.vue';
+import FacultyCourseMaterialDetail from '@/components/faculty/FacultyCourseMaterial.vue';
 
 const routes = [
   {
@@ -97,7 +98,7 @@ const routes = [
     component: GradeDashboard,
   },
 
-/* Faculty Routes */
+  /* Faculty Routes */
   {
     path: '/faculty-dashboard',
     name: 'FacultyDashboard',
@@ -114,6 +115,12 @@ const routes = [
     component: FacultyCourseContent,
     props: true,
   },
+  {
+    path: '/course/:courseId/material/:materialId',
+    name: 'FacultyCourseMaterialDetail',
+    component: FacultyCourseMaterialDetail,
+    props: true,
+  }
 ];
 
 const router = createRouter({

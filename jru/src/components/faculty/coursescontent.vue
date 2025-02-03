@@ -73,8 +73,8 @@
         courses: [
           {
             id: 1,
-            name: 'COMP101',
-            sections: [{ id: 1, name: 'CS1A' }],
+            name: 'ITELECT4',
+            sections: [{ id: 1, name: 'BSCS-3A' }],
             materials: [
               {
                 id: 1,

@@ -19,7 +19,9 @@ import FacultyCourse from '@/views/faculty/Courses.vue';
 import FacultyCourseContent from '@/components/faculty/coursescontent.vue';
 import FacultyCourseMaterialDetail from '@/components/faculty/FacultyCourseMaterial.vue';
 import StudentList from '@/components/faculty/StudentList.vue';
-
+import FacultyQuiz from '@/views/faculty/FacultyQuiz.vue';
+import FacultyExam from '@/views/faculty/FacultyExam.vue';
+import FacultyAssignment from '@/views/faculty/FacultyAssignment.vue';
 const routes = [
   {
     path: '/',
@@ -127,6 +129,21 @@ const routes = [
     name: 'StudentList',
     component: StudentList,
     props: true
+  },
+  {
+    path: '/faculty-quizzes',
+    name: 'FacultyQuiz',
+    component: FacultyQuiz,
+  },
+  {
+    path: '/faculty-exams',
+    name: 'FacultyExam',
+    component: FacultyExam,
+  },
+  {
+    path: '/faculty-assignments',
+    name: 'FacultyAssignment',
+    component: FacultyAssignment,
   },
 ];
 

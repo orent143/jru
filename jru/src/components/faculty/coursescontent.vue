@@ -7,7 +7,6 @@
         <!-- Course Header -->
         <div class="course-header">
           <h2>{{ course.name }} - Course Content</h2>
-          <button class="add-btn" @click="showAddMaterialModal = true">+</button>
           <div class="course-sections">
             <ul>
               <li v-for="section in course.sections" :key="section.id">
@@ -21,16 +20,16 @@
         <div class="course-hero">
           <div class="content-left">
             <section class="announcements">
-  <h3>Students Enrolled:</h3>
-  <div class="student-header">
-    <ul>
-      <li v-for="student in course.students" :key="student.id">
-        {{ student.name }}
-      </li>
-    </ul>
-    <button class="view-btn" @click="viewStudents">View All</button>
-  </div>
-</section>
+              <h3>Students Enrolled:</h3>
+              <div class="student-header">
+                <ul>
+                  <li v-for="student in course.students" :key="student.id">
+                    {{ student.name }}
+                  </li>
+                </ul>
+              </div>
+              <button class="view-btn" @click="viewStudents">View All</button>
+            </section>
           </div>
 
           <div class="content-right">
@@ -319,6 +318,7 @@ export default {
   padding: 1rem;
   border-radius: 8px;
   width: 100%;
+  position: relative;
 }
 
 .card-header {
@@ -352,6 +352,7 @@ export default {
 .assignments ul {
   list-style: none;
   padding-left: 0;
+  
 }
 
 .announcements li,
@@ -399,11 +400,14 @@ export default {
 
 .view-btn {
   background-color: #2c3e50;
-  color: white;
+  color: rgb(255, 255, 255);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 
 .view-btn:hover {

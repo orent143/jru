@@ -10,7 +10,7 @@
             <!-- View Courses Section -->
             <li>
                 <i class="pi pi-book"></i>
-                <router-link to="/view-courses"><strong>View Courses</strong></router-link>
+                <router-link to="/faculty-courses"><strong>View Courses</strong></router-link>
             </li>
 
             <!-- View Calendar Section -->

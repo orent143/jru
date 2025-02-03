@@ -15,6 +15,7 @@ import QuizDetails from '@/components/student/QuizDetails.vue' // Import the new
 import GradeDashboard from '@/views/student/Grades.vue' // Import the new component
 
 import FacultyDashboard from '@/views/faculty/FacultyDashboard.vue';
+import FacultyCourse from '@/views/faculty/Courses.vue';
 
 const routes = [
   {
@@ -95,11 +96,16 @@ const routes = [
     component: GradeDashboard,
   },
 
-
+/* Faculty Routes */
   {
     path: '/faculty-dashboard',
     name: 'FacultyDashboard',
     component: FacultyDashboard,
+  },
+  {
+    path: '/faculty-courses',
+    name: 'FacultyCourse',
+    component: FacultyCourse,
   },
 ];
 

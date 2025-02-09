@@ -10,7 +10,7 @@
                         <button @click="showCreateExamForm = true" class="create-exam-btn">Create Exam</button>
                     </div>
                     <div class="exam-cards">
-                        <div v-for="exam in exams" :key="exam.id" class="exam-card" @click="startExam(exam.id)">
+                        <div v-for="exam in exams" :key="exam.id" class="exam-card" @click="startExam(exam.id, exam.courseId)">
                             <div class="card-header">
                                 <h2>{{ exam.courseName }}</h2>
                                 <p>{{ exam.courseSection }}</p>
@@ -29,7 +29,7 @@
                             <span class="close" @click="showCreateExamForm = false">&times;</span>
                             <h2>Create Exam</h2>
                             <form @submit.prevent="createExam" class="exam-form">
-                                <label for="title">Course Name:</label>
+                                <label for="courseName">Course Name:</label>
                                 <input type="text" v-model="newExam.courseName" required>
                                 <label for="courseSection">Course Section:</label>
                                 <input type="text" v-model="newExam.courseSection" required>
@@ -63,9 +63,13 @@ export default {
                 id: '12345'
             },
             isSidebarCollapsed: false,
+            courses: [
+                { id: 1, subject: 'Math', section: 'Section A', schedule: 'Mon 9-11 AM' },
+                { id: 2, subject: 'Science', section: 'Section B', schedule: 'Tue 10-12 AM' }
+            ],
             exams: [
-                { id: 1, title: 'Exam 1', courseName: 'Math', courseSection: 'Section A', duration: 30 },
-                { id: 2, title: 'Exam 2', courseName: 'Science', courseSection: 'Section B', duration: 45 }
+                { id: 1, courseId: 1, courseName: 'Math', courseSection: 'Section A', duration: 30 },
+                { id: 2, courseId: 2, courseName: 'Science', courseSection: 'Section B', duration: 45 }
             ],
             showCreateExamForm: false,
             newExam: {
@@ -81,7 +85,8 @@ export default {
         },
         createExam() {
             const newId = this.exams.length + 1;
-            this.exams.push({ id: newId, ...this.newExam });
+            const newCourseId = this.courses.length + 1; // Assuming you have a courses array
+            this.exams.push({ id: newId, courseId: newCourseId, ...this.newExam });
             this.newExam.courseName = '';
             this.newExam.courseSection = '';
             this.newExam.duration = null;
@@ -93,8 +98,11 @@ export default {
         deleteExam(id) {
             this.exams = this.exams.filter(exam => exam.id !== id);
         },
-        startExam(examId) {
-            this.$router.push({ name: 'Exam', params: { examId } });
+        startExam(examId, courseId) {
+            this.$router.push({ 
+                name: 'FacultyExamContent', 
+                params: { examId, courseId } 
+            });
         }
     }
 };

@@ -20,10 +20,14 @@ import FacultyCourseContent from '@/components/faculty/Course/coursescontent.vue
 import FacultyCourseMaterialDetail from '@/components/faculty/Course/FacultyCourseMaterial.vue';
 import StudentList from '@/components/faculty/Course/StudentList.vue';
 import FacultyQuiz from '@/views/faculty/FacultyQuiz.vue';
+import FacultyQuizContent from '@/components/faculty/Quiz/FacultyQuizContent.vue';
 import FacultyExam from '@/views/faculty/FacultyExam.vue';
+import FacultyExamContentVue from '@/components/faculty/Exam/FacultyExamContent.vue';
+import FacultyExamDetailsVue from '@/components/faculty/Exam/FacultyExamDetails.vue';
 import FacultyAssignment from '@/views/faculty/FacultyAssignment.vue';
 import FacultyAssignmentContent from '@/components/faculty/Assignment/FacultyAssContent.vue';
 import FacultyAssignmentDetailsVue from '@/components/faculty/Assignment/FacultyAssignmentDetails.vue';
+import FacultyQuizDetailsVue from '@/components/faculty/Quiz/FacultyQuizDetails.vue';
 const routes = [
   {
     path: '/',
@@ -138,9 +142,33 @@ const routes = [
     component: FacultyQuiz,
   },
   {
+    path: '/course/:courseId',
+    name: 'FacultyQuizContent',
+    component: FacultyQuizContent,
+    props: true,
+  },
+  {
+    path: '/course/:courseId/quiz/:quizId',
+    name: 'FacultyQuizDetails',
+    component: FacultyQuizDetailsVue,
+    props: true,
+  },
+  {
     path: '/faculty-exams',
     name: 'FacultyExam',
     component: FacultyExam,
+  },
+  {
+    path: '/course/:courseId',
+    name: 'FacultyExamContent',
+    component: FacultyExamContentVue,
+    props: true,
+  },
+  {
+    path: '/course/:courseId/exam/:examId',
+    name: 'FacultyExamDetails',
+    component: FacultyExamDetailsVue,
+    props: true,
   },
   {
     path: '/faculty-assignments',

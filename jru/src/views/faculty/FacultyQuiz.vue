@@ -10,7 +10,7 @@
                         <button @click="showCreateQuizForm = true" class="create-quiz-btn">Create Quiz</button>
                     </div>
                     <div class="quiz-cards">
-                        <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-card" @click="startQuiz(quiz.id)">
+                        <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-card" @click="startQuiz(quiz.id, quiz.courseId)">
                             <div class="card-header">
                                 <h2>{{ quiz.courseName }}</h2>
                                 <p>{{ quiz.courseSection }}</p>
@@ -63,9 +63,13 @@ export default {
                 id: '12345'
             },
             isSidebarCollapsed: false,
+            courses: [
+                { id: 1, subject: 'ITELECT4', section: 'BSCS-3A', schedule: 'Mon 9-11 AM' },
+                { id: 2, subject: 'ITELECT4', section: 'BSCS-3B', schedule: 'Tue 10-12 AM' }
+            ],
             quizzes: [
-                { id: 1, courseName: 'ITELECT4', courseSection: 'BSCS-3A', duration: 30 },
-                { id: 2, courseName: 'ITELECT3', courseSection: 'BSCS-3A', duration: 45 }
+                { id: 1, courseId: 1, courseName: 'ITELECT4', courseSection: 'BSCS-3A', duration: 30 },
+                { id: 2, courseId: 2, courseName: 'ITELECT3', courseSection: 'BSCS-3A', duration: 45 }
             ],
             showCreateQuizForm: false,
             newQuiz: {
@@ -81,7 +85,8 @@ export default {
         },
         createQuiz() {
             const newId = this.quizzes.length + 1;
-            this.quizzes.push({ id: newId, ...this.newQuiz });
+            const newCourseId = this.courses.length + 1; // Assuming you have a courses array
+            this.quizzes.push({ id: newId, courseId: newCourseId, ...this.newQuiz });
             this.newQuiz.courseName = '';
             this.newQuiz.courseSection = '';
             this.newQuiz.duration = null;
@@ -93,8 +98,11 @@ export default {
         deleteQuiz(id) {
             this.quizzes = this.quizzes.filter(quiz => quiz.id !== id);
         },
-        startQuiz(quizId) {
-            this.$router.push({ name: 'Quiz', params: { quizId } });
+        startQuiz(quizId, courseId) {
+            this.$router.push({ 
+                name: 'FacultyQuizContent', 
+                params: { quizId, courseId } 
+            });
         }
     }
 };

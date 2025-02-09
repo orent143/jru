@@ -65,8 +65,8 @@
   
   
   <script>
-  import Header from './header.vue';
-  import Sidebar from './SideBar.vue';
+  import Header from '@/components/faculty/header.vue';
+  import Sidebar from '@/components/faculty/SideBar.vue';
   import AddMaterialModal from './AddMaterialModal.vue';
   
   export default {

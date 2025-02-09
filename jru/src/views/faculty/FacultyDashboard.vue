@@ -38,10 +38,10 @@
                 </div>
 
                 <div class="action-cards">
-                    <router-link to="/view-courses" class="card">
+                    <router-link to="/faculty-courses" class="card">
                         <h3>View Courses</h3>
                     </router-link>
-                    <router-link to="/create-assignment" class="card">
+                    <router-link to="/faculty-assignments" class="card">
                         <h3>Create Assignment</h3>
                     </router-link>
                     <router-link to="/view-submissions" class="card">

@@ -49,8 +49,8 @@
   
   
   <script>
-  import Header from './header.vue';
-  import Sidebar from './SideBar.vue';
+  import Header from '../header.vue';
+  import Sidebar from '../SideBar.vue';
   
   export default {
     name: 'StudentList',

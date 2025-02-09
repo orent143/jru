@@ -6,15 +6,17 @@
       <main class="course-main" v-if="course">
         <!-- Course Header -->
         <div class="course-header">
-          <h2>{{ course.name }} - Course Content</h2>
-          <div class="course-sections">
-            <ul>
-              <li v-for="section in course.sections" :key="section.id">
-                {{ section.name }}
-              </li>
-            </ul>
-          </div>
-        </div>
+  <h2>{{ course.name }} - Course Content</h2>
+  <!-- Add this button -->
+  <button class="add-btn" @click="showAddMaterialModal = true">+</button>
+  <div class="course-sections">
+    <ul>
+      <li v-for="section in course.sections" :key="section.id">
+        {{ section.name }}
+      </li>
+    </ul>
+  </div>
+</div>
 
         <!-- Course Hero Section -->
         <div class="course-hero">
@@ -56,8 +58,8 @@
 </template>
 
 <script>
-import Header from './header.vue';
-import Sidebar from './SideBar.vue';
+import Header from '@/components/faculty/header.vue';
+import Sidebar from '@/components/faculty/SideBar.vue';
 import AddMaterialModal from './AddMaterialModal.vue';
 
 export default {
@@ -312,8 +314,7 @@ export default {
 }
 
 /* Announcements & Assignments */
-.announcements,
-.assignments {
+.announcements {
   background-color: #D9D9D9;
   padding: 1rem;
   border-radius: 8px;

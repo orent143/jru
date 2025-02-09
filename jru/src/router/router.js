@@ -1,27 +1,29 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LandingPage from '@/views/LandingPage.vue';
 import StudentDashboard from '@/views/student/StudentDashboard.vue';
-import CourseContent from '@/components/student/CourseContent.vue'; 
-import AssignmentDetailsVue from '@/components/student/AssignmentDetails.vue';
-import CourseMaterialDetail from '@/components/student/CourseMaterialDetail.vue';
+import CourseContent from '@/components/student/course/CourseContent.vue'; 
+import AssignmentDetailsVue from '@/components/student/assignment/AssignmentDetails.vue';
+import CourseMaterialDetail from '@/components/student/course/CourseMaterialDetail.vue';
 import AssignmentDashboard from '@/views/student/Assignment.vue';
-import AssignmentContent from '@/components/student/AssignmentContent.vue';
+import AssignmentContent from '@/components/student/assignment/AssignmentContent.vue';
 import ExamDashboard from '@/views/student/Exam.vue';
-import ExamContent from '@/components/student/ExamContent.vue';
-import ExamDetails from '@/components/student/ExamDetails.vue';
+import ExamContent from '@/components/student/exam/ExamContent.vue';
+import ExamDetails from '@/components/student/exam/ExamDetails.vue';
 import QuizDashboard from '@/views/student/Quiz.vue';
-import QuizContent from '@/components/student/QuizContent.vue';
-import QuizDetails from '@/components/student/QuizDetails.vue';
+import QuizContent from '@/components/student/quiz/QuizContent.vue';
+import QuizDetails from '@/components/student/quiz/QuizDetails.vue';
 import GradeDashboard from '@/views/student/Grades.vue';
 
 import FacultyDashboard from '@/views/faculty/FacultyDashboard.vue';
 import FacultyCourse from '@/views/faculty/Courses.vue';
-import FacultyCourseContent from '@/components/faculty/coursescontent.vue';
-import FacultyCourseMaterialDetail from '@/components/faculty/FacultyCourseMaterial.vue';
-import StudentList from '@/components/faculty/StudentList.vue';
+import FacultyCourseContent from '@/components/faculty/Course/coursescontent.vue';
+import FacultyCourseMaterialDetail from '@/components/faculty/Course/FacultyCourseMaterial.vue';
+import StudentList from '@/components/faculty/Course/StudentList.vue';
 import FacultyQuiz from '@/views/faculty/FacultyQuiz.vue';
 import FacultyExam from '@/views/faculty/FacultyExam.vue';
 import FacultyAssignment from '@/views/faculty/FacultyAssignment.vue';
+import FacultyAssignmentContent from '@/components/faculty/Assignment/FacultyAssContent.vue';
+import FacultyAssignmentDetailsVue from '@/components/faculty/Assignment/FacultyAssignmentDetails.vue';
 const routes = [
   {
     path: '/',
@@ -144,6 +146,18 @@ const routes = [
     path: '/faculty-assignments',
     name: 'FacultyAssignment',
     component: FacultyAssignment,
+  },
+  {
+    path: '/course/:courseId',
+    name: 'FacultyAssignmentContent',
+    component: FacultyAssignmentContent,
+    props: true,
+  },
+  {
+    path: '/course/:courseId/assignment/:assignmentId',
+    name: 'FacultyAssignmentDetails',
+    component: FacultyAssignmentDetailsVue,
+    props: true,
   },
 ];
 

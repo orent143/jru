@@ -10,7 +10,7 @@
                         <button @click="showCreateAssignmentForm = true" class="create-assignment-btn">Create Assignment</button>
                     </div>
                     <div class="assignment-cards">
-                        <div v-for="assignment in assignments" :key="assignment.id" class="assignment-card" @click="startAssignment(assignment.id)">
+                        <div v-for="assignment in assignments" :key="assignment.id" class="assignment-card" @click="startAssignment(assignment.id, assignment.courseId)">
                             <div class="card-header">
                                 <h2>{{ assignment.courseName }}</h2>
                                 <p>{{ assignment.courseSection }}</p>
@@ -63,9 +63,13 @@ export default {
                 id: '12345'
             },
             isSidebarCollapsed: false,
+            courses: [
+                { id: 1, subject: 'ITELECT4', section: 'BSCS-3A', schedule: 'Mon 9-11 AM' },
+                { id: 2, subject: 'ITELECT4', section: 'BSCS-3B', schedule: 'Tue 10-12 AM' }
+            ],
             assignments: [
-                { id: 1, courseName: 'Algebra 101', courseSection: 'Section A', dueDate: '2022-12-31' },
-                { id: 2, courseName: 'Biology 101', courseSection: 'Section B', dueDate: '2022-12-31' }
+                { id: 1, courseId: 1, courseName: 'ITELECT4', courseSection: 'BSCS-3A', dueDate: '2022-12-31' },
+                { id: 2, courseId: 2, courseName: 'ITELECT4', courseSection: 'BSCS-3B', dueDate: '2022-12-31' }
             ],
             showCreateAssignmentForm: false,
             newAssignment: {
@@ -81,7 +85,8 @@ export default {
         },
         createAssignment() {
             const newId = this.assignments.length + 1;
-            this.assignments.push({ id: newId, ...this.newAssignment });
+            const newCourseId = this.courses.length + 1; // Assuming you have a courses array
+            this.assignments.push({ id: newId, courseId: newCourseId, ...this.newAssignment });
             this.newAssignment.courseName = '';
             this.newAssignment.courseSection = '';
             this.newAssignment.dueDate = null;
@@ -93,8 +98,11 @@ export default {
         deleteAssignment(id) {
             this.assignments = this.assignments.filter(assignment => assignment.id !== id);
         },
-        startAssignment(assignmentId) {
-            this.$router.push({ name: 'Assignment', params: { assignmentId } });
+        startAssignment(assignmentId, courseId) {
+            this.$router.push({ 
+                name: 'FacultyAssignmentContent', 
+                params: { assignmentId, courseId } 
+            });
         }
     }
 };

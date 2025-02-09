@@ -1,29 +1,29 @@
 <template>
-    <div class="quiz-details-container">
+    <div class="exam-details-container">
         <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-        <div class="quiz-detail">
+        <div class="exam-detail">
             <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-            <div class="quiz-detail-container" v-if="currentQuiz">
+            <div class="exam-detail-container" v-if="currentExam">
                 <button class="back-btn" @click="goBack">
                     <i class="pi pi-arrow-left"></i> Back to Course
                 </button>
 
-                <div class="quiz-content">
+                <div class="exam-content">
                     <div class="main-content">
-                        <div class="quiz-header">
+                        <div class="exam-header">
                             <div class="header-content">
-                                <h1>{{ currentQuiz.name }}</h1>
-                                <div class="quiz-meta">
+                                <h1>{{ currentExam.name }}</h1>
+                                <div class="exam-meta">
                                     <span class="posted-date">
                                         <i class="pi pi-calendar"></i>
-                                        Posted: {{ formatDate(currentQuiz.datePosted) }}
+                                        Posted: {{ formatDate(currentExam.datePosted) }}
                                     </span>
                                     <span class="due-date">
                                         <i class="pi pi-clock"></i>
-                                        Due: {{ formatDate(currentQuiz.dueDate) }}
+                                        Due: {{ formatDate(currentExam.dueDate) }}
                                     </span>
-                                    <span class="status" :class="currentQuiz.status.toLowerCase()">
-                                        {{ currentQuiz.status }}
+                                    <span class="status" :class="currentExam.status.toLowerCase()">
+                                        {{ currentExam.status }}
                                     </span>
                                 </div>
                             </div>
@@ -32,10 +32,10 @@
                         <div class="content-section instructions">
                             <h2>Instructions</h2>
                             <div class="instruction-content">
-                                <p>{{ currentQuiz.description }}</p>
+                                <p>{{ currentExam.description }}</p>
                                 <div class="attachments">
                                     <h3>Attachments</h3>
-                                    <div v-for="file in currentQuiz.attachments" :key="file.id" class="attachment-item" @click="downloadAttachment(file)">
+                                    <div v-for="file in currentExam.attachments" :key="file.id" class="attachment-item" @click="downloadAttachment(file)">
                                         <i :class="getFileIcon(file.type)"></i>
                                         <span>{{ file.name }}</span>
                                         <i class="pi pi-download" v-if="file.type !== 'link'"></i>
@@ -51,8 +51,8 @@
                             <h2>Your Work</h2>
                             <div class="submission-area">
                                 <div class="submission-status">
-                                    <div class="status-indicator" :class="currentQuiz.status.toLowerCase()">
-                                        {{ currentQuiz.status }}
+                                    <div class="status-indicator" :class="currentExam.status.toLowerCase()">
+                                        {{ currentExam.status }}
                                     </div>
                                 </div>
                                 <div class="submission-actions">
@@ -73,7 +73,7 @@
                                     </button>
                                 </div>
                                 <div class="comments-list">
-                                    <div v-for="comment in currentQuiz.comments" :key="comment.id" class="comment">
+                                    <div v-for="comment in currentExam.comments" :key="comment.id" class="comment">
                                         <img :src="comment.authorAvatar" :alt="comment.author" />
                                         <div class="comment-content">
                                             <div class="comment-header">
@@ -94,11 +94,11 @@
 </template>
 
 <script>
-import Header from './Header.vue';
-import Sidebar from './Sidebar.vue';
+import Header from '../Header.vue';
+import Sidebar from '../Sidebar.vue';
 
 export default {
-    name: 'QuizDetails',
+    name: 'ExamDetails',
     components: {
         Header,
         Sidebar
@@ -113,11 +113,11 @@ export default {
                     id: 1,
                     name: 'ITELECT4',
                     sections: [{ id: 1, name: 'BSCS-3A' }],
-                    quizzes: [
+                    exams: [
                         {
                             id: 1,
-                            name: 'Quiz 1',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 1',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -130,8 +130,8 @@ export default {
                         },
                         {
                             id: 2,
-                            name: 'Quiz 2',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 2',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -144,8 +144,8 @@ export default {
                         },
                         {
                             id: 3,
-                            name: 'Quiz 3',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 3',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -162,11 +162,11 @@ export default {
                     id: 2,
                     name: 'GEC010',
                     sections: [{ id: 1, name: 'BSCS-3A' }],
-                    quizzes: [
+                    exams: [
                         {
                             id: 1,
-                            name: 'Quiz 1',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 1',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -179,8 +179,8 @@ export default {
                         },
                         {
                             id: 2,
-                            name: 'Quiz 2',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 2',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -193,8 +193,8 @@ export default {
                         },
                         {
                             id: 3,
-                            name: 'Quiz 3',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 3',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -211,11 +211,11 @@ export default {
                     id: 3,
                     name: 'CC321',
                     sections: [{ id: 1, name: 'BSCS-3A' }],
-                    quizzes: [
+                    exams: [
                         {
                             id: 1,
-                            name: 'Quiz 1',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 1',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -228,8 +228,8 @@ export default {
                         },
                         {
                             id: 2,
-                            name: 'Quiz 2',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 2',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -242,8 +242,8 @@ export default {
                         },
                         {
                             id: 3,
-                            name: 'Quiz 3',
-                            description: 'Complete the following quiz questions...',
+                            name: 'Exam 3',
+                            description: 'Complete the following exam questions...',
                             datePosted: '2024-01-20',
                             dueDate: '2024-02-01',
                             status: 'Not submitted',
@@ -256,7 +256,7 @@ export default {
                         }
                     ]
                 }
-                // Include other courses and quizzes here
+                // Include other courses and exams here
             ]
         };
     },
@@ -265,10 +265,10 @@ export default {
             const courseId = parseInt(this.$route.params.courseId);
             return this.courses.find(c => c.id === courseId);
         },
-        currentQuiz() {
+        currentExam() {
             if (!this.currentCourse) return null;
-            const quizId = parseInt(this.$route.params.quizId);
-            return this.currentCourse.quizzes.find(q => q.id === quizId);
+            const examId = parseInt(this.$route.params.examId);
+            return this.currentCourse.exams.find(e => e.id === examId);
         }
     },
     methods: {
@@ -306,7 +306,7 @@ export default {
         },
         goBack() {
             this.$router.push({
-                name: 'QuizContent',
+                name: 'ExamContent',
                 params: { courseId: this.$route.params.courseId }
             });
         },
@@ -319,7 +319,7 @@ export default {
                     text: this.newComment,
                     date: new Date().toISOString()
                 };
-                this.currentQuiz.comments.unshift(newCommentObj);
+                this.currentExam.comments.unshift(newCommentObj);
                 this.newComment = '';
             }
         }
@@ -328,18 +328,18 @@ export default {
 </script>
 
 <style scoped>
-.quiz-details-container {
+.exam-details-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
 }
 
-.quiz-detail {
+.exam-detail {
     display: flex;
     flex: 1;
 }
 
-.quiz-detail-container {
+.exam-detail-container {
     flex: 1;
     padding: 1rem;
     max-width: 100%;
@@ -364,7 +364,7 @@ export default {
     background-color: #f0f0f0;
 }
 
-.quiz-content {
+.exam-content {
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 2rem;
@@ -385,17 +385,17 @@ export default {
     margin-bottom: 2rem; /* Add bottom margin here */
 }
 
-.quiz-header {
+.exam-header {
     background-color: #D9D9D9;
     padding: 2rem;
     border-radius: 8px;
 }
 
-.quiz-header h1 {
+.exam-header h1 {
     color: #333;
 }
 
-.quiz-meta {
+.exam-meta {
     display: flex;
     gap: 2rem;
     margin-top: 1rem;

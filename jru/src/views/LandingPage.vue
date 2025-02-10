@@ -14,6 +14,7 @@
           <div class="role-options" v-if="showDropdown">
             <a href="#student" class="role-option" @click.prevent="selectRole('student')">Student</a>
             <a href="#faculty" class="role-option" @click.prevent="selectRole('faculty')">Faculty</a>
+            <a href="#admin" class="role-option" @click.prevent="selectRole('admin')">Admin</a>
           </div>
         </div>
       </div>
@@ -62,6 +63,9 @@ export default {
   }
   else if (role === 'faculty') {
     this.$router.push({ name: 'FacultyDashboard' }); // Navigate to faculty dashboard
+  }
+  else if (role === 'admin') {
+    this.$router.push({ name: 'AdminDashboard' }); // Navigate to faculty dashboard
   }
 },
 

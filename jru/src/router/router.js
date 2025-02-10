@@ -28,6 +28,9 @@ import FacultyAssignment from '@/views/faculty/FacultyAssignment.vue';
 import FacultyAssignmentContent from '@/components/faculty/Assignment/FacultyAssContent.vue';
 import FacultyAssignmentDetailsVue from '@/components/faculty/Assignment/FacultyAssignmentDetails.vue';
 import FacultyQuizDetailsVue from '@/components/faculty/Quiz/FacultyQuizDetails.vue';
+
+import AdminDashboard from '@/views/admin/Home.vue';
+import Users from '@/views/admin/Users.vue';
 const routes = [
   {
     path: '/',
@@ -186,6 +189,17 @@ const routes = [
     name: 'FacultyAssignmentDetails',
     component: FacultyAssignmentDetailsVue,
     props: true,
+  },
+
+  {
+    path: '/admin-dashboard',
+    name: 'AdminDashboard',
+    component: AdminDashboard,
+  },
+  {
+    path: '/users',
+    name: 'Users',
+    component: Users,
   },
 ];
 

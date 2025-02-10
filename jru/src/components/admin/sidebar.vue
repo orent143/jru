@@ -8,18 +8,11 @@
         </li>
   
         <!-- User Management -->
-        <li @click="toggleUserDropdown" :aria-expanded="isUserDropdownOpen.toString()">
+        <li>
           <i class="pi pi-users"></i>
-          <strong>User Management</strong>
-          <i v-if="isUserDropdownOpen" class="pi pi-angle-down"></i>
-          <i v-else class="pi pi-angle-right"></i>
+          <router-link to="/users"><strong>User Management</strong></router-link>
         </li>
-        <ul v-if="isUserDropdownOpen" class="dropdown-menu">
-          <li><router-link to="/users">Students</router-link></li>
-          <li><router-link to="/users">Faculty</router-link></li>
-          <li><router-link to="/users">Admins</router-link></li>
-        </ul>
-  
+
         <!-- Course Management -->
         <li @click="toggleCourseDropdown" :aria-expanded="isCourseDropdownOpen.toString()">
           <i class="pi pi-book"></i>
@@ -63,9 +56,6 @@
       };
     },
     methods: {
-      toggleUserDropdown() {
-        this.isUserDropdownOpen = !this.isUserDropdownOpen;
-      },
       toggleCourseDropdown() {
         this.isCourseDropdownOpen = !this.isCourseDropdownOpen;
       },

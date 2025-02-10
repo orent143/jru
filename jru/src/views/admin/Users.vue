@@ -98,6 +98,15 @@
               <input type="email" v-model="userForm.email" required>
             </div>
             <div class="form-group">
+  <label>Password</label>
+  <input 
+    type="password" 
+    v-model="userForm.password" 
+    :required="!isEditing" 
+    placeholder="Enter password"
+  >
+</div>
+            <div class="form-group">
               <label>Role</label>
               <select v-model="userForm.role" required>
                 <option value="student">Student</option>
@@ -146,14 +155,15 @@
           status: 'active'
         },
         users: [
-          {
-            id: 1,
-            name: 'John Doe',
-            email: 'john@example.com',
-            role: 'student',
-            status: 'active',
-            lastLogin: '2024-03-20 10:30'
-          },
+        {
+        id: 1,
+        name: 'Myk Palado',
+        email: 'Myk@Kawali.com',
+        password: '********', // Added password field
+        role: 'student',
+        status: 'active',
+        lastLogin: '2024-03-20 10:30'
+      },
           // Add more sample users
         ]
       }
@@ -347,6 +357,7 @@
   .modal-content {
     background: white;
     padding: 20px;
+    color:#333;
     border-radius: 10px;
     width: 500px;
   }

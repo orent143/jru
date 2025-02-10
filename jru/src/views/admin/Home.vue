@@ -7,26 +7,26 @@
         
         <main class="dashboard-main">
           <div class="system-overview-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Total Users</th>
-                  <th>Active Courses</th> 
-                  <th>System Health</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1,234</td>
-                  <td>56</td>
-                  <td>98%</td>
-                </tr>
-              </tbody>
-            </table>
+            <<table class="system-table">
+  <thead>
+    <tr>
+      <th>Total Users</th>
+      <th>Active Courses</th>
+      <th>Faculty</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1,234</strong></td>
+      <td><strong>56</strong></td>
+      <td><strong>32</strong></td>
+    </tr>
+  </tbody>
+</table>
           </div>
   
           <div class="action-cards">
-            <router-link to="/user-management" class="card">
+            <router-link to="/users" class="card">
               <h3>User Management</h3>
             </router-link>
             <router-link to="/course-management" class="card">
@@ -72,11 +72,11 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="task in pendingTasks" :key="task.id">
-                    <td>{{task.name}}</td>
-                    <td>{{task.priority}}</td>
-                    <td>{{task.status}}</td>
-                  </tr>
+                    <tr v-for="task in pendingTasks" :key="task.id">
+  <td>{{task.name}}</td>
+  <td><span :class="['priority', `priority-${task.priority.toLowerCase()}`]">{{task.priority}}</span></td>
+  <td><span :class="['status', `status-${task.status.toLowerCase()}`]">{{task.status}}</span></td>
+</tr>
                 </tbody>
               </table>
             </div>
@@ -105,98 +105,126 @@
         },
         isSidebarCollapsed: false,
         notifications: [
-          // Add sample notifications
-        ],
-        pendingTasks: [
-          // Add sample tasks
-        ]
-      };
-    },
-    methods: {
-      toggleSidebar() {
-        this.isSidebarCollapsed = !this.isSidebarCollapsed;
-      }
+        {
+          id: 1,
+          type: 'New User',
+          message: 'Lorenzzz registered as a student',
+          time: '2 hours ago'
+        },
+        {
+          id: 2,
+          type: 'Course',
+          message: 'New course ITELECT4 was added',
+          time: '3 hours ago'
+        },
+        {
+          id: 3,
+          type: 'System',
+          message: 'System maintenance scheduled',
+          time: '5 hours ago'
+        },
+        {
+          id: 4,
+          type: 'Alert',
+          message: 'High server load detected',
+          time: '6 hours ago'
+        }
+      ],
+      
+      // Pending Tasks dummy data
+      pendingTasks: [
+        {
+          id: 1,
+          name: 'Review Course Proposals',
+          priority: 'High',
+          status: 'Pending'
+        },
+        {
+          id: 2,
+          name: 'Update System Settings',
+          priority: 'Medium',
+          status: 'In Progress'
+        },
+        {
+          id: 3,
+          name: 'Backup Database',
+          priority: 'Low',
+          status: 'Scheduled'
+        },
+        {
+          id: 4,
+          name: 'User Account Approvals',
+          priority: 'High',
+          status: 'Pending'
+        }
+      ]
+    };
+  },
+  methods: {
+    toggleSidebar() {
+      this.isSidebarCollapsed = !this.isSidebarCollapsed;
     }
-  };
-  </script>
+  }
+};
+</script>
   
   <style scoped>
   .dashboard-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
-}
-
-.dashboard-content {
+  }
+  
+  .dashboard-content {
     display: flex;
     flex-grow: 1;
-}
-
-.dashboard-main {
+  }
+  
+  .dashboard-main {
     flex-grow: 1;
     padding: 20px;
-    color: #333;
     background-color: #fff;
-}
-
-.container {
-    margin-bottom: 20px;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.una-container {
+  }
+  
+  /* System Overview Section */
+  .system-overview-container {
     margin-bottom: 40px;
     background-color: #D9D9D9;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.una-container table {
+  }
+  
+  .system-overview-container table {
     width: 100%;
     border-collapse: collapse;
-}
-
-.una-container th {
+  }
+  
+  .system-overview-container th {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
     color: #000000;
     font-size: 23px;
     font-weight: bold;
-}
-.una-container td {
+  }
+  
+  .system-overview-container td {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
     color: #000000e1;
     font-size: 17px;
-}
-a, .green {
-    text-decoration: none;
-    color: #007BF6;
-    transition: 0.4s;
-    padding: 3px;
-}
-tbody  {
-    background-color: #ffffff;
-    border-radius: 20px;
-}
-h1, h2 {
-    color: #333;
-    display: flex;
-}
-
-.action-cards {
+  }
+  
+  /* Action Cards */
+  .action-cards {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 40px;
-}
-
-.card {
+  }
+  
+  .card {
     flex: 1;
     min-width: 200px;
     padding: 17px;
@@ -205,68 +233,104 @@ h1, h2 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
     text-decoration: none;
-}
-
-.card h3 {
+  }
+  
+  .card h3 {
     color: #fff;
-}
-
-.side-by-side {
+  }
+  
+  /* Side by Side Containers */
+  .side-by-side {
     display: flex;
     gap: 20px;
-}
-
-.upcoming-class-container, .submissions-container {
+  }
+  
+  .notifications-container,
+  .tasks-container {
     flex: 1;
     background-color: #D9D9D9;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-.upcoming-class-container table,
-.submissions-container table {
+  }
+  
+  .notifications-container table,
+  .tasks-container table {
     width: 100%;
     border-collapse: collapse;
-}
-.upcoming-class-container, .submissions-container, h2{
+  }
+  
+  .notifications-container h2,
+  .tasks-container h2 {
     margin-left: 15px;
-}
-.upcoming-class-container th,
-.submissions-container th {
+    color: #333;
+    display: flex;
+  }
+  
+  .notifications-container th,
+  .tasks-container th {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
     color: #000;
     font-size: 18px;
     font-weight: bold;
-}
-
-.upcoming-class-container td,
-.submissions-container td {
+  }
+  
+  .notifications-container td,
+  .tasks-container td {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
     color: #333;
     font-size: 16px;
-}
-
-.upcoming-class-container tbody,
-.submissions-container tbody {
+  }
+  
+  .notifications-container tbody,
+  .tasks-container tbody {
     background-color: #fff;
-}
-
-  /* Keep existing styles and add/modify as needed */
-  .system-overview-container {
-    background-color: #D9D9D9;
-    border-radius: 10px;
-    margin-bottom: 40px;
+    border-radius: 20px;
   }
   
-  .notifications-container, 
-  .tasks-container {
-    flex: 1;
-    background-color: #D9D9D9;
-    border-radius: 10px;
+  /* Status and Priority Badges */
+  .status,
+  .priority {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
   }
   
-  /* Rest of the styles remain the same */
+  .status-completed {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .priority-high {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
+  .priority-medium {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  .priority-low {
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+  
+  /* Links */
+  a {
+    text-decoration: none;
+    color: #007BF6;
+    transition: 0.4s;
+    padding: 3px;
+  }
+  
+  /* General Table Styles */
+  tbody {
+    background-color: #ffffff;
+    border-radius: 20px;
+  }
   </style>

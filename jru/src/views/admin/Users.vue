@@ -1,240 +1,176 @@
-
 <template>
-    <div class="admin-layout">
-      <Header />
-      <div class="content-wrapper">
-        <SideBar :isCollapsed="isSidebarCollapsed" />
-        <div class="main-content">
-          <div class="user-management">
-            <div class="page-header">
-              <h1>User Management</h1>
-              <button class="add-user-btn" @click="openAddUserModal">
-                <i class="pi pi-plus"></i> Add New User
+  <div class="admin-layout">
+    <Header />
+    <div class="content-wrapper">
+      <SideBar :isCollapsed="isSidebarCollapsed" />
+      <div class="main-content">
+        <div class="user-management">
+          <div class="page-header">
+            <h1>User Management</h1>
+            <button class="add-user-btn" @click="openAddUserModal">
+              <i class="pi pi-plus"></i> Add New User
+            </button>
+          </div>
+
+          <div class="filters">
+            <input type="text" v-model="searchQuery" placeholder="Search users..." />
+            <select v-model="roleFilter">
+              <option value="">All Roles</option>
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in filteredUsers" :key="user.user_id">
+                  <td>{{ user.user_id }}</td>
+                  <td>{{ user.name }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.role }}</td>
+                  <td>{{ formatDate(user.created_at) }}</td>
+                  <td>
+                    <button class="action-btn edit"@click="editUser(user)">
+                <i class="pi pi-pencil"></i>
               </button>
-            </div>  
-        
-      <div class="filters">
-        <div class="search-box">
-          <input 
-            type="text" 
-            v-model="searchQuery"
-            placeholder="Search users..."
-          />
-        </div>
-        <div class="filter-options">
-          <select v-model="roleFilter">
-            <option value="">All Roles</option>
-            <option value="student">Student</option>
-            <option value="faculty">Faculty</option>
-            <option value="admin">Admin</option>
-          </select>
-          <select v-model="statusFilter">
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+<button class="action-btn delete" @click="confirmDelete(user.user_id)">
+  <i class="pi pi-trash"></i>
+</button>
+
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-  
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Last Login</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in filteredUsers" :key="user.id">
-              <td>{{ user.id }}</td>
-              <td>{{ user.name }}</td>
-              <td>{{ user.email }}</td>
-              <td>
-                <span :class="['role-badge', user.role]">
-                  {{ user.role }}
-                </span>
-              </td>
-              <td>
-                <span :class="['status-badge', user.status]">
-                  {{ user.status }}
-                </span>
-              </td>
-              <td>{{ user.lastLogin }}</td>
-              <td class="actions">
-                <button class="edit-btn" @click="editUser(user)">
-                  <i class="pi pi-pencil"></i>
-                </button>
-                <button class="view-btn" @click="viewUser(user)">
-                  <i class="pi pi-eye"></i>
-                </button>
-                <button class="delete-btn" @click="confirmDelete(user)">
-                  <i class="pi pi-trash"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
     </div>
-      </div>
-    </div>
+
+    <!-- Add User Modal -->
+    <AddUser 
+      :isVisible="showAddUserModal" 
+      @close="closeAddUserModal" 
+      @user-added="fetchUsers"
+    />
+
+    <!-- Edit User Modal -->
+    <EditUser 
+      :show="showEditUserModal" 
+      :user="selectedUser" 
+      @close="closeEditUserModal" 
+      @update="fetchUsers"
+    />
   </div>
-      <!-- Add/Edit User Modal -->
-      <div class="modal" v-if="showModal">
-        <div class="modal-content">
-          <h2>{{ isEditing ? 'Edit User' : 'Add New User' }}</h2>
-          <form @submit.prevent="saveUser">
-            <div class="form-group">
-              <label>Name</label>
-              <input type="text" v-model="userForm.name" required>
-            </div>
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" v-model="userForm.email" required>
-            </div>
-            <div class="form-group">
-  <label>Password</label>
-  <input 
-    type="password" 
-    v-model="userForm.password" 
-    :required="!isEditing" 
-    placeholder="Enter password"
-  >
-</div>
-            <div class="form-group">
-              <label>Role</label>
-              <select v-model="userForm.role" required>
-                <option value="student">Student</option>
-                <option value="faculty">Faculty</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Status</label>
-              <select v-model="userForm.status" required>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-            <div class="modal-actions">
-              <button type="submit" class="save-btn">Save</button>
-              <button type="button" @click="closeModal" class="cancel-btn">Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
-  </template>
-  
-  <script>
-    import Header from '@/components/admin/header.vue';
-  import SideBar from '@/components/admin/sidebar.vue';
-  
-  export default {
-    name: 'UserManagement',
-    components: {
-      Header,
-      SideBar,
-    },
-    data() {
-      return {
-        searchQuery: '',
-        roleFilter: '',
-        isSidebarCollapsed: false,
-        statusFilter: '',
-        showModal: false,
-        isEditing: false,
-        userForm: {
-          name: '',
-          email: '',
-          role: 'student',
-          status: 'active'
-        },
-        users: [
-        {
-        id: 1,
-        name: 'Myk Palado',
-        email: 'Myk@Kawali.com',
-        password: '********', // Added password field
-        role: 'student',
-        status: 'active',
-        lastLogin: '2024-03-20 10:30'
-      },
-          // Add more sample users
-        ]
+</template>
+
+<script>
+import axios from 'axios';
+import Header from '@/components/admin/header.vue';
+import SideBar from '@/components/admin/sidebar.vue';
+import AddUser from '@/components/admin/users/AddUser.vue';
+import EditUser from '@/components/admin/users/EditUser.vue';
+
+export default {
+  name: 'UserManagement',
+  components: { Header, SideBar, AddUser, EditUser },
+  data() {
+    return {
+      searchQuery: '',
+      roleFilter: '',
+      users: [],
+      isSidebarCollapsed: false,
+      showAddUserModal: false,
+      showEditUserModal: false,
+      selectedUser: null,
+    };
+  },
+  computed: {
+    filteredUsers() {
+      return this.users.filter(user => {
+        return (
+          (user.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+            user.email.toLowerCase().includes(this.searchQuery.toLowerCase())) &&
+          (!this.roleFilter || user.role === this.roleFilter)
+        );
+      });
+    }
+  },
+  methods: {
+    async fetchUsers() {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/users/');
+        this.users = response.data;
+      } catch (error) {
+        alert('Error fetching users: ' + (error.response?.data?.detail || error.message));
+        console.error('Error fetching users:', error);
       }
     },
-    computed: {
-      filteredUsers() {
-        return this.users.filter(user => {
-          const matchesSearch = user.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                              user.email.toLowerCase().includes(this.searchQuery.toLowerCase())
-          const matchesRole = !this.roleFilter || user.role === this.roleFilter
-          const matchesStatus = !this.statusFilter || user.status === this.statusFilter
-          return matchesSearch && matchesRole && matchesStatus
-        })
+    formatDate(dateString) {
+      return new Date(dateString).toLocaleString();
+    },
+    openEditUserModal(user) {
+      this.selectedUser = { ...user }; // Clone the user object
+      this.showEditUserModal = true;
+    },
+    closeAddUserModal() {
+      this.showAddUserModal = false;
+    },
+// In your UserManagement.vue component
+editUser(user) {
+    this.selectedUser = { ...user }; // Make sure the user object is passed with the correct ID
+    this.showEditUserModal = true;
+},
+    closeEditUserModal() {
+      this.showEditUserModal = false;
+      this.selectedUser = null;
+    },
+    async confirmDelete(userId) {
+      if (confirm('Are you sure you want to delete this user?')) {
+        await this.deleteUser(userId);
       }
     },
-    methods: {
-      openAddUserModal() {
-        this.isEditing = false
-        this.userForm = {
-          name: '',
-          email: '',
-          role: 'student',
-          status: 'active'
-        }
-        this.showModal = true
-      },
-      editUser(user) {
-        this.isEditing = true
-        this.userForm = { ...user }
-        this.showModal = true
-      },
-      viewUser(user) {
-        // Implement view user details
-      },
-      confirmDelete(user) {
-        if (confirm(`Are you sure you want to delete ${user.name}?`)) {
-          this.deleteUser(user)
-        }
-      },
-      deleteUser(user) {
-        // Implement delete functionality
-        this.users = this.users.filter(u => u.id !== user.id)
-      },
-      saveUser() {
-        if (this.isEditing) {
-          // Update existing user
-          const index = this.users.findIndex(u => u.id === this.userForm.id)
-          this.users[index] = { ...this.userForm }
-        } else {
-          // Add new user
-          this.users.push({
-            id: this.users.length + 1,
-            ...this.userForm,
-            lastLogin: '-'
-          })
-        }
-        this.closeModal()
-      },
-      closeModal() {
-        this.showModal = false
-        this.userForm = {
-          name: '',
-          email: '',
-          role: 'student',
-          status: 'active'
-        }
+    async deleteUser(userId) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/users/${userId}`);
+        alert('User deleted successfully!');
+        this.fetchUsers();
+      } catch (error) {
+        alert('Error deleting user: ' + (error.response?.data?.detail || error.message));
+        console.error('Error deleting user:', error);
       }
     }
+  },
+  mounted() {
+    this.fetchUsers();
+  },
+  watch: {
+  user: {
+    handler(newUser) {
+      console.log("Received user data:", newUser); // Log user data received by the component
+      if (newUser && newUser.user_id) {
+        this.formData = { ...newUser };
+      } else {
+        console.error("Invalid user data", newUser);
+      }
+    },
+    immediate: true
   }
-  </script>
-  
+},
+};
+</script>
+
   <style scoped>
 
 .content-wrapper {
@@ -331,17 +267,40 @@
     gap: 5px;
   }
   
-  .actions button {
-    padding: 5px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
+  .action-btn {
+    padding: 8px;
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+  margin-right: 10px;
+  width: 35px;
+  height: 35px;
+  align-items: center;
+  justify-content: center;
   }
   
-  .edit-btn { background: #ffd700; }
-  .view-btn { background: #90caf9; }
-  .delete-btn { background: #ff6b6b; }
+  .action-btn.edit {
+  color: #1976d2;
+}
+
+.action-btn.delete {
+  color: #dc3545;
+}
   
+  .action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:active {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.action-btn:active {
+  background-color: #004080;
+}
   .modal {
     position: fixed;
     top: 0;

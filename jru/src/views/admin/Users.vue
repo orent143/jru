@@ -108,6 +108,12 @@ export default {
     }
   },
   methods: {
+    openAddUserModal() {
+    this.showAddUserModal = true;
+  },
+  closeAddUserModal() {
+    this.showAddUserModal = false;
+  },
     async fetchUsers() {
       try {
         const response = await axios.get('http://127.0.0.1:8000/api/users/');

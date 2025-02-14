@@ -10,10 +10,10 @@
                         <button @click="showCreateQuizForm = true" class="create-quiz-btn">Create Quiz</button>
                     </div>
                     <div class="quiz-cards">
-                        <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-card" @click="startQuiz(quiz.id, quiz.courseId)">
+                        <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-card" @click="startQuiz(quiz.id, quiz.course_id)">
                             <div class="card-header">
-                                <h2>{{ quiz.courseName }}</h2>
-                                <p>{{ quiz.courseSection }}</p>
+                                <h2>{{ quiz.course_id }}</h2>
+                                <p>{{ quiz.course_id }}</p>
                                 <div class="card-actions">
                                     <button @click.stop="editQuiz(quiz.id)"><i class="pi pi-pencil"></i></button>
                                     <button @click.stop="deleteQuiz(quiz.id)"><i class="pi pi-trash"></i></button>
@@ -46,67 +46,131 @@
 </template>
 
 <script>
+import axios from 'axios';
 import Header from '@/components/faculty/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
 
 export default {
-    name: 'FacultyQuiz',
     components: {
         Header,
-        SideBar,
+        SideBar
     },
     data() {
         return {
-            searchQuery: '',
-            student: {
-                name: 'John Doe',
-                id: '12345'
-            },
             isSidebarCollapsed: false,
-            courses: [
-                { id: 1, subject: 'ITELECT4', section: 'BSCS-3A', schedule: 'Mon 9-11 AM' },
-                { id: 2, subject: 'ITELECT4', section: 'BSCS-3B', schedule: 'Tue 10-12 AM' }
-            ],
-            quizzes: [
-                { id: 1, courseId: 1, courseName: 'ITELECT4', courseSection: 'BSCS-3A', duration: 30 },
-                { id: 2, courseId: 2, courseName: 'ITELECT3', courseSection: 'BSCS-3A', duration: 45 }
-            ],
+            quizzes: [],
+            courses: [],
+            loading: false,
+            error: null,
             showCreateQuizForm: false,
             newQuiz: {
-                courseName: '',
-                courseSection: '',
-                duration: null
-            }
+                title: '',
+                duration: '',
+                course_id: null
+            },
+            user: null // Store logged-in user data
         };
     },
     methods: {
         toggleSidebar() {
             this.isSidebarCollapsed = !this.isSidebarCollapsed;
         },
-        createQuiz() {
-            const newId = this.quizzes.length + 1;
-            const newCourseId = this.courses.length + 1; // Assuming you have a courses array
-            this.quizzes.push({ id: newId, courseId: newCourseId, ...this.newQuiz });
-            this.newQuiz.courseName = '';
-            this.newQuiz.courseSection = '';
-            this.newQuiz.duration = null;
-            this.showCreateQuizForm = false;
+        async fetchQuizzes() {
+            this.loading = true;
+            this.error = null;
+            
+            try {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    this.user = JSON.parse(storedUser);
+                }
+
+                if (!this.user || this.user.role !== 'faculty') {
+                    this.error = "Unauthorized access.";
+                    return;
+                }
+
+                const response = await axios.get(`http://127.0.0.1:8000/api/courses/?user_id=${this.user.user_id}`);
+                this.assignments = response.data;
+            } catch (err) {
+                this.error = 'Failed to fetch quizzes.';
+            } finally {
+                this.loading = false;
+            }
         },
-        editQuiz(id) {
-            // Implement edit functionality
+        async fetchCourses() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await axios.get(`http://127.0.0.1:8000/api/courses/?user_id=${this.user.user_id}`);
+                this.courses = response.data;
+            } catch (err) {
+                this.error = 'Failed to fetch courses.';
+            } finally {
+                this.loading = false;
+            }
         },
-        deleteQuiz(id) {
-            this.quizzes = this.quizzes.filter(quiz => quiz.id !== id);
+        getCourseName(course_id) {
+            const course = this.courses.find(course => course.course_id === course_id);
+            return course ? course.course_name : 'Unknown Course';
+        },
+        getCourseSection(course_id) {
+            const course = this.courses.find(course => course.course_id === course_id);
+            return course ? course.section : 'Unknown Section';
+        },
+        async createQuiz() {
+            try {
+                if (!this.user) return;
+                
+                const response = await axios.post('http://127.0.0.1:8000/api/quizzes/', {
+                    title: this.newQuiz.title,
+                    duration: this.newQuiz.duration,
+                    course_id: this.newQuiz.course_id,
+                    user_id: this.user.user_id
+                });
+                
+                this.quizzes.push({ ...this.newQuiz, quiz_id: response.data.quiz_id });
+                this.showCreateQuizForm = false;
+                this.newQuiz = { title: '', duration: '', course_id: null };
+            } catch (err) {
+                this.error = 'Failed to create quiz.';
+            }
+        },
+        async deleteQuiz(quiz_id) {
+            try {
+                if (!this.user) return;
+                
+                await axios.delete(`http://127.0.0.1:8000/api/quizzes/${quiz_id}`, {
+                    params: { user_id: this.user.user_id }
+                });
+                
+                this.quizzes = this.quizzes.filter(quiz => quiz.quiz_id !== quiz_id);
+            } catch (err) {
+                this.error = 'Failed to delete quiz.';
+            }
+        },
+        async editQuiz(quiz_id) {
+            // Placeholder for edit function (modal or inline editing can be added)
+            console.log(`Edit quiz ${quiz_id}`);
         },
         startQuiz(quizId, courseId) {
             this.$router.push({ 
                 name: 'FacultyQuizContent', 
                 params: { quizId, courseId } 
             });
+        },
+        closeModal() {
+            this.showCreateQuizForm = false;
         }
+    },
+    mounted() {
+        this.fetchQuizzes();
+        this.fetchCourses();
     }
 };
 </script>
+
 
 <style scoped>
 .quiz-container {

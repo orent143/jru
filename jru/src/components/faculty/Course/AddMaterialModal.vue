@@ -1,56 +1,85 @@
 <template>
-  <div v-if="showCreateCourseForm" class="modal">
-    <div class="modal-content">
-      <span class="close" @click="closeForm">&times;</span>
-      <div class="modal-header">Add New Material</div>
-      <div class="modal-body">
-        <label for="subject">Material Name:</label>
-        <input v-model="title" type="text" placeholder="Material Title" />
+  <div class="modal-container">
+    <div class="modal">
+      <div class="modal-content">
+        <span class="close" @click="closeModal">&times;</span>
+        <h2>Add New Material</h2>
+        
+        <label for="title">Material Title:</label>
+        <input v-model="title" type="text" placeholder="Enter Title" required />
 
-        <!-- New Label and Input for File Upload -->
+        <label for="content">Material Content:</label>
+        <textarea v-model="content" placeholder="Enter Content"></textarea>
+
         <label for="file-upload">Upload File:</label>
         <input type="file" @change="handleFileUpload" />
-      </div>
-      <div class="modal-buttons">
-        <button class="submit" @click="addMaterial">Add</button>
+
+        <button @click="addMaterial" :disabled="isSubmitting">Add Material</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
+  props: {
+    courseId: Number, // Ensure the parent component passes the courseId
+  },
   data() {
     return {
-      title: '',
-      selectedFile: null, // To store the uploaded file
-      showCreateCourseForm: true,
+      title: "",
+      content: "",
+      file: null,
+      isSubmitting: false,
     };
   },
   methods: {
-    // Handle file upload
     handleFileUpload(event) {
-      this.selectedFile = event.target.files[0]; // Store the selected file
+      this.file = event.target.files[0];
     },
+    async addMaterial() {
+      if (!this.courseId || !this.title || !this.content) {
+        alert("Please fill in all required fields.");
+        return;
+      }
 
-    addMaterial() {
-      if (this.title.trim() && this.selectedFile) {
-        // You can handle the file upload logic here or pass the file to the parent
-        this.$emit('add-material', {
-          id: Date.now(),
-          title: this.title,
-          file: this.selectedFile, // Pass the file along with other data
+      this.isSubmitting = true;
+
+      const formData = new FormData();
+      formData.append("course_id", this.courseId);
+      formData.append("title", this.title);
+      formData.append("content", this.content);
+      if (this.file) {
+        formData.append("file", this.file);
+      }
+
+      try {
+        const response = await axios.post("http://127.0.0.1:8000/api/course-content", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
-        this.closeForm();
-      } else {
-        alert('Please provide both a title and a file.');
+
+        alert("Material added successfully!");
+        this.$emit("add-material", response.data);
+        this.resetForm();
+      } catch (error) {
+        console.error("Error adding material:", error);
+        alert("Failed to add material.");
+      } finally {
+        this.isSubmitting = false;
       }
     },
-    closeForm() {
-      this.showCreateCourseForm = false;
-      this.$emit('close');
-    }
-  }
+    resetForm() {
+      this.title = "";
+      this.content = "";
+      this.file = null;
+      this.$emit("close");
+    },
+    closeModal() {
+      this.resetForm();
+    },
+  },
 };
 </script>
 
@@ -75,7 +104,7 @@ export default {
   position: relative;
 }
 
-.modal-header {
+.modal-content {
   font-size: 25px;
   font-family: 'Arial', sans-serif;
   font-weight: 1000;
@@ -92,7 +121,7 @@ export default {
   font-size: 25px;
 }
 
-.modal-body, label {
+.modal-content label  {
   display: flex;
   flex-direction: column;
   font-weight: 600;
@@ -102,7 +131,8 @@ export default {
   color: #272727;
 }
 
-.modal-body input {
+.modal-content input,
+.modal-content textarea{
   padding: 10px;
   font-size: 14px;
   border-radius: 12px;
@@ -110,20 +140,21 @@ export default {
   border: 1px solid #ccc;
 }
 
-.modal-buttons {
+.modal-content button {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-top: 1rem;
 }
 
-.modal-buttons button {
+.modal-content button{
   padding: 8px 12px;
   border: none;
   cursor: pointer;
   font-size: 1rem;
 }
 
-.modal-buttons .submit {
+.modal-content button {
   padding: 10px 20px;
   background-color: #007BF6;
   color: white;
@@ -131,9 +162,13 @@ export default {
   border-radius: 10px;
   font-size: 14px;
   font-weight: bold;
+  margin-top: 1rem;
   cursor: pointer;
   transition: background-color 0.3s;
   width: 100%;
+  display: flex;          /* Add this */
+  justify-content: center; /* Add this */
 }
+
 </style>
   

@@ -1,35 +1,23 @@
 <template>
   <div class="course-content-container">
-    <Header :teacher="teacher" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-    <div class="course-content">
-      <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-      <main class="course-main" v-if="course">
-        <!-- Course Header -->
-        <div class="course-header">
-  <h2>{{ course.name }} - Course Content</h2>
-  <!-- Add this button -->
-  <button class="add-btn" @click="showAddMaterialModal = true">+</button>
-  <div class="course-sections">
-    <ul>
-      <li v-for="section in course.sections" :key="section.id">
-        {{ section.name }}
-      </li>
-    </ul>
-  </div>
-</div>
+    <!-- Header Section -->
+    <Header :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
 
-        <!-- Course Hero Section -->
+    <div class="course-content">
+      <!-- Sidebar Section -->
+      <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+
+      <!-- Main Course Content Section -->
+      <main class="course-main">
+        <div class="course-header">
+          <h2>{{ courseName || "Loading..." }} - Course Content</h2> 
+          <button class="add-btn" @click="openAddMaterialModal">+</button>
+        </div>
+
         <div class="course-hero">
           <div class="content-left">
             <section class="announcements">
               <h3>Students Enrolled:</h3>
-              <div class="student-header">
-                <ul>
-                  <li v-for="student in course.students" :key="student.id">
-                    {{ student.name }}
-                  </li>
-                </ul>
-              </div>
               <button class="view-btn" @click="viewStudents">View All</button>
             </section>
           </div>
@@ -37,14 +25,24 @@
           <div class="content-right">
             <section class="course-materials">
               <h3>Course Materials</h3>
-              <div class="material-cards">
-                <div v-for="material in course.materials" :key="material.id" class="material-card" @click="navigateToMaterial(material)">
-                  <div class="card-header">
-                    <i class="pi pi-clipboard"></i>
-                    <h4>Teacher posted a new material:</h4>
-                    {{ material.title }}
-                  </div>
-                </div>
+
+              <div v-if="loading">
+                <p>Loading materials...</p>
+              </div>
+
+              <div v-else-if="courseContent.length === 0">
+                <p>No materials available.</p>
+              </div>
+
+              <!-- ✅ Clicking a material now redirects to MaterialDetail.vue -->
+              <div v-for="(material, index) in courseContent" 
+                   :key="index" 
+                   class="material-card" 
+                   @click="viewMaterial(material)">
+
+                <h4>{{ material.user_name }} posted a material:</h4>
+                <p>{{ material.title }}</p>
+
               </div>
             </section>
           </div>
@@ -53,14 +51,20 @@
     </div>
 
     <!-- Add Material Modal -->
-    <AddMaterialModal v-if="showAddMaterialModal" @close="showAddMaterialModal = false" @add-material="addMaterial" />
+    <AddMaterialModal 
+      :courseId="courseId"  
+      v-if="showAddMaterialModal" 
+      @close="showAddMaterialModal = false" 
+      @add-material="addMaterial" 
+    />
   </div>
 </template>
 
 <script>
-import Header from '@/components/faculty/header.vue';
-import Sidebar from '@/components/faculty/SideBar.vue';
-import AddMaterialModal from './AddMaterialModal.vue';
+import axios from "axios";
+import Header from "@/components/faculty/header.vue";
+import Sidebar from "@/components/faculty/SideBar.vue";
+import AddMaterialModal from "@/components/faculty/Course/AddMaterialModal.vue";
 
 export default {
   components: {
@@ -70,118 +74,55 @@ export default {
   },
   data() {
     return {
-      teacher: { name: 'Professor Smith' },
-      searchQuery: '',
+      courseId: this.$route.params.courseId,
+      courseName: "",
+      courseContent: [],
+      loading: true,
       isSidebarCollapsed: false,
-      showAddMaterialModal: false,
-      courses: [
-        {
-          id: 1,
-          name: 'ITELECT4',
-          sections: [{ id: 1, name: 'BSCS-3A' }],
-          materials: [
-            {
-              id: 1,
-              title: 'Introduction to Programming',
-              description: 'Basic programming concepts and logic building',
-              datePosted: '2024-02-01',
-              dueDate: '2024-02-15',
-              status: 'Not started',
-              attachments: [{ id: 1, name: 'intro_programming.pdf', type: 'pdf' }],
-              submittedFiles: [],
-              comments: []
-            },
-            {
-              id: 2,
-              title: 'Data Types and Variables',
-              description: 'Understanding primitive data types',
-              datePosted: '2024-02-03',
-              dueDate: '2024-02-17',
-              status: 'Not submitted',
-              attachments: [],
-              submittedFiles: [],
-              comments: []
-            }
-          ],
-          
-          students: [
-            { id: 1, name: 'John Smith' },
-            { id: 2, name: 'Alice Johnson' }
-          ]
-        },
-        {
-          id: 2,
-          name: 'ITELECT4',
-          sections: [{ id: 2, name: 'BSCS-3B' }],
-          materials: [
-            {
-              id: 1,
-              title: 'Introduction to Programming',
-              description: 'Basic programming concepts and logic building',
-              datePosted: '2024-02-01',
-              dueDate: '2024-02-15',
-              status: 'Not started',
-              attachments: [{ id: 1, name: 'intro_programming.pdf', type: 'pdf' }],
-              submittedFiles: [],
-              comments: []
-            },
-            {
-              id: 2,
-              title: 'Data Types and Variables',
-              description: 'Understanding primitive data types',
-              datePosted: '2024-02-03',
-              dueDate: '2024-02-17',
-              status: 'Not submitted',
-              attachments: [],
-              submittedFiles: [],
-              comments: []
-            }
-          ],
-          
-          students: [
-            { id: 1, name: 'John Smith' },
-            { id: 2, name: 'Alice Johnson' }
-          ]
-        }
-      ]
+      showAddMaterialModal: false
     };
   },
-  computed: {
-    course() {
-      const courseId = parseInt(this.$route.params.courseId);
-      const foundCourse = this.courses.find(c => c.id === courseId);
-
-      if (!foundCourse) {
-        this.$router.push('/faculty-dashboard'); // Redirect to faculty dashboard if course is not found
-        return null;
-      }
-      return foundCourse;
+  methods: {
+  async fetchCourseContent() {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/course_materials/${this.courseId}`);
+      this.courseName = response.data.course_name;
+      this.courseContent = response.data.materials;
+      this.loading = false;
+    } catch (error) {
+      console.error("Error fetching course content:", error);
+      this.loading = false;
     }
   },
-  methods: {
-    viewStudents() {
-      this.$router.push({
-        name: 'StudentList',
-        params: { courseId: this.$route.params.courseId.toString() }
-      });
-    },
-    toggleSidebar() {
-      this.isSidebarCollapsed = !this.isSidebarCollapsed;
-    },
-    navigateToMaterial(material) {
-      this.$router.push({
-        name: 'FacultyCourseMaterialDetail',
-        params: {
-          courseId: this.$route.params.courseId,
-          materialId: material.id.toString()
-        }
-      });
-    },
-    addMaterial(newMaterial) {
-      this.course.materials.push(newMaterial);
-      this.showAddMaterialModal = false;
+  toggleSidebar() {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  },
+  openAddMaterialModal() {
+    this.showAddMaterialModal = true;
+  },
+  addMaterial(newMaterial) {
+    this.courseContent.push(newMaterial);
+  },
+  viewMaterial(material) {
+    console.log("Material object:", material); // Debug log
+
+    if (!material || !material.content_id) {
+      console.error("Error: materialId is missing", material);
+      return;
     }
-  } // Remove the extra semicolon that was causing the issue
+
+    this.$router.push({
+      name: "MaterialDetail",
+      params: { courseId: this.courseId, materialId: material.content_id }
+    });
+  },
+  viewStudents() {
+    this.$router.push({ name: "StudentList", params: { courseId: this.courseId } });
+  }
+  },
+  mounted() {
+    this.fetchCourseContent();
+  }
 };
 </script>
 
@@ -302,8 +243,18 @@ export default {
   display: flex;
   align-items: center;
   padding: 1rem;
-}
+  gap: 7px;
 
+}
+.material-card h4 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+}
+.material-card p {
+  font-size: 1rem;
+  color: #666;
+}
 .material-card:hover {
   transform: translateY(-5px);
 }

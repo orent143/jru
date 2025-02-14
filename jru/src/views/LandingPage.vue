@@ -9,13 +9,7 @@
       <!-- Sign In Button with Hover-Based Role Options -->
       <div class="sign-in-container">
         <div class="sign-in-button">
-          <button class="sign-in-btn" @click="toggleDropdown">Sign In</button>
-          <!-- Hover-based Role Selection -->
-          <div class="role-options" v-if="showDropdown">
-            <a href="#student" class="role-option" @click.prevent="selectRole('student')">Student</a>
-            <a href="#faculty" class="role-option" @click.prevent="selectRole('faculty')">Faculty</a>
-            <a href="#admin" class="role-option" @click.prevent="selectRole('admin')">Admin</a>
-          </div>
+          <button class="sign-in-btn" @click="navigateToLogin">Sign In</button>
         </div>
       </div>
 
@@ -39,6 +33,7 @@
 </template>
 
 
+
 <script>
 export default {
   name: "App",
@@ -51,24 +46,9 @@ export default {
     };
   },
   methods: {
-  toggleDropdown() {
-    this.showDropdown = !this.showDropdown; // Toggle the dropdown visibility
-  },
-  selectRole(role) {
-  this.roleSelected = role; // Set the selected role
-  this.showDropdown = false; // Hide the dropdown after selecting a role
-
-  if (role === 'student') {
-    this.$router.push({ name: 'StudentDashboard' }); // Navigate to student dashboard
-  }
-  else if (role === 'faculty') {
-    this.$router.push({ name: 'FacultyDashboard' }); // Navigate to faculty dashboard
-  }
-  else if (role === 'admin') {
-    this.$router.push({ name: 'AdminDashboard' }); // Navigate to faculty dashboard
-  }
-},
-
+    navigateToLogin() {
+      this.$router.push('/login'); // Navigate to the login page
+    },
     scrollToAdmissions() {
       document.getElementById("admissions").scrollIntoView({ behavior: "smooth" });
     },

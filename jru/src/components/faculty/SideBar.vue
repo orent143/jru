@@ -10,7 +10,7 @@
             <!-- View Courses Section -->
             <li>
                 <i class="pi pi-book"></i>
-                <router-link to="/faculty-courses"><strong>View Courses</strong></router-link>
+                <router-link to="/faculty/courses"><strong>View Courses</strong></router-link>
             </li>
 
             <!-- View Calendar Section -->
@@ -27,9 +27,9 @@
                <i v-else class="pi pi-angle-right"></i>
             </li>
             <ul v-if="isTestsDropdownOpen" class="dropdown-menu">
-                <li><router-link to="/faculty-quizzes">Quiz</router-link></li>
-            <li><router-link to="/faculty-exams">Exam</router-link></li>
-            <li><router-link to="/faculty-assignments">Assignments</router-link></li>
+                <li><router-link to="/faculty/quizzes">Quiz</router-link></li>
+            <li><router-link to="/faculty/exams">Exam</router-link></li>
+            <li><router-link to="/faculty/assignments">Assignments</router-link></li>
             </ul>
         </ul>
     </aside>

@@ -56,92 +56,54 @@
 </template>
 
 <script>
-import Header from '../header.vue';
-import Sidebar from '../SideBar.vue';
+import axios from 'axios';
+import Header from "@/components/faculty/header.vue";
+import Sidebar from "@/components/faculty/SideBar.vue";
 
 export default {
-    components: {
-        Header,
-        Sidebar,
-    },
+  components: {
+    Header,
+    Sidebar
+  },
     data() {
         return {
-            teacher: { name: 'Professor Smith' },
-            searchQuery: '',
-            isSidebarCollapsed: false,
+            course: null,
+            assignments: [],
             showAddAssignmentModal: false,
-            courses: [
-                {
-                    id: 1,
-                    name: 'ITELECT4',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    assignments: [
-                        {
-                            id: 1,
-                            title: 'Programming Assignment 1',
-                            description: 'Create a simple calculator application',
-                            datePosted: '2024-02-01',
-                            dueDate: '2024-02-15',
-                            status: 'Open',
-                            points: 100,
-                            submissions: []
-                        },
-                        {
-                            id: 2,
-                            title: 'Database Design Project',
-                            description: 'Design a database schema for a library system',
-                            datePosted: '2024-02-03',
-                            dueDate: '2024-02-17',
-                            status: 'Open',
-                            points: 150,
-                            submissions: []
-                        }
-                    ]
-                }
-            ]
         };
     },
+    props: {
+        courseId: Number, // Ensure this is passed as a prop from the router or parent component
+    },
     computed: {
-        course() {
-            const courseId = parseInt(this.$route.params.courseId);
-            return this.courses.find(c => c.id === courseId) || null;
-        },
         upcomingAssignments() {
-            if (!this.course) return [];
-            const today = new Date();
-            return this.course.assignments
-                .filter(assignment => new Date(assignment.dueDate) > today)
-                .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-                .slice(0, 5);
+            // Filter assignments that have a due date and are upcoming
+            return this.assignments.filter(assignment => assignment.due_date && new Date(assignment.due_date) > new Date());
         }
     },
     methods: {
-        toggleSidebar() {
-            this.isSidebarCollapsed = !this.isSidebarCollapsed;
+        async fetchAssignments() {
+            try {
+                const response = await axios.get(`http://127.0.0.1:8000/api/assignments/${this.courseId}`);
+                this.course = { name: response.data.course_name, assignments: response.data.assignments };
+                this.assignments = response.data.assignments;
+            } catch (error) {
+                console.error("Error fetching assignments:", error);
+            }
         },
         navigateToAssignment(assignment) {
-            this.$router.push({
-                name: 'FacultyAssignmentDetails',
-                params: {
-                    courseId: this.$route.params.courseId,
-                    assignmentId: assignment.id.toString()
-                }
-            });
+            this.$router.push(`/assignment/${assignment.assignment_id}`);
         },
         addAssignment(newAssignment) {
-            this.course.assignments.push(newAssignment);
-            this.showAddAssignmentModal = false;
-        },
-        getStatusClass(status) {
-            return {
-                'status-open': status === 'Open',
-                'status-closed': status === 'Closed',
-                'status-graded': status === 'Graded'
-            };
+            this.assignments.push(newAssignment);
         }
+    },
+    mounted() {
+        this.fetchAssignments();
     }
 };
 </script>
+
 
 <style scoped>
 .course-content-container {

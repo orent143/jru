@@ -1,6 +1,6 @@
 <template>
   <div class="admin-layout">
-    <Header />
+    <Header :user="user" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
     <div class="content-wrapper">
       <SideBar :isCollapsed="isSidebarCollapsed" />
       <div class="main-content">
@@ -108,6 +108,9 @@ export default {
     }
   },
   methods: {
+    toggleSidebar() {
+      this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    },
     openAddUserModal() {
     this.showAddUserModal = true;
   },

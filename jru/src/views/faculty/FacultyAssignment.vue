@@ -7,34 +7,48 @@
                 <div class="assignments">
                     <div class="header">
                         <h1>Assignments</h1>
-                        <button @click="showCreateAssignmentForm = true" class="create-assignment-btn">Create Assignment</button>
                     </div>
-                    <div class="assignment-cards">
-                        <div v-for="assignment in assignments" :key="assignment.id" class="assignment-card" @click="startAssignment(assignment.id, assignment.courseId)">
-                            <div class="card-header">
-                                <h2>{{ assignment.courseName }}</h2>
-                                <p>{{ assignment.courseSection }}</p>
-                                <div class="card-actions">
-                                    <button @click.stop="editAssignment(assignment.id)"><i class="pi pi-pencil"></i></button>
-                                    <button @click.stop="deleteAssignment(assignment.id)"><i class="pi pi-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="assignment-details">
-                                <p>Due Date: {{ assignment.dueDate }}</p>
-                            </div>
-                        </div>
-                    </div>
+
+                    <!-- Show loading message -->
+                    <p v-if="loading">Loading assignments...</p>
+
+                    <!-- Show error message if request fails -->
+                    <p v-if="error" class="error">{{ error }}</p>
+
+                    <<div v-if="!loading && assignments.length" class="assignment-cards">
+    <div 
+        v-for="assignment in assignments" 
+        :key="assignment.assignment_id" 
+        class="assignment-card" 
+        @click="startAssignment(assignment.assignment_id, assignment.course_id)"
+    >
+        <div class="card-header">
+            <h2>{{ getCourseName(assignment.course_id) }} </h2>
+            <p>Section: {{ getCourseSection(assignment.course_id) }}</p>
+            
+        </div>
+        <div class="assignment-details">
+            <p><strong>Description:</strong> {{ assignment.description }}</p>
+        </div>
+    </div>
+</div>
+
+
                     <div v-if="showCreateAssignmentForm" class="modal">
                         <div class="modal-content">
                             <span class="close" @click="showCreateAssignmentForm = false">&times;</span>
                             <h2>Create Assignment</h2>
                             <form @submit.prevent="createAssignment" class="assignment-form">
-                                <label for="courseName">Course Name:</label>
-                                <input type="text" v-model="newAssignment.courseName" required>
-                                <label for="courseSection">Course Section:</label>
-                                <input type="text" v-model="newAssignment.courseSection" required>
+                                <label for="title">Assignment Title:</label>
+                                <input type="text" v-model="newAssignment.title" required>
                                 <label for="dueDate">Due Date:</label>
-                                <input type="date" v-model="newAssignment.dueDate" required>
+                                <input type="date" v-model="newAssignment.due_date" required>
+                                <label for="course">Select Course:</label>
+                                <select v-model="newAssignment.course_id" required>
+                                    <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
+                                        {{ course.name }} ({{ course.section }})
+                                    </option>
+                                </select>
                                 <button type="submit">Create</button>
                             </form>
                         </div>
@@ -46,67 +60,131 @@
 </template>
 
 <script>
+import axios from 'axios';
 import Header from '@/components/faculty/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
 
 export default {
-    name: 'FacultyAssignment',
     components: {
         Header,
-        SideBar,
+        SideBar
     },
     data() {
         return {
-            searchQuery: '',
-            student: {
-                name: 'John Doe',
-                id: '12345'
-            },
             isSidebarCollapsed: false,
-            courses: [
-                { id: 1, subject: 'ITELECT4', section: 'BSCS-3A', schedule: 'Mon 9-11 AM' },
-                { id: 2, subject: 'ITELECT4', section: 'BSCS-3B', schedule: 'Tue 10-12 AM' }
-            ],
-            assignments: [
-                { id: 1, courseId: 1, courseName: 'ITELECT4', courseSection: 'BSCS-3A', dueDate: '2022-12-31' },
-                { id: 2, courseId: 2, courseName: 'ITELECT4', courseSection: 'BSCS-3B', dueDate: '2022-12-31' }
-            ],
+            assignments: [],
+            courses: [],
+            loading: false,
+            error: null,
             showCreateAssignmentForm: false,
             newAssignment: {
-                courseName: '',
-                courseSection: '',
-                dueDate: null
-            }
+                title: '',
+                due_date: '',
+                course_id: null
+            },
+            user: null // Store logged-in user data
         };
     },
     methods: {
         toggleSidebar() {
             this.isSidebarCollapsed = !this.isSidebarCollapsed;
         },
-        createAssignment() {
-            const newId = this.assignments.length + 1;
-            const newCourseId = this.courses.length + 1; // Assuming you have a courses array
-            this.assignments.push({ id: newId, courseId: newCourseId, ...this.newAssignment });
-            this.newAssignment.courseName = '';
-            this.newAssignment.courseSection = '';
-            this.newAssignment.dueDate = null;
-            this.showCreateAssignmentForm = false;
+        async fetchAssignments() {
+            this.loading = true;
+            this.error = null;
+            
+            try {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    this.user = JSON.parse(storedUser);
+                }
+
+                if (!this.user || this.user.role !== 'faculty') {
+                    this.error = "Unauthorized access.";
+                    return;
+                }
+
+                const response = await axios.get(`http://127.0.0.1:8000/api/courses/?user_id=${this.user.user_id}`);
+                this.assignments = response.data;
+            } catch (err) {
+                this.error = 'Failed to fetch assignments.';
+            } finally {
+                this.loading = false;
+            }
         },
-        editAssignment(id) {
-            // Implement edit functionality
+        async fetchCourses() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await axios.get(`http://127.0.0.1:8000/api/courses/?user_id=${this.user.user_id}`);
+                this.courses = response.data;
+            } catch (err) {
+                this.error = 'Failed to fetch courses.';
+            } finally {
+                this.loading = false;
+            }
         },
-        deleteAssignment(id) {
-            this.assignments = this.assignments.filter(assignment => assignment.id !== id);
+        getCourseName(course_id) {
+        const course = this.courses.find(course => course.course_id === course_id);
+        return course ? course.course_name : 'Unknown Course';
+    },
+    getCourseSection(course_id) {
+        const course = this.courses.find(course => course.course_id === course_id);
+        return course ? course.section : 'Unknown Section';
+    },
+        async createAssignment() {
+            try {
+                if (!this.user) return;
+                
+                const response = await axios.post('http://127.0.0.1:8000/api/assignments/', {
+                    title: this.newAssignment.title,
+                    due_date: this.newAssignment.due_date,
+                    course_id: this.newAssignment.course_id,
+                    user_id: this.user.user_id
+                });
+                
+                this.assignments.push({ ...this.newAssignment, assignment_id: response.data.assignment_id });
+                this.showCreateAssignmentForm = false;
+                this.newAssignment = { title: '', due_date: '', course_id: null };
+            } catch (err) {
+                this.error = 'Failed to create assignment.';
+            }
+        },
+        async deleteAssignment(assignment_id) {
+            try {
+                if (!this.user) return;
+                
+                await axios.delete(`http://127.0.0.1:8000/api/assignments/${assignment_id}`, {
+                    params: { user_id: this.user.user_id }
+                });
+                
+                this.assignments = this.assignments.filter(assignment => assignment.assignment_id !== assignment_id);
+            } catch (err) {
+                this.error = 'Failed to delete assignment.';
+            }
+        },
+        async editAssignment(assignment_id) {
+            // Placeholder for edit function (modal or inline editing can be added)
+            console.log(`Edit assignment ${assignment_id}`);
         },
         startAssignment(assignmentId, courseId) {
             this.$router.push({ 
                 name: 'FacultyAssignmentContent', 
                 params: { assignmentId, courseId } 
             });
+        },
+        closeModal() {
+            this.showCreateAssignmentForm = false;
         }
+    },
+    mounted() {
+        this.fetchAssignments();
+        this.fetchCourses();
     }
 };
 </script>
+
 
 <style scoped>
 .assignment-container {
@@ -124,8 +202,12 @@ export default {
     flex-grow: 1;
     padding: 20px;
     background-color: #fff;
+    overflow-y: auto; /* Allow vertical scrolling if the content is too long */
+    max-height: 100vh; /* Make sure it doesn't overflow out of the screen */
 }
-
+.assignments {
+    margin-bottom: 5rem;
+}
 .header {
     display: flex;
     justify-content: space-between;
@@ -139,20 +221,20 @@ export default {
 
 .assignment-cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4rem;
+    grid-template-columns: repeat(3, 1fr); /* 3 items per row */
+    gap: 4rem; /* Adds space between cards */
 }
 
 .assignment-card {
     background-color: #D9D9D9ff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    width: 95%;
-    height: auto;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+  height: auto;
+  cursor: pointer; /* Change the cursor to a pointer to indicate the card is clickable */
+  transition: transform 0.2s, box-shadow 0.2s; /* Add a transition effect for hover */
 }
 
 .assignment-card:hover {
@@ -161,7 +243,7 @@ export default {
 }
 
 .card-header {
-    position: relative;
+    position: relative; /* Needed for absolute positioning of card actions */
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
@@ -179,7 +261,7 @@ export default {
 }
 
 .card-actions {
-    position: absolute;
+    position: absolute; /* Position the actions at the top-right corner */
     top: 10px;
     right: 10px;
     display: flex;
@@ -195,13 +277,9 @@ export default {
 .assignment-details {
     background-color: #F5F5F5;
     padding: 1rem;
-    padding-top: 0%;
-    border-radius: 8px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
+    border-radius: 0 0 8px 8px;
     display: flex;
     flex-direction: column;
-    min-height: 100px;
 }
 
 .assignment-details p {
@@ -218,6 +296,10 @@ export default {
     font-weight: 500;
 }
 
+.create-assignment-btn:hover {
+    background-color: #005bb5;
+}
+
 .modal {
     position: fixed;
     top: 0;
@@ -228,6 +310,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
 .modal-content {
@@ -235,13 +318,9 @@ export default {
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.459);
-    position: fixed;
-    right: 50%;
-    top: 50%;
-    transform: translate(50%, -50%);
     width: 400px;
     max-width: 100%;
-    z-index: 1000;
+    text-align: center;
 }
 
 .modal-content h2 {
@@ -266,7 +345,8 @@ export default {
     gap: 10px;
 }
 
-.assignment-form input {
+.assignment-form input,
+.assignment-form select {
     padding: 10px;
     font-size: 14px;
     border-radius: 12px;
@@ -284,6 +364,10 @@ export default {
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s;
+}
+
+.assignment-form button:hover {
+    background-color: #005bb5;
 }
 
 .close {

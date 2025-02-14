@@ -7,13 +7,19 @@
                 <div class="exams">
                     <div class="header">
                         <h1>Exams</h1>
-                        <button @click="showCreateExamForm = true" class="create-exam-btn">Create Exam</button>
                     </div>
-                    <div class="exam-cards">
-                        <div v-for="exam in exams" :key="exam.id" class="exam-card" @click="startExam(exam.id, exam.courseId)">
+
+                    <!-- Show loading message -->
+                    <p v-if="loading">Loading exams...</p>
+
+                    <!-- Show error message if request fails -->
+                    <p v-if="error" class="error">{{ error }}</p>
+
+                    <div v-if="!loading && exams.length" class="exam-cards">
+                        <div v-for="exam in exams" :key="exam.id" class="exam-card" @click="startExam(exam.id, exam.course_id)">
                             <div class="card-header">
-                                <h2>{{ exam.courseName }}</h2>
-                                <p>{{ exam.courseSection }}</p>
+                                <h2>{{ getCourseName(exam.course_id) }}</h2>
+                                <p>Section: {{ getCourseSection(exam.course_id) }}</p>
                                 <div class="card-actions">
                                     <button @click.stop="editExam(exam.id)"><i class="pi pi-pencil"></i></button>
                                     <button @click.stop="deleteExam(exam.id)"><i class="pi pi-trash"></i></button>
@@ -24,6 +30,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div v-if="showCreateExamForm" class="modal">
                         <div class="modal-content">
                             <span class="close" @click="showCreateExamForm = false">&times;</span>
@@ -46,64 +53,127 @@
 </template>
 
 <script>
+import axios from 'axios';
 import Header from '@/components/faculty/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
 
 export default {
-    name: 'FacultyExam',
     components: {
         Header,
-        SideBar,
+        SideBar
     },
     data() {
         return {
-            searchQuery: '',
-            student: {
-                name: 'John Doe',
-                id: '12345'
-            },
             isSidebarCollapsed: false,
-            courses: [
-                { id: 1, subject: 'Math', section: 'Section A', schedule: 'Mon 9-11 AM' },
-                { id: 2, subject: 'Science', section: 'Section B', schedule: 'Tue 10-12 AM' }
-            ],
-            exams: [
-                { id: 1, courseId: 1, courseName: 'Math', courseSection: 'Section A', duration: 30 },
-                { id: 2, courseId: 2, courseName: 'Science', courseSection: 'Section B', duration: 45 }
-            ],
+            exams: [],
+            courses: [],
+            loading: false,
+            error: null,
             showCreateExamForm: false,
             newExam: {
                 courseName: '',
                 courseSection: '',
-                duration: null
-            }
+                duration: ''
+            },
+            user: null // Store logged-in user data
         };
     },
     methods: {
         toggleSidebar() {
             this.isSidebarCollapsed = !this.isSidebarCollapsed;
         },
-        createExam() {
-            const newId = this.exams.length + 1;
-            const newCourseId = this.courses.length + 1; // Assuming you have a courses array
-            this.exams.push({ id: newId, courseId: newCourseId, ...this.newExam });
-            this.newExam.courseName = '';
-            this.newExam.courseSection = '';
-            this.newExam.duration = null;
-            this.showCreateExamForm = false;
+        async fetchExams() {
+            this.loading = true;
+            this.error = null;
+            
+            try {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    this.user = JSON.parse(storedUser);
+                }
+
+                if (!this.user || this.user.role !== 'faculty') {
+                    this.error = "Unauthorized access.";
+                    return;
+                }
+
+                const response = await axios.get(`http://127.0.0.1:8000/api/courses/?user_id=${this.user.user_id}`);
+                this.exams = response.data;
+            } catch (err) {
+                this.error = 'Failed to fetch exams.';
+            } finally {
+                this.loading = false;
+            }
         },
-        editExam(id) {
-            // Implement edit functionality
+        async fetchCourses() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await axios.get(`http://127.0.0.1:8000/api/courses/?user_id=${this.user.user_id}`);
+                this.courses = response.data;
+            } catch (err) {
+                this.error = 'Failed to fetch courses.';
+            } finally {
+                this.loading = false;
+            }
         },
-        deleteExam(id) {
-            this.exams = this.exams.filter(exam => exam.id !== id);
+        getCourseName(course_id) {
+            const course = this.courses.find(course => course.course_id === course_id);
+            return course ? course.course_name : 'Unknown Course';
+        },
+        getCourseSection(course_id) {
+            const course = this.courses.find(course => course.course_id === course_id);
+            return course ? course.section : 'Unknown Section';
+        },
+        async createExam() {
+            try {
+                if (!this.user) return;
+                
+                const response = await axios.post('http://127.0.0.1:8000/api/exams/', {
+                    courseName: this.newExam.courseName,
+                    courseSection: this.newExam.courseSection,
+                    duration: this.newExam.duration,
+                    user_id: this.user.user_id
+                });
+                
+                this.exams.push({ ...this.newExam, id: response.data.id });
+                this.showCreateExamForm = false;
+                this.newExam = { courseName: '', courseSection: '', duration: '' };
+            } catch (err) {
+                this.error = 'Failed to create exam.';
+            }
+        },
+        async deleteExam(exam_id) {
+            try {
+                if (!this.user) return;
+                
+                await axios.delete(`http://127.0.0.1:8000/api/exams/${exam_id}`, {
+                    params: { user_id: this.user.user_id }
+                });
+                
+                this.exams = this.exams.filter(exam => exam.id !== exam_id);
+            } catch (err) {
+                this.error = 'Failed to delete exam.';
+            }
+        },
+        async editExam(exam_id) {
+            // Placeholder for edit function (modal or inline editing can be added)
+            console.log(`Edit exam ${exam_id}`);
         },
         startExam(examId, courseId) {
             this.$router.push({ 
                 name: 'FacultyExamContent', 
                 params: { examId, courseId } 
             });
+        },
+        closeModal() {
+            this.showCreateExamForm = false;
         }
+    },
+    mounted() {
+        this.fetchExams();
+        this.fetchCourses();
     }
 };
 </script>
@@ -124,8 +194,12 @@ export default {
     flex-grow: 1;
     padding: 20px;
     background-color: #fff;
+    overflow-y: auto; /* Allow vertical scrolling if the content is too long */
+    max-height: 100vh; /* Make sure it doesn't overflow out of the screen */
 }
-
+.exams {
+margin-bottom: 5rem;
+}
 .header {
     display: flex;
     justify-content: space-between;

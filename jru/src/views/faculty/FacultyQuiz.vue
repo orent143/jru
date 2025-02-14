@@ -9,11 +9,18 @@
                         <h1>Quizzes</h1>
                         <button @click="showCreateQuizForm = true" class="create-quiz-btn">Create Quiz</button>
                     </div>
-                    <div class="quiz-cards">
+
+                    <!-- Show loading message -->
+                    <p v-if="loading">Loading quizzes...</p>
+
+                    <!-- Show error message if request fails -->
+                    <p v-if="error" class="error">{{ error }}</p>
+
+                    <div v-if="!loading && quizzes.length" class="quiz-cards">
                         <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-card" @click="startQuiz(quiz.id, quiz.course_id)">
                             <div class="card-header">
-                                <h2>{{ quiz.course_id }}</h2>
-                                <p>{{ quiz.course_id }}</p>
+                                <h2>{{ getCourseName(quiz.course_id) }}</h2>
+                                <p>Section: {{ getCourseSection(quiz.course_id) }}</p>
                                 <div class="card-actions">
                                     <button @click.stop="editQuiz(quiz.id)"><i class="pi pi-pencil"></i></button>
                                     <button @click.stop="deleteQuiz(quiz.id)"><i class="pi pi-trash"></i></button>
@@ -24,14 +31,15 @@
                             </div>
                         </div>
                     </div>
+
                     <div v-if="showCreateQuizForm" class="modal">
                         <div class="modal-content">
                             <span class="close" @click="showCreateQuizForm = false">&times;</span>
                             <h2>Create Quiz</h2>
                             <form @submit.prevent="createQuiz" class="quiz-form">
-                                <label for="title">Course Name:</label>
+                                <label for="courseName">Course Name:</label>
                                 <input type="text" v-model="newQuiz.courseName" required>
-                                <label for="subject">Course Section:</label>
+                                <label for="courseSection">Course Section:</label>
                                 <input type="text" v-model="newQuiz.courseSection" required>
                                 <label for="duration">Duration (minutes):</label>
                                 <input type="number" v-model="newQuiz.duration" required>
@@ -64,9 +72,9 @@ export default {
             error: null,
             showCreateQuizForm: false,
             newQuiz: {
-                title: '',
-                duration: '',
-                course_id: null
+                courseName: '',
+                courseSection: '',
+                duration: ''
             },
             user: null // Store logged-in user data
         };
@@ -91,7 +99,7 @@ export default {
                 }
 
                 const response = await axios.get(`http://127.0.0.1:8000/api/courses/?user_id=${this.user.user_id}`);
-                this.assignments = response.data;
+                this.quizzes = response.data;
             } catch (err) {
                 this.error = 'Failed to fetch quizzes.';
             } finally {
@@ -124,15 +132,15 @@ export default {
                 if (!this.user) return;
                 
                 const response = await axios.post('http://127.0.0.1:8000/api/quizzes/', {
-                    title: this.newQuiz.title,
+                    courseName: this.newQuiz.courseName,
+                    courseSection: this.newQuiz.courseSection,
                     duration: this.newQuiz.duration,
-                    course_id: this.newQuiz.course_id,
                     user_id: this.user.user_id
                 });
                 
-                this.quizzes.push({ ...this.newQuiz, quiz_id: response.data.quiz_id });
+                this.quizzes.push({ ...this.newQuiz, id: response.data.id });
                 this.showCreateQuizForm = false;
-                this.newQuiz = { title: '', duration: '', course_id: null };
+                this.newQuiz = { courseName: '', courseSection: '', duration: '' };
             } catch (err) {
                 this.error = 'Failed to create quiz.';
             }
@@ -145,7 +153,7 @@ export default {
                     params: { user_id: this.user.user_id }
                 });
                 
-                this.quizzes = this.quizzes.filter(quiz => quiz.quiz_id !== quiz_id);
+                this.quizzes = this.quizzes.filter(quiz => quiz.id !== quiz_id);
             } catch (err) {
                 this.error = 'Failed to delete quiz.';
             }
@@ -188,6 +196,12 @@ export default {
     flex-grow: 1;
     padding: 20px;
     background-color: #fff;
+    overflow-y: auto; /* Allow vertical scrolling if the content is too long */
+    max-height: 100vh; /* Make sure it doesn't overflow out of the screen */
+}
+
+.quizzes {
+margin-bottom: 5rem;
 }
 
 .header {

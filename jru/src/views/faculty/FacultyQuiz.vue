@@ -7,7 +7,6 @@
                 <div class="quizzes">
                     <div class="header">
                         <h1>Quizzes</h1>
-                        <button @click="showCreateQuizForm = true" class="create-quiz-btn">Create Quiz</button>
                     </div>
 
                     <!-- Show loading message -->

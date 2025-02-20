@@ -1,106 +1,119 @@
 <template>
-    <div class="course-content-container">
-        <Header :teacher="teacher" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-        <div class="course-content">
-            <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-            <main class="course-main" v-if="course">
-                <div class="course-header">
-                    <h2>{{ course.name }} - Assignments</h2>
-                    <button class="add-btn" @click="showAddAssignmentModal = true">+</button>
-                    <div class="course-sections">
-                        <ul>
-                            <li v-for="section in course.sections" :key="section.id">
-                                {{ section.name }}
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+  <div class="course-content-container">
+      <Header :teacher="teacher" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
+      <div class="course-content">
+          <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+          <main class="course-main" v-if="course">
+              <div class="course-header">
+                  <h2>{{ course.name }} - Assignments</h2>
+                  <button class="add-btn" @click="showAddAssignmentModal = true">+</button>
+                  <div class="course-sections">
+                      <ul>
+                          <li v-for="section in course.sections" :key="section.id">
+                              {{ section.name }}
+                          </li>
+                      </ul>
+                  </div>
+              </div>
 
-                <div class="course-hero">
-                    <div class="content-left">
-                        <section class="assignments-summary">
-                            <h3>Due Soon:</h3>
-                            <div class="assignment-list">
-                                <ul>
-                                    <li v-for="assignment in upcomingAssignments" :key="assignment.id">
-                                        {{ assignment.title }} - Due: {{ assignment.dueDate }}
-                                    </li>
-                                </ul>
-                            </div>
-                        </section>
-                    </div>
+              <div class="course-hero">
+                  <div class="content-left">
+                      <section class="assignments-summary">
+                          <h3>Due Soon:</h3>
+                          <div class="assignment-list">
+                              <ul>
+                                  <li v-for="assignment in upcomingAssignments" :key="assignment.id">
+                                      {{ assignment.title }} - Due: {{ formatDate(assignment.due_date) }}
+                                  </li>
+                              </ul>
+                          </div>
+                      </section>
+                  </div>
 
-                    <div class="content-right">
-                        <section class="assignments">
-                            <h3>All Assignments</h3>
-                            <div class="material-cards">
-                                <div v-for="assignment in course.assignments" :key="assignment.id" 
-                                     class="material-card" @click="navigateToAssignment(assignment)">
-                                    <div class="card-header">
-                                        <i class="pi pi-file-edit"></i>
-                                        <h4>Teacher posted a new assignment:</h4>
-                                        {{ assignment.title }}
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </main>
-        </div>
+                  <div class="content-right">
+                      <section class="assignments">
+                          <h3>All Assignments</h3>
+                          <div class="material-cards">
+                              <div v-for="assignment in assignments" :key="assignment.id" 
+                                   class="material-card" @click="navigateToAssignment(assignment)">
+                                  <div class="card-header">
+                                      <i class="pi pi-file-edit"></i>
+                                      <h4>Teacher posted a new assignment:</h4>
+                                      {{ assignment.title }}
+                                  </div>
+                              </div>
+                          </div>
+                      </section>
+                  </div>
+              </div>
+          </main>
+      </div>
 
-        <AddAssignmentModal v-if="showAddAssignmentModal" 
-                            @close="showAddAssignmentModal = false" 
-                            @add-assignment="addAssignment" />
-    </div>
+      <AddAssignmentModal 
+          v-if="showAddAssignmentModal" 
+          @close="showAddAssignmentModal = false" 
+          @add-assignment="addAssignment"
+          :courseId="courseId" 
+      />
+  </div>
 </template>
 
 <script>
 import axios from 'axios';
 import Header from "@/components/faculty/header.vue";
 import Sidebar from "@/components/faculty/SideBar.vue";
+import AddAssignmentModal from "@/components/faculty/Assignment/AddAssignmentModal.vue";
 
 export default {
   components: {
-    Header,
-    Sidebar
+      Header,
+      Sidebar,
+      AddAssignmentModal
   },
-    data() {
-        return {
-            course: null,
-            assignments: [],
-            showAddAssignmentModal: false,
-        };
-    },
-    props: {
-        courseId: Number, // Ensure this is passed as a prop from the router or parent component
-    },
-    computed: {
-        upcomingAssignments() {
-            // Filter assignments that have a due date and are upcoming
-            return this.assignments.filter(assignment => assignment.due_date && new Date(assignment.due_date) > new Date());
-        }
-    },
-    methods: {
-        async fetchAssignments() {
-            try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/assignments/${this.courseId}`);
-                this.course = { name: response.data.course_name, assignments: response.data.assignments };
-                this.assignments = response.data.assignments;
-            } catch (error) {
-                console.error("Error fetching assignments:", error);
-            }
-        },
-        navigateToAssignment(assignment) {
-            this.$router.push(`/assignment/${assignment.assignment_id}`);
-        },
-        addAssignment(newAssignment) {
-            this.assignments.push(newAssignment);
-        }
-    },
-    mounted() {
-        this.fetchAssignments();
-    }
+  data() {
+      return {
+          course: null,
+          assignments: [],
+          showAddAssignmentModal: false,
+      };
+  },
+  props: {
+      courseId: Number, // Ensure this is passed as a prop from the router or parent component
+  },
+  computed: {
+      upcomingAssignments() {
+          return this.assignments.filter(assignment => 
+              assignment.due_date && new Date(assignment.due_date) > new Date()
+          );
+      }
+  },
+  methods: {
+      async fetchAssignments() {
+          try {
+              const response = await axios.get(`http://127.0.0.1:8000/api/assignments/${this.courseId}`);
+              this.course = { 
+                  name: response.data.course_name, 
+                  assignments: response.data.assignments, 
+                  sections: response.data.sections || [] 
+              };
+              this.assignments = response.data.assignments;
+          } catch (error) {
+              console.error("Error fetching assignments:", error);
+          }
+      },
+      navigateToAssignment(assignment) {
+          this.$router.push(`/assignment/${assignment.id}`);
+      },
+      addAssignment(newAssignment) {
+          this.assignments.push(newAssignment);
+      },
+      formatDate(dateString) {
+          return new Date(dateString).toLocaleDateString();
+      }
+  },
+  mounted() {
+      this.fetchAssignments();
+  }
 };
 </script>
 

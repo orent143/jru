@@ -1,149 +1,103 @@
 <template>
     <div class="course-content-container">
-        <Header :teacher="teacher" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-        <div class="course-content">
-            <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-            <main class="course-main" v-if="course">
-                <div class="course-header">
-                    <h2>{{ course.name }} - Examinations</h2>
-                    <button class="add-btn" @click="showAddExamModal = true">+</button>
-                    <div class="course-sections">
-                        <ul>
-                            <li v-for="section in course.sections" :key="section.id">
-                                {{ section.name }}
-                            </li>
-                        </ul>
+      <Header :teacher="teacher" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
+      <div class="course-content">
+        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+        <main class="course-main" v-if="course">
+          <div class="course-header">
+            <h2>{{ course.name }} - Examinations</h2>
+            <button class="add-btn" @click="showAddExamModal = true">+</button>
+          </div>
+  
+          <div class="course-hero">
+            <div class="content-left">
+              <section class="exam-summary">
+                <h3>Upcoming Exams:</h3>
+                <ul>
+                  <li v-for="exam in upcomingExams" :key="exam.exam_id">
+                    {{ exam.title }} - Date: {{ exam.exam_date }}
+                  </li>
+                </ul>
+              </section>
+            </div>
+  
+            <div class="content-right">
+              <section class="exams">
+                <h3>All Examinations</h3>
+                <div class="material-cards">
+                  <div v-for="exam in course.exams" :key="exam.exam_id"
+                       class="material-card" @click="navigateToExam(exam)">
+                    <div class="card-header">
+                      <i class="pi pi-file"></i>
+                      <h4>{{ exam.title }}</h4>
                     </div>
+                    <div class="card-status">
+                      Scheduled for: {{ exam.exam_date }}
+                    </div>
+                  </div>
                 </div>
-
-                <div class="course-hero">
-                    <div class="content-left">
-                        <section class="exam-summary">
-                            <h3>Upcoming Exams:</h3>
-                            <div class="exam-list">
-                                <ul>
-                                    <li v-for="exam in upcomingExams" :key="exam.id">
-                                        {{ exam.title }} - Date: {{ exam.scheduleDate }}
-                                    </li>
-                                </ul>
-                            </div>
-                        </section>
-                    </div>
-
-                    <div class="content-right">
-                        <section class="exams">
-                            <h3>All Examinations</h3>
-                            <div class="material-cards">
-                                <div v-for="exam in course.exams" :key="exam.id" 
-                                     class="material-card" @click="navigateToExam(exam)">
-                                    <div class="card-header">
-                                        <i class="pi pi-file"></i>
-                                        <h4>{{ exam.title }}</h4>
-                                    </div>
-                                    <div class="card-status" :class="getStatusClass(exam.status)">
-                                        {{ exam.status }}
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </main>
-        </div>
-
-        <AddExamModal v-if="showAddExamModal" 
-                      @close="showAddExamModal = false" 
-                      @add-exam="addExam" />
+              </section>
+            </div>
+          </div>
+        </main>
+      </div>
+  
+      <!-- ✅ Add Exam Modal -->
+      <AddExamModal v-if="showAddExamModal"
+                    :courseId="this.$route.params.courseId"
+                    @close="showAddExamModal = false"
+                    @add-exam="fetchExams" />
     </div>
-</template>
-
-<script>
-import Header from '../header.vue';
-import Sidebar from '../SideBar.vue';
-
-export default {
-    components: {
-        Header,
-        Sidebar,
-    },
+  </template>
+  
+  <script>
+  import Header from '../header.vue';
+  import Sidebar from '../SideBar.vue';
+  import AddExamModal from '@/components/faculty/Exam/AddExamModal.vue';
+  import axios from 'axios';
+  
+  export default {
+    components: { Header, Sidebar, AddExamModal },
     data() {
-        return {
-            teacher: { name: 'Professor Smith' },
-            searchQuery: '',
-            isSidebarCollapsed: false,
-            showAddExamModal: false,
-            courses: [
-                {
-                    id: 1,
-                    name: 'ITELECT4',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    exams: [
-                        {
-                            id: 1,
-                            title: 'Midterm Examination',
-                            description: 'Coverage: Chapters 1-7',
-                            scheduleDate: '2024-03-15',
-                            duration: 180,
-                            status: 'Scheduled',
-                            totalPoints: 100,
-                            submissions: []
-                        },
-                        {
-                            id: 2,
-                            title: 'Preliminary Examination',
-                            description: 'Fundamentals and Basic Concepts',
-                            scheduleDate: '2024-02-25',
-                            duration: 120,
-                            status: 'Draft',
-                            totalPoints: 100,
-                            submissions: []
-                        }
-                    ]
-                }
-            ]
-        };
+      return {
+        teacher: {},
+        searchQuery: '',
+        isSidebarCollapsed: false,
+        course: null,
+        showAddExamModal: false,
+        upcomingExams: [],
+      };
     },
-    computed: {
-        course() {
-            const courseId = parseInt(this.$route.params.courseId);
-            return this.courses.find(c => c.id === courseId) || null;
-        },
-        upcomingExams() {
-            if (!this.course) return [];
-            const today = new Date();
-            return this.course.exams
-                .filter(exam => new Date(exam.scheduleDate) > today)
-                .sort((a, b) => new Date(a.scheduleDate) - new Date(b.scheduleDate))
-                .slice(0, 5);
-        }
+    async created() {
+      await this.fetchExams();
     },
     methods: {
-        toggleSidebar() {
-            this.isSidebarCollapsed = !this.isSidebarCollapsed;
-        },
-        navigateToExam(exam) {
-            this.$router.push({
-                name: 'FacultyExamDetails',
-                params: {
-                    courseId: this.$route.params.courseId,
-                    examId: exam.id.toString()
-                }
-            });
-        },
-        addExam(newExam) {
-            this.course.exams.push(newExam);
-            this.showAddExamModal = false;
-        },
-        getStatusClass(status) {
-            return {
-                'status-scheduled': status === 'Scheduled',
-                'status-draft': status === 'Draft',
-                'status-completed': status === 'Completed'
-            };
+      async fetchExams() {
+        try {
+          const courseId = this.$route.params.courseId; // Get course ID from route
+          const response = await axios.get(`http://127.0.0.1:8000/api/exams/${courseId}`);
+          
+          this.course = {
+            name: response.data.course_name,
+            exams: response.data.exams,
+          };
+  
+          // Filter upcoming exams (example: filter by future dates)
+          this.upcomingExams = this.course.exams.filter(exam => {
+            return new Date(exam.exam_date) >= new Date();
+          });
+        } catch (error) {
+          console.error('Error fetching exams:', error);
         }
-    }
-};
-</script>
+      },
+      navigateToExam(exam) {
+        this.$router.push(`/exam/${exam.exam_id}`);
+      },
+    },
+  };
+  </script>
+  
+
 
 <style scoped>
 .course-content-container {

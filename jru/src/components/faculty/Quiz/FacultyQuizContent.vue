@@ -89,8 +89,11 @@ export default {
       }
     },
     navigateToQuiz(quiz) {
-      this.$router.push(`/quiz/${quiz.quiz_id}`);
-    },
+    this.$router.push({ 
+      name: 'FacultyQuizDetails', 
+      params: { courseId: this.$route.params.courseId, quizId: quiz.quiz_id } 
+    });
+  },
   },
 };
 </script>

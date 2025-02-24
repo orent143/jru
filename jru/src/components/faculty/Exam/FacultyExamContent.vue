@@ -91,8 +91,12 @@
         }
       },
       navigateToExam(exam) {
-        this.$router.push(`/exam/${exam.exam_id}`);
-      },
+  this.$router.push({ 
+    name: 'FacultyExamDetails', 
+    params: { examId: exam.exam_id } 
+  });
+},
+
     },
   };
   </script>

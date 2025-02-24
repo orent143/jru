@@ -20,11 +20,11 @@
                             <div class="quiz-meta">
                                 <span class="posted-date">
                                     <i class="pi pi-calendar"></i> 
-                                    Posted: {{ formatDate(currentQuiz.datePosted) }}
+                                    Posted: {{ formatDate(currentQuiz.quiz_date) }}
                                 </span>
-                                <span class="due-date">
+                                <span class="duration">
                                     <i class="pi pi-clock"></i>
-                                    Due: {{ formatDate(currentQuiz.dueDate) }}
+                                    Duration: {{ currentQuiz.duration_minutes }} mins
                                 </span>
                             </div>
                         </div>
@@ -34,51 +34,13 @@
                             <p>{{ currentQuiz.description }}</p>
                         </div>
 
-                        <div class="content-section uploaded-materials">
+                        <div class="content-section uploaded-materials" v-if="currentQuiz.file_path">
                             <h2>Quiz Materials</h2>
                             <div class="materials-list">
-                                <div v-for="file in currentQuiz.attachments" 
-                                         :key="file.id"
-                                         class="material-item"
-                                         @click="downloadAttachment(file)">
-                                    <i :class="getFileIcon(file.type)"></i>
-                                    <span>{{ file.name }}</span>
+                                <div class="material-item" @click="downloadAttachment(currentQuiz.file_path)">
+                                    <i class="pi pi-file"></i>
+                                    <span>{{ getFileName(currentQuiz.file_path) }}</span>
                                     <i class="pi pi-download"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="side-content">
-                        <div class="content-section submission-stats">
-                            <h2>Submission Status</h2>
-                            <div class="stats">
-                                <div class="stat-item">
-                                    <span>Submitted</span>
-                                    <span class="count">{{ submittedCount }}/{{ totalStudents }}</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span>Pending</span>
-                                    <span class="count">{{ pendingCount }}/{{ totalStudents }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="content-section student-submissions">
-                            <h2>Student Submissions</h2>
-                            <div class="submission-list">
-                                <div v-for="submission in studentSubmissions" 
-                                         :key="submission.studentId"
-                                         class="submission-item">
-                                    <div class="student-info">
-                                        <span>{{ submission.studentName }}</span>
-                                        <span :class="['status', submission.status.toLowerCase()]">
-                                            {{ submission.status }}
-                                        </span>
-                                    </div>
-                                    <div class="submission-date" v-if="submission.submittedDate">
-                                        Submitted: {{ formatDate(submission.submittedDate) }}
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -95,115 +57,59 @@
 <script>
 import Header from '../header.vue';
 import Sidebar from '../SideBar.vue';
+import axios from 'axios';
 
 export default {
-    name: 'FacultyQuizDetails',
-    components: {
-        Header,
-        Sidebar
-    },
+    components: { Header, Sidebar },
     data() {
         return {
-            teacher: { name: 'Professor Smith' },
-            searchQuery: '',
-            isSidebarCollapsed: false,
-            student: {
-                name: 'John Doe',
-                id: '12345'
-            },
-            courses: [
-                {
-                    id: 1,
-                    name: 'ITELECT4',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    quizzes: [
-                        {
-                            id: 1,
-                            title: 'Quiz 1',
-                            description: 'This is the first quiz.',
-                            datePosted: '2024-02-01',
-                            dueDate: '2024-02-15',
-                            attachments: [
-                                { id: 1, name: 'quiz_specs.pdf', type: 'pdf' }
-                            ],
-                            studentSubmissions: [
-                                {
-                                    studentId: 1,
-                                    studentName: 'John Smith',
-                                    status: 'Submitted',
-                                    submittedDate: '2024-02-14'
-                                },
-                                {
-                                    studentId: 2,
-                                    studentName: 'Alice Johnson',
-                                    status: 'Pending',
-                                    submittedDate: null
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+            currentQuiz: null
         };
     },
-    computed: {
-        currentQuiz() {
-            if (!this.course) return null;
-            const quizId = parseInt(this.$route.params.quizId);
-            return this.course.quizzes.find(q => q.id === quizId) || null;
-        },
-        course() {
-            const courseId = parseInt(this.$route.params.courseId);
-            return this.courses.find(c => c.id === courseId);
-        },
-        submittedCount() {
-            return this.currentQuiz?.studentSubmissions.filter(s => s.status === 'Submitted').length || 0;
-        },
-        pendingCount() {
-            return this.currentQuiz?.studentSubmissions.filter(s => s.status === 'Pending').length || 0;
-        },
-        totalStudents() {
-            return this.currentQuiz?.studentSubmissions.length || 0;
-        },
-        studentSubmissions() {
-            return this.currentQuiz?.studentSubmissions || [];
-        }
-    },
     methods: {
-        toggleSidebar() {
-            this.isSidebarCollapsed = !this.isSidebarCollapsed;
+        async fetchQuiz() {
+    try {
+        const courseId = this.$route.params.courseId; // Get course_id from route
+        const quizId = parseInt(this.$route.params.quizId); // Get quiz_id from route
+
+        const response = await axios.get(`http://127.0.0.1:8000/api/quizzes/${courseId}`);
+        const quizzes = response.data.quizzes;
+
+        // Find the specific quiz by ID
+        this.currentQuiz = quizzes.find(quiz => quiz.quiz_id === quizId) || null;
+
+        if (!this.currentQuiz) {
+            console.error("Quiz not found in course");
+        }
+    } catch (error) {
+        console.error("Error fetching quiz:", error);
+    }
+}
+,
+        formatDate(date) {
+            if (!date) return 'N/A';
+            return new Date(date).toLocaleDateString();
+        },
+        getFileName(filePath) {
+            return filePath ? filePath.split('\\').pop() : 'Unknown File';
+        },
+        downloadAttachment(filePath) {
+            window.open(`/${filePath}`, '_blank');
         },
         goBack() {
-            if (this.course) {
-                this.$router.push({
-                    name: 'FacultyQuiz',
-                    params: { courseId: this.$route.params.courseId }
-                });
-            } else {
-                this.$router.push({ name: 'Home' });
-            }
-        },
-        formatDate(date) {
-            return new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        },
-        getFileIcon(type) {
-            const icons = {
-                pdf: 'pi pi-file-pdf',
-                docx: 'pi pi-file-word',
-                zip: 'pi pi-file-export',
-                default: 'pi pi-file'
-            };
-            return icons[type] || icons.default;
-        },
+    this.$router.push({ 
+        name: 'FacultyQuizContent', 
+        params: { courseId: this.$route.params.courseId } 
+    });
+},
         editQuiz() {
-            // Implement edit quiz logic
-        },
-        downloadAttachment(file) {
-            // Implement download logic
+            this.$router.push(`/edit-quiz/${this.currentQuiz.quiz_id}`);
+        }
+    },
+    mounted() {
+        const quizId = this.$route.params.quizId;
+        if (quizId) {
+            this.fetchQuiz(quizId);
         }
     }
 };

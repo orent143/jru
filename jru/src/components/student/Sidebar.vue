@@ -15,18 +15,17 @@
         <i v-else class="pi pi-angle-right"></i>
       </li>
       <ul v-if="isCoursesDropdownOpen" class="dropdown-menu">
-        <li v-for="course in courses" :key="course.id">
+        <li v-for="course in courses" :key="course.course_id">
           <!-- Dynamic Link to Course Content -->
-          <router-link :to="`/course/${course.id}`">{{ course.name }}</router-link>
+          <router-link :to="`/student/course/${course.course_id}`">{{ course.course_name }}</router-link>
         </li>
       </ul>
 
       <!-- Assignments Section -->
       <li>
-  <i class="pi pi-pen-to-square"></i>
-  <router-link to="/assignment-content"><strong>Assignments</strong></router-link>
-</li>
-
+        <i class="pi pi-pen-to-square"></i>
+        <router-link to="/student/assignment-dashboard"><strong>Assignments</strong></router-link>
+      </li>
 
       <!-- Tests Dropdown -->
       <li @click="toggleTestsDropdown" :aria-expanded="isTestsDropdownOpen.toString()">
@@ -37,17 +36,17 @@
       </li>
       <ul v-if="isTestsDropdownOpen" class="dropdown-menu">
         <li>
-          <router-link to="/quiz-dashboard">Quiz</router-link>
+          <router-link to="/student/quiz-dashboard">Quiz</router-link>
         </li>
         <li>
-          <router-link to="/exam-dashboard">Exam</router-link>
+          <router-link to="/student/exam-dashboard">Exam</router-link>
         </li>
       </ul>
 
       <!-- Grades Section -->
       <li>
         <i class="pi pi-graduation-cap"></i>
-        <router-link to="/grade-dashboard"><strong>Grades</strong></router-link>
+        <router-link to="/student/grade-dashboard"><strong>Grades</strong></router-link>
       </li>
 
       <!-- Profile Section -->

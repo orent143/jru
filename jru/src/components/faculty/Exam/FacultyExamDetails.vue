@@ -20,11 +20,7 @@
                             <div class="exam-meta">
                                 <span class="posted-date">
                                     <i class="pi pi-calendar"></i> 
-                                    Posted: {{ formatDate(currentExam.datePosted) }}
-                                </span>
-                                <span class="due-date">
-                                    <i class="pi pi-clock"></i>
-                                    Due: {{ formatDate(currentExam.dueDate) }}
+                                    Posted: {{ formatDate(currentExam.exam_date) }}
                                 </span>
                             </div>
                         </div>
@@ -34,51 +30,13 @@
                             <p>{{ currentExam.description }}</p>
                         </div>
 
-                        <div class="content-section uploaded-materials">
+                        <div class="content-section uploaded-materials" v-if="currentExam.file_path">
                             <h2>Exam Materials</h2>
                             <div class="materials-list">
-                                <div v-for="file in currentExam.attachments" 
-                                     :key="file.id"
-                                     class="material-item"
-                                     @click="downloadAttachment(file)">
-                                    <i :class="getFileIcon(file.type)"></i>
-                                    <span>{{ file.name }}</span>
+                                <div class="material-item" @click="downloadAttachment(currentExam.file_path)">
+                                    <i class="pi pi-file"></i>
+                                    <span>{{ getFileName(currentExam.file_path) }}</span>
                                     <i class="pi pi-download"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="side-content">
-                        <div class="content-section submission-stats">
-                            <h2>Submission Status</h2>
-                            <div class="stats">
-                                <div class="stat-item">
-                                    <span>Submitted</span>
-                                    <span class="count">{{ submittedCount }}/{{ totalStudents }}</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span>Pending</span>
-                                    <span class="count">{{ pendingCount }}/{{ totalStudents }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="content-section student-submissions">
-                            <h2>Student Submissions</h2>
-                            <div class="submission-list">
-                                <div v-for="submission in studentSubmissions" 
-                                     :key="submission.studentId"
-                                     class="submission-item">
-                                    <div class="student-info">
-                                        <span>{{ submission.studentName }}</span>
-                                        <span :class="['status', submission.status.toLowerCase()]">
-                                            {{ submission.status }}
-                                        </span>
-                                    </div>
-                                    <div class="submission-date" v-if="submission.submittedDate">
-                                        Submitted: {{ formatDate(submission.submittedDate) }}
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -93,6 +51,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 import Header from '../header.vue';
 import Sidebar from '../SideBar.vue';
 
@@ -104,110 +63,59 @@ export default {
     },
     data() {
         return {
-            teacher: { name: 'Professor Smith' },
-            searchQuery: '',
-            isSidebarCollapsed: false,
-            student: {
-                name: 'John Doe',
-                id: '12345'
-            },
-            courses: [
-                {
-                    id: 1,
-                    name: 'ITELECT4',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    exams: [
-                        {
-                            id: 1,
-                            title: 'Exam 1',
-                            description: 'This is the first exam.',
-                            datePosted: '2024-02-01',
-                            dueDate: '2024-02-15',
-                            attachments: [
-                                { id: 1, name: 'exam_specs.pdf', type: 'pdf' }
-                            ],
-                            studentSubmissions: [
-                                {
-                                    studentId: 1,
-                                    studentName: 'John Smith',
-                                    status: 'Submitted',
-                                    submittedDate: '2024-02-14'
-                                },
-                                {
-                                    studentId: 2,
-                                    studentName: 'Alice Johnson',
-                                    status: 'Pending',
-                                    submittedDate: null
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+            courseId: this.$route.params.courseId,
+            examId: this.$route.params.examId,
+            currentExam: null
         };
     },
-    computed: {
-        currentExam() {
-            if (!this.course) return null;
-            const examId = parseInt(this.$route.params.examId);
-            return this.course.exams.find(e => e.id === examId) || null;
-        },
-        course() {
-            const courseId = parseInt(this.$route.params.courseId);
-            return this.courses.find(c => c.id === courseId);
-        },
-        submittedCount() {
-            return this.currentExam?.studentSubmissions.filter(s => s.status === 'Submitted').length || 0;
-        },
-        pendingCount() {
-            return this.currentExam?.studentSubmissions.filter(s => s.status === 'Pending').length || 0;
-        },
-        totalStudents() {
-            return this.currentExam?.studentSubmissions.length || 0;
-        },
-        studentSubmissions() {
-            return this.currentExam?.studentSubmissions || [];
-        }
-    },
     methods: {
-        toggleSidebar() {
-            this.isSidebarCollapsed = !this.isSidebarCollapsed;
-        },
-        goBack() {
-            if (this.course) {
-                this.$router.push({
-                    name: 'FacultyExam',
-                    params: { courseId: this.$route.params.courseId }
-                });
-            } else {
-                this.$router.push({ name: 'Home' });
+        async fetchExam() {
+            try {
+                const courseId = this.$route.params.courseId;
+                const examId = parseInt(this.$route.params.examId);
+
+                if (!courseId || !examId) {
+                    console.error("Missing courseId or examId in route params.");
+                    return;
+                }
+
+                const response = await axios.get(`http://127.0.0.1:8000/api/exams/${courseId}`);
+                console.log("Fetched exams:", response.data);
+
+                this.currentExam = response.data.exams.find(exam => exam.exam_id === examId);
+
+                if (!this.currentExam) {
+                    console.error("Exam not found for given examId:", examId);
+                }
+            } catch (error) {
+                console.error('Error fetching exam:', error);
             }
         },
-        formatDate(date) {
-            return new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
+        goBack() {
+            this.$router.push({ 
+                name: 'FacultyExamContent', 
+                params: { courseId: this.$route.params.courseId } 
             });
         },
-        getFileIcon(type) {
-            const icons = {
-                pdf: 'pi pi-file-pdf',
-                docx: 'pi pi-file-word',
-                zip: 'pi pi-file-export',
-                default: 'pi pi-file'
-            };
-            return icons[type] || icons.default;
+        formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString();
+        },
+        getFileName(filePath) {
+            return filePath ? filePath.split('/').pop() : 'Unknown File';
+        },
+        downloadAttachment(filePath) {
+            window.open(filePath, '_blank');
         },
         editExam() {
-            // Implement edit exam logic
-        },
-        downloadAttachment(file) {
-            // Implement download logic
+            this.$router.push(`/edit-exam/${this.currentExam.exam_id}`);
         }
+    },
+    mounted() {
+        this.fetchExam();
     }
 };
 </script>
+
 
 <style scoped>
 .course-content-container {

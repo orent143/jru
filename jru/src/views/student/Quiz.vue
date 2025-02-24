@@ -4,22 +4,11 @@
         <div class="quiz-content">
             <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
             <main class="quiz-main">
-                <!-- Header for Quizzes -->
                 <div class="course-header">
                     <h2>Quizzes: <span>{{ totalQuizzes }}</span></h2>
-                    
-                    <!-- Course Sections -->
-                    <div class="course-sections">
-                        <ul>
-                            <li v-for="section in courses[0].sections" :key="section.id">
-                                {{ section.name }}
-                            </li>
-                        </ul>
-                    </div>
                 </div>
 
                 <div class="course-cards">
-                    <!-- Looping through courses -->
                     <div 
                         class="course-card" 
                         v-for="course in courses" 
@@ -29,17 +18,18 @@
                     >
                         <div class="course-info">
                             <i class="pi pi-file-edit course-logo"></i>
-                            <h4 class="course-name">{{ course.name }}</h4>
+                            <h4 class="course-name">{{ course.course_name }}</h4>
                         </div>
 
-                        <!-- Display first quiz -->
                         <div class="quizzes-list" v-if="course.quizzes.length > 0">
                             <ul>
                                 <li 
-                                    @click.stop="navigateToQuizDetail(course.id, course.quizzes[0].id)"
+                                    v-for="quiz in course.quizzes" 
+                                    :key="quiz.id"
+                                    @click.stop="navigateToQuizDetail(course.id, quiz.quiz_id)"
                                 >
-                                    <span class="quiz-name">{{ course.quizzes[0].name }}</span>
-                                    <span class="quiz-date">Date: {{ course.quizzes[0].date }}</span>
+                                    <span class="quiz-name">{{ quiz.title }}</span>
+                                    <span class="quiz-date">Date: {{ quiz.quiz_date }}</span>
                                 </li>
                             </ul>
                         </div>
@@ -50,9 +40,11 @@
     </div>
 </template>
 
+
 <script>
 import Header from '@/components/student/Header.vue';
 import Sidebar from '@/components/student/Sidebar.vue';
+import axios from 'axios';
 
 export default {
     components: {
@@ -61,35 +53,8 @@ export default {
     },
     data() {
         return {
-            student: {
-                name: 'John Doe',
-            },
-            courses: [
-                {
-                    id: 1,
-                    name: 'ITELECT4',
-                    sections: [{ id: 1, name: 'BSCS-3A' }], 
-                    quizzes: [
-                        { id: 1, name: 'Quiz 1', date: '2024-03-01' },
-                        { id: 2, name: 'Quiz 2', date: '2024-05-01' }
-                    ]
-                },
-                {
-                    id: 2,
-                    name: 'GEC010',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    quizzes: [
-                        { id: 1, name: 'Quiz 1', date: '2024-03-10' }
-                    ]
-                },
-                {
-                    id: 3,
-                    name: "CC321",
-                    quizzes: [
-                        { id: 1, name: "Quiz 1", date: "2024-03-15" },
-                    ],
-                },
-            ],
+            student: null,
+            courses: [],
             searchQuery: '',
             isSidebarCollapsed: false,
         };
@@ -104,21 +69,44 @@ export default {
             this.isSidebarCollapsed = !this.isSidebarCollapsed;
         },
 
+        async fetchQuizzes() {
+            try {
+                const storedUser = JSON.parse(localStorage.getItem('user'));
+                if (storedUser && storedUser.role === 'student') {
+                    this.student = storedUser;
+                    const response = await axios.get(`http://127.0.0.1:8000/api/student_courses/${this.student.user_id}`);
+                    const courses = response.data.courses;
+
+                    for (const course of courses) {
+                        const quizResponse = await axios.get(`http://127.0.0.1:8000/api/student_quizzes/${this.student.user_id}/${course.course_id}`);
+                        course.quizzes = quizResponse.data.quizzes;
+                    }
+
+                    this.courses = courses;
+                } else {
+                    console.error("User is not authenticated or not a student");
+                }
+            } catch (error) {
+                console.error('Error fetching quizzes:', error);
+            }
+        },
+
         navigateToQuizzes(courseId) {
-            // Navigate to the QuizContent page for the selected course
             this.$router.push({
-                name: 'QuizContent', 
+                name: 'QuizContent',
                 params: { courseId: courseId.toString() }
             });
         },
 
         navigateToQuizDetail(courseId, quizId) {
-            // Navigate to the quiz details page
             this.$router.push({
-                name: 'QuizDetails', 
+                name: 'QuizDetails',
                 params: { courseId: courseId.toString(), quizId: quizId.toString() }
             });
         }
+    },
+    mounted() {
+        this.fetchQuizzes();
     }
 };
 </script>

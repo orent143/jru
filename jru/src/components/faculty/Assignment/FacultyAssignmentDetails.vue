@@ -1,213 +1,117 @@
 <template>
     <div class="course-content-container">
-        <Header :teacher="teacher" :searchQuery="searchQuery" :student="student" @toggleSidebar="toggleSidebar" />
-        <div class="course-content">
-            <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-            <div class="assignment-detail-container" v-if="currentAssignment">
-                <button class="back-btn" @click="goBack">
-                    <i class="pi pi-arrow-left"></i> Back to Assignments
-                </button>
-
-                <div class="assignment-content">
-                    <div class="main-content">
-                        <div class="assignment-header">
-                            <div class="header-content">
-                                <h1>{{ currentAssignment.title }}</h1>
-                                <button class="edit-btn" @click="editAssignment">
-                                    <i class="pi pi-pencil"></i> Edit
-                                </button>
-                            </div>
-                            <div class="assignment-meta">
-                                <span class="posted-date">
-                                    <i class="pi pi-calendar"></i> 
-                                    Posted: {{ formatDate(currentAssignment.datePosted) }}
-                                </span>
-                                <span class="due-date">
-                                    <i class="pi pi-clock"></i>
-                                    Due: {{ formatDate(currentAssignment.dueDate) }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="content-section instructions">
-                            <h2>Instructions</h2>
-                            <p>{{ currentAssignment.description }}</p>
-                        </div>
-
-                        <div class="content-section uploaded-materials">
-                            <h2>Assignment Materials</h2>
-                            <div class="materials-list">
-                                <div v-for="file in currentAssignment.attachments" 
-                                         :key="file.id"
-                                         class="material-item"
-                                         @click="downloadAttachment(file)">
-                                    <i :class="getFileIcon(file.type)"></i>
-                                    <span>{{ file.name }}</span>
-                                    <i class="pi pi-download"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="side-content">
-                        <div class="content-section submission-stats">
-                            <h2>Submission Status</h2>
-                            <div class="stats">
-                                <div class="stat-item">
-                                    <span>Submitted</span>
-                                    <span class="count">{{ submittedCount }}/{{ totalStudents }}</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span>Pending</span>
-                                    <span class="count">{{ pendingCount }}/{{ totalStudents }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="content-section student-submissions">
-                            <h2>Student Submissions</h2>
-                            <div class="submission-list">
-                                <div v-for="submission in studentSubmissions" 
-                                         :key="submission.studentId"
-                                         class="submission-item">
-                                    <div class="student-info">
-                                        <span>{{ submission.studentName }}</span>
-                                        <span :class="['status', submission.status.toLowerCase()]">
-                                            {{ submission.status }}
-                                        </span>
-                                    </div>
-                                    <div class="submission-date" v-if="submission.submittedDate">
-                                        Submitted: {{ formatDate(submission.submittedDate) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+      <Header :teacher="teacher" :searchQuery="searchQuery" :student="student" @toggleSidebar="toggleSidebar" />
+      <div class="course-content">
+        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+        <div class="assignment-detail-container" v-if="currentAssignment">
+          <button class="back-btn" @click="goBack">
+            <i class="pi pi-arrow-left"></i> Back to Assignments
+          </button>
+  
+          <div class="assignment-content">
+            <div class="main-content">
+              <div class="assignment-header">
+                <div class="header-content">
+                  <h1>{{ currentAssignment.title }}</h1>
+                  <button class="edit-btn" @click="editAssignment">
+                    <i class="pi pi-pencil"></i> Edit
+                  </button>
                 </div>
+                <div class="assignment-meta">
+                  <!-- If you have a created_at field, use it; otherwise, adjust as needed -->
+                  <span class="posted-date">
+                    <i class="pi pi-calendar"></i> Posted: {{ formatDate(currentAssignment.created_at) }}
+                  </span>
+                  <span class="due-date">
+                    <i class="pi pi-clock"></i> Due: {{ formatDate(currentAssignment.due_date) }}
+                  </span>
+                </div>
+              </div>
+  
+              <div class="content-section instructions">
+                <h2>Instructions</h2>
+                <p>{{ currentAssignment.description }}</p>
+              </div>
+  
+              <div class="content-section uploaded-materials" v-if="currentAssignment.file_url">
+                <h2>Assignment Materials</h2>
+                <div class="materials-list">
+                  <div class="material-item" @click="downloadAttachment(currentAssignment.file_url)">
+                    <i class="pi pi-file"></i>
+                    <span>{{ getFileName(currentAssignment.file_url) }}</span>
+                    <i class="pi pi-download"></i>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div v-else>
-                <p>No assignment found.</p>
-            </div>
+            <!-- Optionally, include side content such as submission stats -->
+          </div>
         </div>
+        <div v-else>
+          <p>No assignment found.</p>
+        </div>
+      </div>
     </div>
-</template>
-
-<script>
-import Header from '../header.vue';
-import Sidebar from '../SideBar.vue';
-
-export default {
+  </template>
+  
+  <script>
+  import axios from 'axios';
+  import Header from '../header.vue';
+  import Sidebar from '../SideBar.vue';
+  
+  export default {
     name: 'FacultyAssignmentDetails',
     components: {
-        Header,
-        Sidebar
+      Header,
+      Sidebar
     },
     data() {
-        return {
-            teacher: { name: 'Professor Smith' },
-            searchQuery: '',
-            isSidebarCollapsed: false,
-            student: {
-                name: 'John Doe',
-                id: '12345'
-            },
-            courses: [
-                {
-                    id: 1,
-                    name: 'ITELECT4',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    assignments: [
-                        {
-                            id: 1,
-                            title: 'Programming Assignment 1',
-                            description: 'Create a simple calculator application',
-                            datePosted: '2024-02-01',
-                            dueDate: '2024-02-15',
-                            attachments: [
-                                { id: 1, name: 'assignment_specs.pdf', type: 'pdf' }
-                            ],
-                            studentSubmissions: [
-                                {
-                                    studentId: 1,
-                                    studentName: 'John Smith',
-                                    status: 'Submitted',
-                                    submittedDate: '2024-02-14'
-                                },
-                                {
-                                    studentId: 2,
-                                    studentName: 'Alice Johnson',
-                                    status: 'Pending',
-                                    submittedDate: null
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        };
-    },
-    computed: {
-        currentAssignment() {
-            if (!this.course) return null;
-            const assignmentId = parseInt(this.$route.params.assignmentId);
-            return this.course.assignments.find(a => a.id === assignmentId) || null;
-        },
-        course() {
-            const courseId = parseInt(this.$route.params.courseId);
-            return this.courses.find(c => c.id === courseId);
-        },
-        submittedCount() {
-            return this.currentAssignment?.studentSubmissions.filter(s => s.status === 'Submitted').length || 0;
-        },
-        pendingCount() {
-            return this.currentAssignment?.studentSubmissions.filter(s => s.status === 'Pending').length || 0;
-        },
-        totalStudents() {
-            return this.currentAssignment?.studentSubmissions.length || 0;
-        },
-        studentSubmissions() {
-            return this.currentAssignment?.studentSubmissions || [];
-        }
+      return {
+        teacher: {},
+        searchQuery: '',
+        isSidebarCollapsed: false,
+        courses: [],
+        currentAssignment: null
+      };
     },
     methods: {
-        toggleSidebar() {
-            this.isSidebarCollapsed = !this.isSidebarCollapsed;
-        },
-        goBack() {
-            if (this.course) {
-                this.$router.push({
-                    name: 'FacultyAssignment',
-                    params: { courseId: this.$route.params.courseId }
-                });
-            } else {
-                this.$router.push({ name: 'Home' });
-            }
-        },
-        formatDate(date) {
-            return new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        },
-        getFileIcon(type) {
-            const icons = {
-                pdf: 'pi pi-file-pdf',
-                docx: 'pi pi-file-word',
-                zip: 'pi pi-file-export',
-                default: 'pi pi-file'
-            };
-            return icons[type] || icons.default;
-        },
-        editAssignment() {
-            // Implement edit assignment logic
-        },
-        downloadAttachment(file) {
-            // Implement download logic
+      async fetchAssignment() {
+        try {
+          // Extract assignmentId from route params. Ensure your route is configured with assignmentId
+          const assignmentId = this.$route.params.assignmentId;
+          const response = await axios.get(`http://127.0.0.1:8000/api/assignments/item/${assignmentId}`);
+          this.currentAssignment = response.data;
+        } catch (error) {
+          console.error("Error fetching assignment:", error);
         }
+      },
+      formatDate(date) {
+        return date ? new Date(date).toLocaleDateString() : 'N/A';
+      },
+      getFileName(fileUrl) {
+        return fileUrl ? fileUrl.split('/').pop() : 'Unknown File';
+      },
+      downloadAttachment(fileUrl) {
+        window.open(fileUrl, '_blank');
+      },
+      goBack() {
+        // Navigate back to the assignment list for the current course.
+        this.$router.push({ 
+          name: 'FacultyAssignmentContent', 
+          params: { courseId: this.$route.params.courseId } 
+        });
+      },
+      editAssignment() {
+        // Navigate to the assignment edit page.
+        this.$router.push(`/edit-assignment/${this.currentAssignment.assignment_id}`);
+      }
+    },
+    mounted() {
+      this.fetchAssignment();
     }
-};
-</script>
+  };
+  </script>
+  
 <style scoped>
 .course-content-container {
     display: flex;

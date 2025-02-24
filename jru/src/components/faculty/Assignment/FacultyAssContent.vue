@@ -15,27 +15,29 @@
                       </ul>
                   </div>
               </div>
-
+  
               <div class="course-hero">
                   <div class="content-left">
                       <section class="assignments-summary">
                           <h3>Due Soon:</h3>
                           <div class="assignment-list">
                               <ul>
-                                  <li v-for="assignment in upcomingAssignments" :key="assignment.id">
+                                  <li v-for="assignment in upcomingAssignments" :key="assignment.assignment_id">
                                       {{ assignment.title }} - Due: {{ formatDate(assignment.due_date) }}
                                   </li>
                               </ul>
                           </div>
                       </section>
                   </div>
-
+  
                   <div class="content-right">
                       <section class="assignments">
                           <h3>All Assignments</h3>
                           <div class="material-cards">
-                              <div v-for="assignment in assignments" :key="assignment.id" 
-                                   class="material-card" @click="navigateToAssignment(assignment)">
+                              <div v-for="assignment in assignments" 
+                                   :key="assignment.assignment_id" 
+                                   class="material-card" 
+                                   @click="navigateToAssignment(assignment)">
                                   <div class="card-header">
                                       <i class="pi pi-file-edit"></i>
                                       <h4>Teacher posted a new assignment:</h4>
@@ -48,7 +50,7 @@
               </div>
           </main>
       </div>
-
+  
       <AddAssignmentModal 
           v-if="showAddAssignmentModal" 
           @close="showAddAssignmentModal = false" 
@@ -65,6 +67,7 @@ import Sidebar from "@/components/faculty/SideBar.vue";
 import AddAssignmentModal from "@/components/faculty/Assignment/AddAssignmentModal.vue";
 
 export default {
+  name: 'FacultyAssignmentContent',
   components: {
       Header,
       Sidebar,
@@ -74,11 +77,19 @@ export default {
       return {
           course: null,
           assignments: [],
+          // Provide courses as an empty array to satisfy the Sidebar component
+          courses: [],
           showAddAssignmentModal: false,
+          teacher: {},
+          searchQuery: '',
+          isSidebarCollapsed: false
       };
   },
   props: {
-      courseId: Number, // Ensure this is passed as a prop from the router or parent component
+      courseId: {
+          type: Number,
+          required: true
+      }
   },
   computed: {
       upcomingAssignments() {
@@ -102,7 +113,11 @@ export default {
           }
       },
       navigateToAssignment(assignment) {
-          this.$router.push(`/assignment/${assignment.id}`);
+          // Navigate using assignment.assignment_id
+          this.$router.push({ 
+              name: 'FacultyAssignmentDetails', 
+              params: { assignmentId: assignment.assignment_id } 
+          });
       },
       addAssignment(newAssignment) {
           this.assignments.push(newAssignment);

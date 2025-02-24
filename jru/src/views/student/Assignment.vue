@@ -9,7 +9,7 @@
           <h2>Assignments: <span>{{ totalAssignments }}</span></h2>
           
           <!-- Course Sections -->
-          <div class="course-sections">
+          <div class="course-sections" v-if="courses.length">
             <ul>
               <li v-for="section in courses[0].sections" :key="section.id">
                 {{ section.name }}
@@ -23,23 +23,23 @@
           <div 
             class="course-card" 
             v-for="course in courses" 
-            :key="course.id" 
-            @click="navigateToAssignments(course.id)" 
+            :key="course.course_id" 
+            @click="navigateToAssignments(course.course_id)" 
             :class="{ 'has-assignments': course.assignments.length > 0 }"
           >
             <div class="course-info">
               <i class="pi pi-file-edit course-logo"></i>
-              <h4 class="course-name">{{ course.name }}</h4>
+              <h4 class="course-name">{{ course.course_name }}</h4>
             </div>
 
             <!-- Display first assignment -->
             <div class="assignments-list" v-if="course.assignments.length > 0">
               <ul>
                 <li 
-                  @click.stop="navigateToAssignmentDetail(course.id, course.assignments[0].id)"
+                  @click.stop="navigateToAssignmentDetail(course.course_id, course.assignments[0].assignment_id)"
                 >
-                  <span class="assignment-name">{{ course.assignments[0].name }}</span>
-                  <span class="assignment-due-date">Due: {{ course.assignments[0].dueDate }}</span>
+                  <span class="assignment-name">{{ course.assignments[0].title }}</span>
+                  <span class="assignment-due-date">Due: {{ course.assignments[0].due_date }}</span>
                 </li>
               </ul>
             </div>
@@ -50,10 +50,10 @@
   </div>
 </template>
 
-
 <script>
 import Header from '@/components/student/Header.vue';
 import Sidebar from '@/components/student/Sidebar.vue';
+import axios from 'axios';
 
 export default {
   components: {
@@ -62,37 +62,8 @@ export default {
   },
   data() {
     return {
-      student: {
-        name: 'John Doe',
-      },
-      courses: [
-        {
-          id: 1,
-          name: 'ITELECT4',
-          sections: [{ id: 1, name: 'BSCS-3A' }], 
-          assignments: [
-            { id: 1, name: 'Assignment 1', dueDate: '2024-02-01' },
-            { id: 1, name: 'Assignment 1', dueDate: '2024-02-01' },
-            { id: 1, name: 'Assignment 1', dueDate: '2024-02-01' }
-
-          ]
-        },
-        {
-          id: 2,
-          name: 'GEC010',
-          sections: [{ id: 1, name: 'BSCS-3A' }],
-          assignments: [
-            { id: 1, name: 'Case Study Analysis', dueDate: '2024-02-10' }
-          ]
-        },
-        {
-          id: 3,
-          name: "CC321",
-          assignments: [
-            { id: 1, name: "Pattern Implementation", dueDate: "2024-02-15", completed: false },
-          ],
-        },
-      ],
+      student: null,
+      courses: [],
       searchQuery: '',
       isSidebarCollapsed: false,
     };
@@ -107,25 +78,48 @@ export default {
       this.isSidebarCollapsed = !this.isSidebarCollapsed;
     },
 
+    async fetchCourses() {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser && storedUser.role === 'student') {
+          this.student = storedUser;
+          const response = await axios.get(`http://127.0.0.1:8000/api/student_courses/${this.student.user_id}`);
+          const courses = response.data.courses;
+
+          // Fetch assignments for each course
+          for (const course of courses) {
+            const assignmentsResponse = await axios.get(`http://127.0.0.1:8000/api/student_assignments/${this.student.user_id}/${course.course_id}`);
+            course.assignments = assignmentsResponse.data.assignments;
+          }
+
+          this.courses = courses;
+        } else {
+          console.error("User is not authenticated or not a student");
+        }
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
+    },
+
     navigateToAssignments(courseId) {
-      // Navigate to the AssignmentContent page for the selected course
       this.$router.push({
         name: 'AssignmentContent', 
         params: { courseId: courseId.toString() }
       });
     },
 
-    navigateToAssignmentDetail(courseId) {
-      // Navigate to the assignment details page
+    navigateToAssignmentDetail(courseId, assignmentId) {
       this.$router.push({
-        name: 'AssignmentContent', 
-        params: { courseId: courseId.toString() }
+        name: 'AssignmentDetail', 
+        params: { courseId: courseId.toString(), assignmentId: assignmentId.toString() }
       });
     }
+  },
+  mounted() {
+    this.fetchCourses();
   }
 };
 </script>
-
 
 <style scoped>
 .dashboard-container {

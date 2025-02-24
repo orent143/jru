@@ -1,6 +1,6 @@
 <template>
   <div class="admin-layout">
-    <Header :user="user" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
+    <Header :user="user" :searchQuery="searchQuery" @update:searchQuery="searchQuery = $event" @toggleSidebar="toggleSidebar" />
     <div class="content-wrapper">
       <SideBar :isCollapsed="isSidebarCollapsed" />
       <div class="main-content">
@@ -13,7 +13,6 @@
           </div>
 
           <div class="filters">
-            <input type="text" v-model="searchQuery" placeholder="Search users..." />
             <select v-model="roleFilter">
               <option value="">All Roles</option>
               <option value="student">Student</option>
@@ -42,13 +41,12 @@
                   <td>{{ user.role }}</td>
                   <td>{{ formatDate(user.created_at) }}</td>
                   <td>
-                    <button class="action-btn edit"@click="editUser(user)">
-                <i class="pi pi-pencil"></i>
-              </button>
-<button class="action-btn delete" @click="confirmDelete(user.user_id)">
-  <i class="pi pi-trash"></i>
-</button>
-
+                    <button class="action-btn edit" @click="editUser(user)">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button class="action-btn delete" @click="confirmDelete(user.user_id)">
+                      <i class="pi pi-trash"></i>
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -112,11 +110,11 @@ export default {
       this.isSidebarCollapsed = !this.isSidebarCollapsed;
     },
     openAddUserModal() {
-    this.showAddUserModal = true;
-  },
-  closeAddUserModal() {
-    this.showAddUserModal = false;
-  },
+      this.showAddUserModal = true;
+    },
+    closeAddUserModal() {
+      this.showAddUserModal = false;
+    },
     async fetchUsers() {
       try {
         const response = await axios.get('http://127.0.0.1:8000/api/users/');
@@ -133,14 +131,6 @@ export default {
       this.selectedUser = { ...user }; // Clone the user object
       this.showEditUserModal = true;
     },
-    closeAddUserModal() {
-      this.showAddUserModal = false;
-    },
-// In your UserManagement.vue component
-editUser(user) {
-    this.selectedUser = { ...user }; // Make sure the user object is passed with the correct ID
-    this.showEditUserModal = true;
-},
     closeEditUserModal() {
       this.showEditUserModal = false;
       this.selectedUser = null;
@@ -163,20 +153,7 @@ editUser(user) {
   },
   mounted() {
     this.fetchUsers();
-  },
-  watch: {
-  user: {
-    handler(newUser) {
-      console.log("Received user data:", newUser); // Log user data received by the component
-      if (newUser && newUser.user_id) {
-        this.formData = { ...newUser };
-      } else {
-        console.error("Invalid user data", newUser);
-      }
-    },
-    immediate: true
   }
-},
 };
 </script>
 

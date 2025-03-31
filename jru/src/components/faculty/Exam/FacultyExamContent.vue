@@ -1,107 +1,103 @@
 <template>
-    <div class="course-content-container">
-      <Header :teacher="teacher" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-      <div class="course-content">
-        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-        <main class="course-main" v-if="course">
-          <div class="course-header">
-            <h2>{{ course.name }} - Examinations</h2>
-            <button class="add-btn" @click="showAddExamModal = true">+</button>
+  <div class="course-content-container">
+    <Header :teacher="teacher" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
+    <div class="course-content">
+      <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+      <main class="course-main" v-if="course">
+        <div class="course-header">
+          <h2>{{ course.name }} - Examinations</h2>
+          <button class="add-btn" @click="showAddExamModal = true">+</button>
+        </div>
+
+        <div class="course-hero">
+          <div class="content-left">
+            <section class="exam-summary">
+              <h3>Upcoming Exams:</h3>
+              <ul>
+                <li v-for="exam in upcomingExams" :key="exam.exam_id">
+                  {{ exam.title }} - Date: {{ exam.exam_date }}
+                </li>
+              </ul>
+            </section>
           </div>
-  
-          <div class="course-hero">
-            <div class="content-left">
-              <section class="exam-summary">
-                <h3>Upcoming Exams:</h3>
-                <ul>
-                  <li v-for="exam in upcomingExams" :key="exam.exam_id">
-                    {{ exam.title }} - Date: {{ exam.exam_date }}
-                  </li>
-                </ul>
-              </section>
-            </div>
-  
-            <div class="content-right">
-              <section class="exams">
-                <h3>All Examinations</h3>
-                <div class="material-cards">
-                  <div v-for="exam in course.exams" :key="exam.exam_id"
-                       class="material-card" @click="navigateToExam(exam)">
-                    <div class="card-header">
-                      <i class="pi pi-file"></i>
-                      <h4>{{ exam.title }}</h4>
-                    </div>
-                    <div class="card-status">
-                      Scheduled for: {{ exam.exam_date }}
-                    </div>
+
+          <div class="content-right">
+            <section class="exams">
+              <h3>All Examinations</h3>
+              <div class="material-cards">
+                <div v-for="exam in course.exams" :key="exam.exam_id" class="material-card" @click="navigateToExam(exam)">
+                  <div class="card-header">
+                    <i class="pi pi-file"></i>
+                    <h4>{{ exam.title }}</h4>
+                  </div>
+                  <div class="card-status">
+                    Scheduled for: {{ exam.exam_date }}
                   </div>
                 </div>
-              </section>
-            </div>
+              </div>
+            </section>
           </div>
-        </main>
-      </div>
-  
-      <!-- ✅ Add Exam Modal -->
-      <AddExamModal v-if="showAddExamModal"
-                    :courseId="this.$route.params.courseId"
-                    @close="showAddExamModal = false"
-                    @add-exam="fetchExams" />
+        </div>
+      </main>
     </div>
-  </template>
-  
-  <script>
-  import Header from '../header.vue';
-  import Sidebar from '../SideBar.vue';
-  import AddExamModal from '@/components/faculty/Exam/AddExamModal.vue';
-  import axios from 'axios';
-  
-  export default {
-    components: { Header, Sidebar, AddExamModal },
-    data() {
-      return {
-        teacher: {},
-        searchQuery: '',
-        isSidebarCollapsed: false,
-        course: null,
-        showAddExamModal: false,
-        upcomingExams: [],
-      };
-    },
-    async created() {
-      await this.fetchExams();
-    },
-    methods: {
-      async fetchExams() {
-        try {
-          const courseId = this.$route.params.courseId; // Get course ID from route
-          const response = await axios.get(`http://127.0.0.1:8000/api/exams/${courseId}`);
-          
-          this.course = {
-            name: response.data.course_name,
-            exams: response.data.exams,
-          };
-  
-          // Filter upcoming exams (example: filter by future dates)
-          this.upcomingExams = this.course.exams.filter(exam => {
-            return new Date(exam.exam_date) >= new Date();
-          });
-        } catch (error) {
-          console.error('Error fetching exams:', error);
-        }
-      },
-      navigateToExam(exam) {
-  this.$router.push({ 
-    name: 'FacultyExamDetails', 
-    params: { examId: exam.exam_id } 
-  });
-},
 
-    },
-  };
-  </script>
-  
+    <!-- ✅ Add Exam Modal -->
+    <AddExamModal v-if="showAddExamModal"
+                  :courseId="this.$route.params.courseId"
+                  @close="showAddExamModal = false"
+                  @add-exam="fetchExams" />
+  </div>
+</template>
 
+<script>
+import Header from '../header.vue';
+import Sidebar from '../SideBar.vue';
+import AddExamModal from '@/components/faculty/Exam/AddExamModal.vue';
+import axios from 'axios';
+
+export default {
+  components: { Header, Sidebar, AddExamModal },
+  data() {
+    return {
+      teacher: {},
+      searchQuery: '',
+      isSidebarCollapsed: false,
+      course: null,
+      showAddExamModal: false,
+      upcomingExams: [],
+    };
+  },
+  async created() {
+    await this.fetchExams();
+  },
+  methods: {
+    async fetchExams() {
+      try {
+        const courseId = this.$route.params.courseId; // Get course ID from route
+        const response = await axios.get(`http://127.0.0.1:8000/api/exams/exams/${courseId}`);
+
+        this.course = {
+          name: response.data.course_name,
+          exams: response.data.exams,
+        };
+
+        // Filter upcoming exams (example: filter by future dates)
+        this.upcomingExams = this.course.exams.filter(exam => {
+          return new Date(exam.exam_date) >= new Date();
+        });
+      } catch (error) {
+        console.error('Error fetching exams:', error);
+      }
+    },
+    navigateToExam(exam) {
+      this.$router.push({ 
+        name: 'FacultyExamDetails', 
+        params: { examId: exam.exam_id } 
+      });
+    },
+  },
+};
+</script>
 
 <style scoped>
 .course-content-container {
@@ -122,6 +118,7 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    background-color: #fff;
 }
 
 /* Course Header */

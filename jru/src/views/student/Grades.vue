@@ -105,6 +105,8 @@ export default {
 .content {
     flex: 1;
     padding: 20px;
+    background-color: #fff;
+
     overflow-y: auto; /* Enable vertical scrolling for the content */
     height: calc(100vh - 50px); /* Adjust height considering the header */
 }

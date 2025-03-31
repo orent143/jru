@@ -1,331 +1,205 @@
 <template>
     <div class="exam-details-container">
-        <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-        <div class="exam-detail">
-            <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-            <div class="exam-detail-container" v-if="currentExam">
-                <button class="back-btn" @click="goBack">
-                    <i class="pi pi-arrow-left"></i> Back to Course
-                </button>
-
-                <div class="exam-content">
-                    <div class="main-content">
-                        <div class="exam-header">
-                            <div class="header-content">
-                                <h1>{{ currentExam.name }}</h1>
-                                <div class="exam-meta">
-                                    <span class="posted-date">
-                                        <i class="pi pi-calendar"></i>
-                                        Posted: {{ formatDate(currentExam.datePosted) }}
-                                    </span>
-                                    <span class="due-date">
-                                        <i class="pi pi-clock"></i>
-                                        Due: {{ formatDate(currentExam.dueDate) }}
-                                    </span>
-                                    <span class="status" :class="currentExam.status.toLowerCase()">
-                                        {{ currentExam.status }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="content-section instructions">
-                            <h2>Instructions</h2>
-                            <div class="instruction-content">
-                                <p>{{ currentExam.description }}</p>
-                                <div class="attachments">
-                                    <h3>Attachments</h3>
-                                    <div v-for="file in currentExam.attachments" :key="file.id" class="attachment-item" @click="downloadAttachment(file)">
-                                        <i :class="getFileIcon(file.type)"></i>
-                                        <span>{{ file.name }}</span>
-                                        <i class="pi pi-download" v-if="file.type !== 'link'"></i>
-                                        <i class="pi pi-link" v-if="file.type === 'link'"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="side-content">
-                        <div class="content-section submission">
-                            <h2>Your Work</h2>
-                            <div class="submission-area">
-                                <div class="submission-status">
-                                    <div class="status-indicator" :class="currentExam.status.toLowerCase()">
-                                        {{ currentExam.status }}
-                                    </div>
-                                </div>
-                                <div class="submission-actions">
-                                    <button class="upload-btn primary">
-                                        <i class="pi pi-upload"></i> Add or create
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="content-section comments">
-                            <h2>Class Comments</h2>
-                            <div class="comments-section">
-                                <div class="comment-input">
-                                    <input type="text" v-model="newComment" placeholder="Add class comment..." @keyup.enter="addComment" />
-                                    <button class="send-btn" @click="addComment">
-                                        <i class="pi pi-send"></i>
-                                    </button>
-                                </div>
-                                <div class="comments-list">
-                                    <div v-for="comment in currentExam.comments" :key="comment.id" class="comment">
-                                        <img :src="comment.authorAvatar" :alt="comment.author" />
-                                        <div class="comment-content">
-                                            <div class="comment-header">
-                                                <h4>{{ comment.author }}</h4>
-                                                <span class="comment-date">{{ formatDate(comment.date) }}</span>
-                                            </div>
-                                            <p>{{ comment.text }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+      <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
+  
+      <div class="exam-detail">
+        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+  
+        <div class="exam-detail-container" v-if="currentExam">
+          <button class="back-btn" @click="goBack">
+            <i class="pi pi-arrow-left"></i> Back to Course
+          </button>
+  
+          <div class="exam-content">
+            <div class="main-content">
+              <div class="exam-header">
+                <h1>{{ currentExam.title }}</h1>
+                <div class="exam-meta">
+                  <span class="posted-date">
+                    <i class="pi pi-calendar"></i> Posted: {{ formatDate(currentExam.exam_date) }}
+                  </span>
                 </div>
+              </div>
+  
+              <div class="content-section instructions">
+                <h2>Instructions</h2>
+                <p>{{ currentExam.description }}</p>
+  
+                <!-- Attachments Section -->
+                <div v-if="currentExam.file_url || currentExam.external_link" class="attachments">
+                  <h3>Attachments</h3>
+  
+                  <!-- Local File Attachment -->
+                  <div v-if="currentExam.file_url" class="attachment-item" @click="downloadFile(currentExam.file_url)">
+                    <i class="pi pi-file"></i>
+                    <span>{{ getFileName(currentExam.file_url) }}</span>
+                    <i class="pi pi-download"></i>
+                  </div>
+  
+                  <!-- External Link -->
+                  <div v-if="currentExam.external_link" class="attachment-item">
+                    <i class="pi pi-link"></i>
+                    <a :href="currentExam.external_link" target="_blank">{{ getFileName(currentExam.external_link) }}</a>
+                </div>
+                </div>
+              </div>
             </div>
+  
+            <div class="side-content">
+              <div class="content-section submission">
+                <h2>Your Work</h2>
+                <div class="submission-area">
+                  <div class="submission-actions">
+                    <button class="upload-btn primary">
+                      <i class="pi pi-upload"></i> Add or create
+                    </button>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="content-section comments">
+                <h2>Class Comments</h2>
+                <div class="comments-section">
+                  <div class="comment-input">
+                    <input type="text" v-model="newComment" placeholder="Add class comment..."
+                           @keyup.enter="addComment" />
+                    <button class="send-btn" @click="addComment">
+                      <i class="pi pi-send"></i>
+                    </button>
+                  </div>
+                  <div class="comments-list" v-if="currentExam.comments?.length">
+                    <div v-for="comment in currentExam.comments" :key="comment.id" class="comment">
+                      <img :src="comment.authorAvatar || '/default-avatar.png'" :alt="comment.author" />
+                      <div class="comment-content">
+                        <div class="comment-header">
+                          <h4>{{ comment.author }}</h4>
+                          <span class="comment-date">{{ formatDate(comment.date) }}</span>
+                        </div>
+                        <p>{{ comment.text }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p v-else>No comments yet.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+  
+        <div v-else class="loading">Loading exam details...</div>
+      </div>
     </div>
-</template>
-
-<script>
-import Header from '../Header.vue';
-import Sidebar from '../Sidebar.vue';
-
-export default {
+  </template>
+  
+  <script>
+  import Header from '../Header.vue';
+  import Sidebar from '../Sidebar.vue';
+  import axios from 'axios';
+  
+  export default {
     name: 'ExamDetails',
     components: {
-        Header,
-        Sidebar
+      Header,
+      Sidebar
     },
     data() {
-        return {
-            student: { name: 'John Doe' },
-            searchQuery: '',
-            isSidebarCollapsed: false,
-            courses: [
-                {
-                    id: 1,
-                    name: 'ITELECT4',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    exams: [
-                        {
-                            id: 1,
-                            name: 'Exam 1',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 2,
-                            name: 'Exam 2',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 3,
-                            name: 'Exam 3',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    id: 2,
-                    name: 'GEC010',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    exams: [
-                        {
-                            id: 1,
-                            name: 'Exam 1',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 2,
-                            name: 'Exam 2',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 3,
-                            name: 'Exam 3',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    id: 3,
-                    name: 'CC321',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    exams: [
-                        {
-                            id: 1,
-                            name: 'Exam 1',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 2,
-                            name: 'Exam 2',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 3,
-                            name: 'Exam 3',
-                            description: 'Complete the following exam questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        }
-                    ]
-                }
-                // Include other courses and exams here
-            ]
-        };
-    },
-    computed: {
-        currentCourse() {
-            const courseId = parseInt(this.$route.params.courseId);
-            return this.courses.find(c => c.id === courseId);
-        },
-        currentExam() {
-            if (!this.currentCourse) return null;
-            const examId = parseInt(this.$route.params.examId);
-            return this.currentCourse.exams.find(e => e.id === examId);
-        }
+      return {
+        student: {},
+        searchQuery: '',
+        isSidebarCollapsed: false,
+        courses: [],
+        currentExam: null,
+        newComment: '',
+      };
     },
     methods: {
-        toggleSidebar() {
-            this.isSidebarCollapsed = !this.isSidebarCollapsed;
-        },
-        formatDate(date) {
-            return new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        },
-        getFileIcon(type) {
-            const icons = {
-                pdf: 'pi pi-file-pdf',
-                doc: 'pi pi-file-word',
-                docx: 'pi pi-file-word',
-                xls: 'pi pi-file-excel',
-                xlsx: 'pi pi-file-excel',
-                zip: 'pi pi-file-export',
-                video: 'pi pi-video',
-                link: 'pi pi-link',
-                default: 'pi pi-file'
+      async fetchData() {
+        try {
+          const storedUser = JSON.parse(localStorage.getItem('user'));
+          if (storedUser && storedUser.role === 'student') {
+            this.student = {
+              id: storedUser.user_id,
+              name: storedUser.name
             };
-            return icons[type] || icons.default;
-        },
-        downloadAttachment(file) {
-            if (file.type === 'link') {
-                window.open(file.name, '_blank');
-            } else {
-                console.log('Downloading:', file.name);
-                // Actual download logic for file types (e.g., via API or static assets)
-            }
-        },
-        goBack() {
-            this.$router.push({
-                name: 'ExamContent',
-                params: { courseId: this.$route.params.courseId }
-            });
-        },
-        addComment() {
-            if (this.newComment.trim()) {
-                const newCommentObj = {
-                    id: Date.now(), // Consider a more reliable ID generator
-                    author: 'You',
-                    authorAvatar: '/your-avatar.png',
-                    text: this.newComment,
-                    date: new Date().toISOString()
-                };
-                this.currentExam.comments.unshift(newCommentObj);
-                this.newComment = '';
-            }
+          } else {
+            console.error('No valid student data found');
+            return;
+          }
+  
+          const courseId = parseInt(this.$route.params.courseId);
+          const examId = parseInt(this.$route.params.examId);
+  
+          const res = await axios.get(`http://127.0.0.1:8000/api/student_exams/${this.student.id}/${courseId}`);
+          if (res.status === 200) {
+            const exams = res.data.exams;
+            this.currentExam = exams.find(exam => exam.exam_id === examId) || null;
+          }
+        } catch (error) {
+          console.error('Error fetching exam data:', error);
         }
+      },
+  
+      // Helper function to extract the file name from the URL
+      getFileName(fileUrl) {
+        return fileUrl.split('/').pop();
+      },
+  
+      downloadFile(fileUrl) {
+  const formattedUrl = fileUrl.replace(/\\/g, '/'); // In case the file path uses backslashes
+  
+  if (formattedUrl.startsWith('http')) {
+    // Open the URL in a new tab
+    window.open(formattedUrl, '_blank'); 
+  } else {
+    // Extract the file name and open the download link in a new tab
+    const fileName = this.getFileName(formattedUrl);
+    window.open(`http://127.0.0.1:8000/api/assignments/download/${fileName}`, '_blank');
+  }
+},
+      toggleSidebar() {
+        this.isSidebarCollapsed = !this.isSidebarCollapsed;
+      },
+  
+      formatDate(date) {
+        return date ? new Date(date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        }) : 'N/A';
+      },
+  
+      async addComment() {
+        if (!this.newComment.trim()) return;
+  
+        try {
+          const res = await axios.post(`http://127.0.0.1:8000/api/exam/${this.currentExam.exam_id}/comments`, {
+            text: this.newComment,
+            author: this.student.name
+          });
+  
+          if (res.status === 201) {
+            this.currentExam.comments.push({
+              id: res.data.id,
+              text: this.newComment,
+              author: this.student.name,
+              date: new Date().toISOString()
+            });
+            this.newComment = '';
+          }
+        } catch (error) {
+          console.error('Error adding comment:', error);
+        }
+      },
+  
+      goBack() {
+        this.$router.go(-1);
+      }
+    },
+    async mounted() {
+      await this.fetchData();
     }
-};
-</script>
+  };
+  </script>
 
 <style scoped>
 .exam-details-container {
@@ -346,6 +220,8 @@ export default {
     margin: 0 auto;
     overflow-y: auto; /* This will enable vertical scrolling */
     max-height: 100%; /* Set a maximum height for the container */
+    background-color: #fff;
+
 }
 
 .back-btn {

@@ -143,6 +143,7 @@ export default {
   margin: 0 auto;
   overflow-x: auto;
   height: 100vh;
+
 }
 
 .content {
@@ -150,6 +151,7 @@ export default {
   padding: 20px;
   overflow-y: auto;
   height: calc(100vh - 50px);
+  background-color: #fff;
 }
 
 .student-list-content {
@@ -281,7 +283,6 @@ h1 {
 }
 .modal-content h2 {
   font-size: 25px;
-  font-family: 'Arial', sans-serif;
   font-weight: 1000;
   color: #000000;
   padding-right: 30px;

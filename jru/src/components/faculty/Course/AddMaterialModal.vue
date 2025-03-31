@@ -106,7 +106,6 @@ export default {
 
 .modal-content {
   font-size: 25px;
-  font-family: 'Arial', sans-serif;
   font-weight: 1000;
   color: #000000;
   padding-right: 30px;
@@ -125,7 +124,6 @@ export default {
   display: flex;
   flex-direction: column;
   font-weight: 600;
-  font-family: 'Arial', sans-serif;
   font-size: 14px;
   margin-bottom: 5px;
   color: #272727;

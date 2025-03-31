@@ -4,6 +4,9 @@
     <div class="dashboard-content">
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
       <main class="dashboard-main">
+        <div class="header">
+                        <h1>Courses</h1>
+                    </div>
         <section class="course-cards">
           <div class="course-card" 
                v-for="course in courses" 
@@ -86,9 +89,18 @@ export default {
   flex: 1; /* Main area should take the remaining space */
   padding: 2rem;
   overflow-y: auto; /* Allow scrolling if content overflows */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+  background-color: #fff;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
 }
 
+.header h1 {
+    color: #000;
+}
 .course-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 3 items per row */

@@ -14,14 +14,18 @@
           <div class="main-content">
             <div class="title-section">
               <h1>{{ material?.title || "Loading..." }}</h1>
+              <p v-if="material?.posted_at" class="posted-at">
+                Posted at: {{ formatDate(material.posted_at) }}
+              </p>
             </div>
             <div class="content-section">
+              <h2>Content description:</h2>
               <p>{{ material?.content || "No content available" }}</p>
             </div>
 
-
             <!-- ✅ Display File Link -->
             <div v-if="material?.file_path" class="uploaded-materials">
+              <h2>Attachments:</h2>
               <div class="material-item">
                 <i class="pi pi-file"></i>
                 <a
@@ -29,7 +33,7 @@
                   target="_blank"
                   class="file-link"
                 >
-                  View Attached File
+                  {{ material.file_path.split('/').pop() }}
                 </a>
               </div>
             </div>
@@ -107,6 +111,12 @@ export default {
         this.messages.push({ id: Date.now(), user: "You", text: this.newMessage });
         this.newMessage = "";
       }
+    },
+    // Format the posted_at date
+    formatDate(dateString) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', options);
     }
   },
   mounted() {
@@ -116,6 +126,13 @@ export default {
 </script>
 
 <style scoped>
+/* Style for the posted at date */
+.posted-at {
+  font-size: 1rem;
+  color: #777;
+  margin-top: 0.5rem;
+}
+
 .course-content-container {
   display: flex;
   flex-direction: column;
@@ -132,6 +149,7 @@ export default {
   padding: 1rem;
   max-width: 100%;
   margin: 0 auto;
+  background-color: #fff;
 }
 
 .back-btn {
@@ -151,20 +169,18 @@ export default {
 }
 
 .material-content {
-  display: grid
-;
-    grid-template-columns: 3fr 1fr;
-    gap: 2rem;
-    height: 100%;
-    margin-bottom: 5rem;
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 2rem;
+  height: auto;
+  margin-bottom: 5rem;
 }
 
 .main-content {
-  display: flex
-;
-    flex-direction: column;
-    gap: 2rem;
-
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  background-color: #D9D9D9;
 }
 
 .side-content {
@@ -176,26 +192,41 @@ export default {
   padding: 1.5rem;
   border-radius: 8px;
 }
-.title-section h1{
+
+.title-section h1 {
   color: #333;
+  font-weight: bold;
 }
 
 .content-section {
   background-color: #D9D9D9;
-    padding: 1.5rem;
-    border-radius: 8px;
-    min-height: 300px;
-    color: #212121;
-
+  padding: 1.5rem;
+  border-radius: 8px;
+  min-height: 300px;
+  color: #212121;
 }
+
+.content-section h2 {
+  font-size: 1.25rem;
+  color: #333;
+  font-weight: bold;
+}
+
 .content-section p {
   margin-bottom: 1.5rem;
   font-size: 1.25rem;
   color: #333;
-
 }
 
-.uploaded-materials .material-item {
+.uploaded-materials {
+  background-color: #D9D9D9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  min-height: 300px;
+  color: #212121;
+}
+
+.material-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -210,10 +241,16 @@ export default {
   font-size: 1.2rem;
 }
 
-.file-link {
-  color: #007bff;
-  text-decoration: none;
+.uploaded-materials h2 {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 10px;
   font-weight: bold;
+}
+
+.file-link {
+  color: #333;
+  text-decoration: none;
 }
 
 .file-link:hover {
@@ -227,10 +264,12 @@ export default {
   max-height: 80vh;
   overflow-y: auto;
 }
-.messages-section h2, .messages-section p{
-  color: #333;
 
+.messages-section h2,
+.messages-section p {
+  color: #333;
 }
+
 .message-item {
   background-color: #fff;
   padding: 1rem;

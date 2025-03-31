@@ -29,9 +29,7 @@
                   <div class="card-header">
                     <i class="pi pi-file-edit"></i>
                     <h4>{{ quiz.title }}</h4>
-                  </div>
-                  <div class="card-status">
-                    {{ quiz.quiz_date }}
+                    <i class="pi pi-trash" @click.stop="deleteQuiz(quiz.quiz_id)" style="cursor: pointer; margin-left: auto;"></i> <!-- Delete Icon -->
                   </div>
                 </div>
               </div>
@@ -73,7 +71,7 @@ export default {
     async fetchQuizzes() {
       try {
         const courseId = this.$route.params.courseId;
-        const response = await axios.get(`http://127.0.0.1:8000/api/quizzes/${courseId}`);
+        const response = await axios.get(`http://127.0.0.1:8000/api/quizzes/quizzes/${courseId}`);
 
         this.course = {
           name: response.data.course_name,
@@ -89,14 +87,25 @@ export default {
       }
     },
     navigateToQuiz(quiz) {
-    this.$router.push({ 
-      name: 'FacultyQuizDetails', 
-      params: { courseId: this.$route.params.courseId, quizId: quiz.quiz_id } 
-    });
-  },
+      this.$router.push({ 
+        name: 'FacultyQuizDetails', 
+        params: { courseId: this.$route.params.courseId, quizId: quiz.quiz_id } 
+      });
+    },
+    // Method to delete a quiz
+    async deleteQuiz(quiz_id) {
+      try {
+        const response = await axios.delete(`http://127.0.0.1:8000/api/quizzes/${quiz_id}`);
+        // After successful deletion, remove the quiz from the course.quizzes array
+        this.course.quizzes = this.course.quizzes.filter(quiz => quiz.quiz_id !== quiz_id);
+        console.log(response.data.message);
+      } catch (error) {
+        console.error("Error deleting quiz:", error);
+      }
+    }
   },
 };
-</script>
+</script>-
 
 <style scoped>
 .course-content-container {
@@ -117,6 +126,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  background-color: #fff;
 }
 
 /* Course Header */
@@ -215,6 +225,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 1rem;
+  position: relative;
 }
 
 .material-card:hover {
@@ -241,6 +252,7 @@ export default {
   gap: 10px;
   font-size: 1.2rem;
   color: #333;
+  width: 100%;
 }
 
 .card-header h4 {
@@ -248,6 +260,12 @@ export default {
   font-weight: 500;
   color: #333;
 }
+.card-header i.pi-trash {
+  font-size: 15px;
+  color: #e74c3c;
+  cursor: pointer;
+}
+
 
 .card-body {
   font-size: 1rem;

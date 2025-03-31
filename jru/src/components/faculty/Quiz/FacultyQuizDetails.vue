@@ -29,18 +29,31 @@
                             </div>
                         </div>
 
-                        <div class="content-section instructions">
-                            <h2>Instructions</h2>
+                        <div class="content-section-instructions">
+                            <h2>Instructions:</h2>
                             <p>{{ currentQuiz.description }}</p>
                         </div>
 
-                        <div class="content-section uploaded-materials" v-if="currentQuiz.file_path">
-                            <h2>Quiz Materials</h2>
+                        <div class="content-section uploaded-materials" v-if="currentQuiz.external_link">
+                            <h2>Quiz Materials:</h2>
                             <div class="materials-list">
-                                <div class="material-item" @click="downloadAttachment(currentQuiz.file_path)">
-                                    <i class="pi pi-file"></i>
-                                    <span>{{ getFileName(currentQuiz.file_path) }}</span>
-                                    <i class="pi pi-download"></i>
+                                <div class="material-item" @click="openLink(currentQuiz.external_link)">
+                                    <i class="pi pi-link"></i>
+                                    <span>{{ getFileName(currentQuiz.external_link) }}</span>
+                                    <i class="pi pi-external-link"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="submission-container" v-if="submissions.length">
+                        <h2>Submissions:</h2>
+                        <div class="submission-list">
+                            <div class="submission-item" v-for="(submission, index) in submissions" :key="index">
+                                <div class="student-info">
+                                    <span>{{ submission.studentName }}</span>
+                                    <span>{{ formatDate(submission.submissionDate) }}</span>
+                                    <span :class="['status', submission.status.toLowerCase()]">{{ submission.status }}</span>
                                 </div>
                             </div>
                         </div>
@@ -63,53 +76,69 @@ export default {
     components: { Header, Sidebar },
     data() {
         return {
-            currentQuiz: null
+            currentQuiz: null,
+            submissions: [
+                {
+                    studentName: 'John Doe',
+                    submissionDate: '2025-03-25',
+                    status: 'Submitted'
+                },
+                {
+                    studentName: 'Jane Smith',
+                    submissionDate: '2025-03-26',
+                    status: 'Pending'
+                }
+            ]
         };
     },
     methods: {
+        // Fetch quiz details
         async fetchQuiz() {
-    try {
-        const courseId = this.$route.params.courseId; // Get course_id from route
-        const quizId = parseInt(this.$route.params.quizId); // Get quiz_id from route
+            try {
+                const quizId = parseInt(this.$route.params.quizId); // Get quiz_id from route
 
-        const response = await axios.get(`http://127.0.0.1:8000/api/quizzes/${courseId}`);
-        const quizzes = response.data.quizzes;
+                const response = await axios.get(`http://127.0.0.1:8000/api/quizzes/item/${quizId}`);
+                this.currentQuiz = response.data; // Set current quiz with the fetched data
+            } catch (error) {
+                console.error("Error fetching quiz:", error);
+            }
+        },
 
-        // Find the specific quiz by ID
-        this.currentQuiz = quizzes.find(quiz => quiz.quiz_id === quizId) || null;
-
-        if (!this.currentQuiz) {
-            console.error("Quiz not found in course");
-        }
-    } catch (error) {
-        console.error("Error fetching quiz:", error);
-    }
-}
-,
+        // Format the date for display
         formatDate(date) {
             if (!date) return 'N/A';
             return new Date(date).toLocaleDateString();
         },
-        getFileName(filePath) {
-            return filePath ? filePath.split('\\').pop() : 'Unknown File';
+
+        // Extract the file name from the URL (external link)
+        getFileName(fileUrl) {
+            return fileUrl ? fileUrl.split('/').pop() : 'Unknown File';
         },
-        downloadAttachment(filePath) {
-            window.open(`/${filePath}`, '_blank');
+
+        // Open the external link in a new window/tab
+        openLink(fileUrl) {
+            window.open(fileUrl, '_blank');
         },
+
+        // Navigate back to the quizzes list
         goBack() {
-    this.$router.push({ 
-        name: 'FacultyQuizContent', 
-        params: { courseId: this.$route.params.courseId } 
-    });
-},
+            this.$router.push({
+                name: 'FacultyQuizContent',
+                params: { courseId: this.$route.params.courseId }
+            });
+        },
+
+        // Edit quiz details
         editQuiz() {
             this.$router.push(`/edit-quiz/${this.currentQuiz.quiz_id}`);
         }
     },
+
+    // Fetch quiz when the component is mounted
     mounted() {
         const quizId = this.$route.params.quizId;
         if (quizId) {
-            this.fetchQuiz(quizId);
+            this.fetchQuiz();
         }
     }
 };
@@ -133,6 +162,7 @@ export default {
     max-width: 100%;
     margin: 0 auto;
     max-height: 100%;
+    background-color: #fff;
 }
 
 .back-btn {
@@ -155,14 +185,26 @@ export default {
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 2rem;
-    height: 100%;
+    height: auto;
     margin-bottom: 5rem;
 }
 
 .main-content {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    border-radius: 20px;
+    background-color: #D9D9D9;
+}
+.content-section-instructions{
+    padding: 1.5rem;
+    border-radius: 8px;
+    min-height: 300px;
+    color: #212121;
+}
+
+.content-section-instructions h2{
+  font-weight: bold;
+    color: #212121;
 }
 
 .side-content {
@@ -179,8 +221,11 @@ export default {
     position: relative;
 }
 
+
 .header-content h1 {
     color: #333;
+    font-weight: bold;
+
 }
 
 .edit-btn {
@@ -212,6 +257,8 @@ export default {
     margin-bottom: 1.5rem;
     font-size: 1.25rem;
     color: #333;
+    font-weight: bold;
+
 }
 
 .material-item {
@@ -224,7 +271,17 @@ export default {
     margin-bottom: 0.5rem;
     cursor: pointer;
 }
-
+.submission-container{
+    padding: 1.5rem;
+    border-radius: 8px;
+    min-height: 300px;
+    background-color: #D9D9D9;
+    color: #212121;
+}
+.submission-container h2{
+  font-weight: bold;
+  margin-bottom:10px;
+}
 .submission-stats {
     background-color: #D9D9D9;
 }

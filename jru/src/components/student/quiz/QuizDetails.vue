@@ -12,18 +12,14 @@
                     <div class="main-content">
                         <div class="quiz-header">
                             <div class="header-content">
-                                <h1>{{ currentQuiz.name }}</h1>
+                                <h1>{{ currentQuiz.title }}</h1>
                                 <div class="quiz-meta">
                                     <span class="posted-date">
                                         <i class="pi pi-calendar"></i>
-                                        Posted: {{ formatDate(currentQuiz.datePosted) }}
+                                        Posted: {{ formatDate(currentQuiz.quiz_date) }}
                                     </span>
-                                    <span class="due-date">
-                                        <i class="pi pi-clock"></i>
-                                        Due: {{ formatDate(currentQuiz.dueDate) }}
-                                    </span>
-                                    <span class="status" :class="currentQuiz.status.toLowerCase()">
-                                        {{ currentQuiz.status }}
+                                    <span class="status" :class="getQuizStatus(currentQuiz)">
+                                        {{ getQuizStatus(currentQuiz) }}
                                     </span>
                                 </div>
                             </div>
@@ -33,13 +29,12 @@
                             <h2>Instructions</h2>
                             <div class="instruction-content">
                                 <p>{{ currentQuiz.description }}</p>
-                                <div class="attachments">
-                                    <h3>Attachments</h3>
-                                    <div v-for="file in currentQuiz.attachments" :key="file.id" class="attachment-item" @click="downloadAttachment(file)">
-                                        <i :class="getFileIcon(file.type)"></i>
-                                        <span>{{ file.name }}</span>
-                                        <i class="pi pi-download" v-if="file.type !== 'link'"></i>
-                                        <i class="pi pi-link" v-if="file.type === 'link'"></i>
+                                <div class="attachments" v-if="currentQuiz.external_link">
+                                    <h3>External Link</h3>
+                                    <div class="attachment-item" @click="openExternalLink(currentQuiz.external_link)">
+                                        <i class="pi pi-link"></i>
+                                        <span>{{ currentQuiz.external_link }}</span>
+                                        <i class="pi pi-external-link"></i>
                                     </div>
                                 </div>
                             </div>
@@ -51,13 +46,13 @@
                             <h2>Your Work</h2>
                             <div class="submission-area">
                                 <div class="submission-status">
-                                    <div class="status-indicator" :class="currentQuiz.status.toLowerCase()">
-                                        {{ currentQuiz.status }}
+                                    <div class="status-indicator" :class="getQuizStatus(currentQuiz)">
+                                        {{ getQuizStatus(currentQuiz) }}
                                     </div>
                                 </div>
                                 <div class="submission-actions">
-                                    <button class="upload-btn primary">
-                                        <i class="pi pi-upload"></i> Add or create
+                                    <button class="upload-btn primary" @click="submitQuiz">
+                                        <i class="pi pi-upload"></i> Submit Quiz
                                     </button>
                                 </div>
                             </div>
@@ -67,13 +62,18 @@
                             <h2>Class Comments</h2>
                             <div class="comments-section">
                                 <div class="comment-input">
-                                    <input type="text" v-model="newComment" placeholder="Add class comment..." @keyup.enter="addComment" />
+                                    <input 
+                                        type="text" 
+                                        v-model="newComment" 
+                                        placeholder="Add class comment..." 
+                                        @keyup.enter="addComment" 
+                                    />
                                     <button class="send-btn" @click="addComment">
                                         <i class="pi pi-send"></i>
                                     </button>
                                 </div>
                                 <div class="comments-list">
-                                    <div v-for="comment in currentQuiz.comments" :key="comment.id" class="comment">
+                                    <div v-for="comment in comments" :key="comment.id" class="comment">
                                         <img :src="comment.authorAvatar" :alt="comment.author" />
                                         <div class="comment-content">
                                             <div class="comment-header">
@@ -93,9 +93,15 @@
     </div>
 </template>
 
+---
+
+### ✅ **Updated Script Section**
+
+```javascript
 <script>
 import Header from '../Header.vue';
 import Sidebar from '../Sidebar.vue';
+import axios from 'axios';
 
 export default {
     name: 'QuizDetails',
@@ -105,227 +111,114 @@ export default {
     },
     data() {
         return {
-            student: { name: 'John Doe' },
+            student: { id: 27, name: 'John Doe' }, // Adjust to your current student ID
             searchQuery: '',
             isSidebarCollapsed: false,
-            courses: [
-                {
-                    id: 1,
-                    name: 'ITELECT4',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    quizzes: [
-                        {
-                            id: 1,
-                            name: 'Quiz 1',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 2,
-                            name: 'Quiz 2',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 3,
-                            name: 'Quiz 3',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    id: 2,
-                    name: 'GEC010',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    quizzes: [
-                        {
-                            id: 1,
-                            name: 'Quiz 1',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 2,
-                            name: 'Quiz 2',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 3,
-                            name: 'Quiz 3',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    id: 3,
-                    name: 'CC321',
-                    sections: [{ id: 1, name: 'BSCS-3A' }],
-                    quizzes: [
-                        {
-                            id: 1,
-                            name: 'Quiz 1',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 2,
-                            name: 'Quiz 2',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        },
-                        {
-                            id: 3,
-                            name: 'Quiz 3',
-                            description: 'Complete the following quiz questions...',
-                            datePosted: '2024-01-20',
-                            dueDate: '2024-02-01',
-                            status: 'Not submitted',
-                            attachments: [
-                                { id: 1, name: 'https://www.youtube.com/watch?v=w3IGrm9ucFE', type: 'link' }
-                            ],
-                            comments: [
-                                { id: 1, author: 'Teacher', authorAvatar: '/avatar.png', text: 'Please submit before deadline', date: '2024-01-20' }
-                            ]
-                        }
-                    ]
-                }
-                // Include other courses and quizzes here
-            ]
+            courses: [],
+            currentQuiz: null,
+            comments: [],
+            newComment: ''
         };
     },
-    computed: {
-        currentCourse() {
-            const courseId = parseInt(this.$route.params.courseId);
-            return this.courses.find(c => c.id === courseId);
-        },
-        currentQuiz() {
-            if (!this.currentCourse) return null;
-            const quizId = parseInt(this.$route.params.quizId);
-            return this.currentCourse.quizzes.find(q => q.id === quizId);
-        }
+    async created() {
+        await this.fetchQuizDetails();
     },
     methods: {
+        // ✅ Fetch quizzes for the current student and course
+        async fetchQuizDetails() {
+            try {
+                const studentId = this.student.id;
+                const courseId = parseInt(this.$route.params.courseId);
+                
+                const response = await axios.get(`http://127.0.0.1:8000/api/student_quizzes/${studentId}/${courseId}`);
+
+                if (response.status === 200) {
+                    const quizId = parseInt(this.$route.params.quizId);
+                    const data = response.data;
+
+                    // Map quizzes to courses
+                    this.courses = [{
+                        id: courseId,
+                        name: data.course_name,
+                        quizzes: data.quizzes
+                    }];
+
+                    // Find the specific quiz by ID
+                    this.currentQuiz = data.quizzes.find(q => q.quiz_id === quizId);
+
+                    if (!this.currentQuiz) {
+                        console.error('Quiz not found');
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching quiz details:', error);
+            }
+        },
+
+        // ✅ Handle quiz submission
+        async submitQuiz() {
+            try {
+                const submission = {
+                    student_id: this.student.id,
+                    quiz_id: this.currentQuiz.quiz_id,
+                    answers: {}  // Send actual quiz answers here
+                };
+
+                const response = await axios.post('http://127.0.0.1:8000/api/quiz_submissions/', submission);
+
+                if (response.status === 200) {
+                    alert('Quiz submitted successfully!');
+                }
+            } catch (error) {
+                console.error('Error submitting quiz:', error);
+            }
+        },
+
+        openExternalLink(url) {
+            window.open(url, '_blank');
+        },
+
         toggleSidebar() {
             this.isSidebarCollapsed = !this.isSidebarCollapsed;
         },
+
         formatDate(date) {
-            return new Date(date).toLocaleDateString('en-US', {
+            return date ? new Date(date).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric'
-            });
+            }) : 'N/A';
         },
-        getFileIcon(type) {
-            const icons = {
-                pdf: 'pi pi-file-pdf',
-                doc: 'pi pi-file-word',
-                docx: 'pi pi-file-word',
-                xls: 'pi pi-file-excel',
-                xlsx: 'pi pi-file-excel',
-                zip: 'pi pi-file-export',
-                video: 'pi pi-video',
-                link: 'pi pi-link',
-                default: 'pi pi-file'
-            };
-            return icons[type] || icons.default;
-        },
-        downloadAttachment(file) {
-            if (file.type === 'link') {
-                window.open(file.name, '_blank');
-            } else {
-                console.log('Downloading:', file.name);
-                // Actual download logic for file types (e.g., via API or static assets)
-            }
-        },
+
         goBack() {
             this.$router.push({
                 name: 'QuizContent',
                 params: { courseId: this.$route.params.courseId }
             });
         },
+
+        getQuizStatus(quiz) {
+            // Example status logic (you can modify as needed)
+            return quiz ? 'Not Submitted' : 'Submitted';
+        },
+
         addComment() {
             if (this.newComment.trim()) {
                 const newCommentObj = {
-                    id: Date.now(), // Consider a more reliable ID generator
-                    author: 'You',
-                    authorAvatar: '/your-avatar.png',
+                    id: Date.now(),
+                    author: this.student.name,
+                    authorAvatar: '/avatar.png',
                     text: this.newComment,
                     date: new Date().toISOString()
                 };
-                this.currentQuiz.comments.unshift(newCommentObj);
+                this.comments.unshift(newCommentObj);
                 this.newComment = '';
             }
         }
     }
 };
 </script>
+
 
 <style scoped>
 .quiz-details-container {
@@ -345,7 +238,9 @@ export default {
     max-width: 100%;
     margin: 0 auto;
     overflow-y: auto; /* This will enable vertical scrolling */
-    max-height: 100%; /* Set a maximum height for the container */
+    max-height: 100%;
+    background-color: #fff;
+    /* Set a maximum height for the container */
 }
 
 .back-btn {

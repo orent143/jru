@@ -38,8 +38,6 @@
                 <li 
                   @click.stop="navigateToAssignmentDetail(course.course_id, course.assignments[0].assignment_id)"
                 >
-                  <span class="assignment-name">{{ course.assignments[0].title }}</span>
-                  <span class="assignment-due-date">Due: {{ course.assignments[0].due_date }}</span>
                 </li>
               </ul>
             </div>
@@ -139,7 +137,7 @@ export default {
   flex: 1; /* Main area should take the remaining space */
   padding: 2rem;
   overflow-y: auto; /* Allow scrolling if content overflows */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+  background-color: #fff;
 }
 
 .course-header {

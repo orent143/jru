@@ -1,120 +1,168 @@
 <template>
-    <div class="exams-container">
-      <Header :student="student" @toggleSidebar="toggleSidebar" />
-      <div class="exams-content">
-        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-        <main class="exams-main" v-if="course">
-          <div class="exams-header">
-            <h2>{{ course.name }} - Exams</h2>
+  <div class="exams-container">
+    <Header :student="student" @toggleSidebar="toggleSidebar" />
+    <div class="exams-content">
+      <Sidebar :isCollapsed="isSidebarCollapsed" />
+
+      <main class="exams-main">
+        <div class="exams-header">
+          <h2>Exams</h2>
+        </div>
+
+        <div class="exams-hero">
+          <!-- Left Side: Exam Summary Cards -->
+          <div class="content-left">
+            <section class="exams-cards">
+              <router-link
+                class="exams-card"
+                :to="`/course/${courseId}/exams`"
+              >
+                <h3>Exams</h3>
+                <p>{{ pendingExams.length }} Pending</p>
+              </router-link>
+
+              <div class="exams-card completed">
+                <h3>Completed Exams</h3>
+                <p>{{ completedExams.length }} Completed</p>
+              </div>
+            </section>
           </div>
-  
-          <div class="exams-hero">
-            <!-- Left Side: Exam Cards -->
-            <div class="content-left">
-              <section class="exams-cards">
-                <!-- Exams Card -->
-                <router-link
-                  class="exams-card"
-                  :to="`/exams/${course.id}`"
-                  tag="div"
-                >
-                  <h3>Exams</h3>
-                  <p>{{ pendingExams.length }} Pending</p>
-                </router-link>
-  
-                <!-- Completed Exams Card -->
-                <div class="exams-card completed">
-                  <h3>Completed Exams</h3>
-                  <p>{{ completedExams.length }} Completed</p>
+
+          <!-- Right Side: Exam List -->
+          <div class="content-right">
+            <h3>Exams:</h3>
+            <div v-if="exams.length" class="exam-cards">
+              <div
+                v-for="exam in exams"
+                :key="exam.exam_id"
+                class="exam-card"
+                @click="navigateToExamDetails(exam.exam_id)"
+              >
+                <h4>{{ exam.title }}</h4>
+                <p>{{ exam.description }}</p>
+                <p>{{ formatDate(exam.exam_date) }}</p>
+
+                <div v-if="exam.file_url">
+                  <a
+                    :href="getFileUrl(exam.file_url)"
+                    target="_blank"
+                    class="btn-link"
+                  >
+                    Download File
+                  </a>
                 </div>
-              </section>
-            </div>
-  
-            <!-- Right Side: Exams List -->
-            <div class="content-right">
-              <h3>Exams:</h3>
-              <div class="exam-cards">
-                <!-- Loop through each exam and create individual cards -->
-                <div
-                  v-for="exam in pendingExams"
-                  :key="exam.id"
-                  class="exam-card"
-                  @click="navigateToExamDetails(course.id, exam.id)"
-                >
-                  <h4>Teacher posted a new exam:</h4>
-                  <p>{{ exam.name }}</p>
+                <div v-if="exam.external_link">
+                  <a
+                    :href="exam.external_link"
+                    target="_blank"
+                    class="btn-link"
+                  >
+                    External Link
+                  </a>
                 </div>
               </div>
             </div>
+            <p v-else>No exams available.</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
-  </template>
-  
-  <script>
-  import Header from "../Header.vue";
-  import Sidebar from "../Sidebar.vue";
-  
-  export default {
-    components: {
-      Header,
-      Sidebar,
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+import Header from "../Header.vue";
+import Sidebar from "../Sidebar.vue";
+
+export default {
+  components: {
+    Header,
+    Sidebar,
+  },
+  data() {
+    return {
+      student: { id: 27, name: "John Doe" }, // Mock student ID
+      isSidebarCollapsed: false,
+      exams: [],
+    };
+  },
+  computed: {
+    courseId() {
+      return parseInt(this.$route.params.courseId);
     },
-    data() {
-      return {
-        student: { name: "John Doe" },
-        isSidebarCollapsed: false,
-        completedExams: [],
-        courses: [
+    pendingExams() {
+      return this.exams.filter((exam) => !exam.completed);
+    },
+    completedExams() {
+      return this.exams.filter((exam) => exam.completed);
+    }
+  },
+  methods: {
+    // ✅ Fetch exams for the current course
+    async fetchExams() {
+      try {
+        const { id: studentId } = this.student;
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/student_exams/${studentId}/${this.courseId}`,
           {
-            id: 1,
-            name: "ITELECT4",
-            exams: [
-              { id: 1, name: "Exam 1", dueDate: "2024-02-01", completed: false },
-              { id: 2, name: "Exam 2", dueDate: "2024-02-02", completed: false },
-              { id: 3, name: "Exam 3", dueDate: "2024-02-03", completed: false },
-            ],
-          },
-          {
-            id: 2,
-            name: "GEC010",
-            exams: [
-              { id: 1, name: "Case Study Analysis", dueDate: "2024-02-10", completed: false },
-            ],
-          },
-          {
-            id: 3,
-            name: "CC321",
-            exams: [
-              { id: 1, name: "Pattern Implementation", dueDate: "2024-02-15", completed: false },
-            ],
-          },
-        ],
-      };
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        this.exams = response.data.exams.map((exam) => ({
+          ...exam,
+          completed: false,
+        }));
+      } catch (error) {
+        console.error("Error fetching exams:", error);
+      }
     },
-    computed: {
-      course() {
-        const courseId = parseInt(this.$route.params.courseId);
-        return this.courses.find((c) => c.id === courseId) || null;
-      },
-      pendingExams() {
-        return this.course ? this.course.exams.filter((e) => !e.completed) : [];
-      },
+
+    navigateToExamDetails(examId) {
+  this.$router.push(`/student/course/${this.courseId}/exam/${examId}`);
+},
+
+    // ✅ Toggle sidebar
+    toggleSidebar() {
+      this.isSidebarCollapsed = !this.isSidebarCollapsed;
     },
-    methods: {
-      toggleSidebar() {
-        this.isSidebarCollapsed = !this.isSidebarCollapsed;
-      },
-      navigateToExams(courseId) {
-        this.$router.push(`/exams/${courseId}`);
-      },
-      navigateToExamDetails(courseId, examId) {
-        this.$router.push(`/course/${courseId}/exam/${examId}`);
-      },
+
+    // ✅ Format date
+    formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
     },
-  };
-  </script>
+
+    // ✅ Handle file URLs (local or external)
+    getFileUrl(filePath) {
+      if (!filePath) return null;
+
+      // Handle external URLs directly
+      if (filePath.startsWith("http")) {
+        return filePath;
+      }
+
+      // Convert backslashes to forward slashes for compatibility
+      const normalizedPath = filePath.replace(/\\/g, '/');
+      return `http://127.0.0.1:8000/${normalizedPath}`;
+    }
+  },
+
+  async created() {
+    await this.fetchExams();
+  },
+};
+</script>
+
   
   <style scoped>
   .exams-container {
@@ -134,6 +182,8 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    background-color: #fff;
+
   }
   
   .exams-header {

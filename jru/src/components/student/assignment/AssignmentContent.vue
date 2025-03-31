@@ -1,50 +1,48 @@
 <template>
-  <div class="assignments-container">
+  <div class="assignment-content-container">
     <Header :student="student" @toggleSidebar="toggleSidebar" />
-    <div class="assignments-content">
+    <div class="assignment-content">
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-      <main class="assignments-main" v-if="course">
-        <div class="assignments-header">
-          <h2>{{ course.name }} - Assignments</h2>
+      <main class="assignment-main" v-if="course">
+        <div class="assignment-header">
+          <h2>{{ course.course_name }} - Assignments</h2>
         </div>
 
-        <div class="assignments-hero">
-          <!-- Left Side: Assignment Cards -->
+        <div class="assignment-hero">
           <div class="content-left">
-            <section class="assignments-cards">
-              <!-- Assignments Card -->
-              <router-link
-                class="assignments-card"
-                :to="`/assignments/${course.id}`"
-                tag="div"
-              >
-                <h3>Assignments</h3>
-                <p>{{ pendingAssignments.length }} Pending</p>
-              </router-link>
-
-              <!-- Completed Assignments Card -->
-              <div class="assignments-card completed">
-                <h3>Completed Assignments</h3>
-                <p>{{ completedAssignments.length }} Completed</p>
+            <section class="assignments-summary">
+              <h3>Assignment Overview</h3>
+              <div class="assignment-summary-cards">
+                <div class="assignment-summary-card pending">
+                  <h4>Pending Assignments</h4>
+                  <p>{{ pendingAssignments.length }} Pending</p>
+                </div>
+                <div class="assignment-summary-card completed">
+                  <h4>Completed Assignments</h4>
+                  <p>{{ completedAssignments.length }} Completed</p>
+                </div>
               </div>
             </section>
           </div>
 
-          <!-- Right Side: Assignments List -->
           <div class="content-right">
-              <h3>Assignments:</h3>
+            <section class="assignments-list">
+              <h3>Assignments</h3>
               <div class="assignment-cards">
-                <!-- Loop through each assignment and create individual cards -->
-                <div
-                  v-for="assignment in pendingAssignments"
-                  :key="assignment.id"
+                <div 
+                  v-for="assignment in assignments" 
+                  :key="assignment.assignment_id"
                   class="assignment-card"
-                  @click="navigateToAssignmentDetails(course.id, assignment.id)"
+                  @click="navigateToAssignmentDetails(assignment.assignment_id)"
                 >
-                  <h4>Teacher posted a new assignment: </h4>
-                  <p>{{ assignment.name }}</p>
+                  <div class="card-header">
+                    <h4>{{ assignment.title }}</h4>
+                    <p>{{ assignment.description }}</p>
+                    <p class="due-date">Due: {{ formatDate(assignment.due_date) }}</p>
+                  </div>
                 </div>
               </div>
+            </section>
           </div>
         </div>
       </main>
@@ -53,125 +51,148 @@
 </template>
 
 <script>
-import Header from "../Header.vue";
-import Sidebar from "../Sidebar.vue";
+import axios from "axios";
+import Header from "@/components/student/Header.vue";
+import Sidebar from "@/components/student/Sidebar.vue";
 
 export default {
   components: {
     Header,
     Sidebar,
   },
+  props: ["courseId"],
   data() {
     return {
-      student: { name: "John Doe" },
+      student: JSON.parse(localStorage.getItem("user")),
       isSidebarCollapsed: false,
-      completedAssignments: [],
-      courses: [
-        {
-          id: 1,
-          name: "ITELECT4",
-          assignments: [
-            { id: 1, name: "Assignment 1", dueDate: "2024-02-01", completed: false },
-            { id: 2, name: "Assignment 2", dueDate: "2024-02-02", completed: false },
-            { id: 3, name: "Assignment 3", dueDate: "2024-02-03", completed: false },
-          ],
-        },
-        {
-          id: 2,
-          name: "GEC010",
-          assignments: [
-            { id: 1, name: "Case Study Analysis", dueDate: "2024-02-10", completed: false },
-          ],
-        },
-        {
-          id: 3,
-          name: "CC321",
-          assignments: [
-            { id: 1, name: "Pattern Implementation", dueDate: "2024-02-15", completed: false },
-          ],
-        },
-      ],
+      assignments: [],
+      courses: [],
+      course: { course_name: "Loading..." }, // Default placeholder before API fetch
+      studentId: null
     };
   },
+  async created() {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser && storedUser.role === "student") {
+      this.studentId = storedUser.user_id;
+      await this.fetchAssignments();
+    }
+  },
+  watch: {
+    courseId: {
+      handler() {
+        this.fetchAssignments();
+      },
+      immediate: true
+    }
+  },
   computed: {
-    course() {
-      const courseId = parseInt(this.$route.params.courseId);
-      return this.courses.find((c) => c.id === courseId) || null;
-    },
     pendingAssignments() {
-      return this.course ? this.course.assignments.filter((a) => !a.completed) : [];
+      return this.assignments.filter((a) => a.completed === false || a.completed === null);
     },
+    completedAssignments() {
+      return this.assignments.filter((a) => a.completed === true);
+    }
   },
   methods: {
-    toggleSidebar() {
-      this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    async fetchAssignments() {
+  if (!this.studentId || !this.courseId) return;
+  try {
+    const response = await axios.get(
+      `http://127.0.0.1:8000/api/student_assignments/${this.studentId}/${this.courseId}`
+    );
+
+    console.log("Fetched Assignments:", response.data);
+
+    this.assignments = response.data.assignments || [];
+    
+    // ✅ Correctly assign course_name from the API response
+    this.course = { course_name: response.data.course_name || "Course Name Not Available" };
+  } catch (error) {
+    console.error("Error fetching assignments:", error);
+  }
+}
+,
+navigateToAssignmentDetails(assignmentId) {
+      this.$router.push({
+        name: "AssignmentDetails",
+        params: { courseId: this.courseId, assignmentId }
+      });
     },
-    navigateToAssignments(courseId) {
-      this.$router.push(`/assignments/${courseId}`);
-    },
-    navigateToAssignmentDetails(courseId, assignmentId) {
-      this.$router.push(`/course/${courseId}/assignment/${assignmentId}`);
-    },
-  },
+    formatDate(dateString) {
+      if (!dateString) return "No due date";
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
+  }
 };
 </script>
 
+
+
 <style scoped>
-.assignments-container {
+.assignment-content-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
 }
 
-.assignments-content {
+.assignment-content {
   display: flex;
   flex: 1;
 }
 
-.assignments-main {
+.assignment-main {
   padding: 2rem;
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  background-color: #fff;
+
 }
 
-.assignments-header {
+.assignment-header {
+  display: flex;
+  flex-direction: column;
   padding: 20px;
-  border-radius: 10px;
-  background-color: #d9d9d9;
+  border-radius: 20px;
+  background-color: #D9D9D9;
 }
 
-.assignments-header h2 {
+.assignment-header h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: #000;
+  color: #000000;
 }
 
-/* Assignments Hero Layout */
-.assignments-hero {
+.assignment-hero {
   display: flex;
-  justify-content: space-between;
-  gap: 2rem;
+  flex: 1;
+  overflow: auto;
+  max-height: 60vh;
 }
 
-/* Left Side: Cards */
 .content-left {
   display: flex;
   flex-direction: column;
   gap: 2rem;
   flex: 1;
   width: 20%;
-  overflow: auto; /* Allow scrolling */
+  overflow: auto;
 }
 
-.assignments-cards {
+.assignment-summary-cards {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.assignments-card {
+.assignment-summary-card {
   padding: 1.5rem;
   border-radius: 8px;
   background: #D9D9D9;
@@ -179,30 +200,30 @@ export default {
   color: black;
   font-weight: bold;
 }
-.assignments-card h3 {
+
+.assignment-summary-card h4 {
   font-size: 17px;
-    font-weight: 600;
-    color: #000000d2;
+  font-weight: 600;
+  color: #000000d2;
 }
-.assignments-card:hover {
-  background: #D9D9D9;
-}
-.assignments-card p {
+
+.assignment-summary-card p {
   font-size: 1.1rem;
-    color: #444;
-}
-.completed {
-  background: #D9D9D9;
+  color: #444;
 }
 
-/* Right Side: Assignment Cards */
 .content-right {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
   flex: 2;
+  width: 50%;
+  padding-left: 2rem;
+  overflow: auto;
 }
 
- h3 {
-  font-size: 1.5rem;
-  color: #2c3e50;
+.assignments-list {
+  flex-direction: column;
 }
 
 .assignment-cards {
@@ -217,19 +238,25 @@ export default {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: transform 0.3s ease;
-  flex-direction: row; /* Make the layout horizontal */
+  flex-direction: row;
   padding: 1rem;
-  gap: 10px;
-
   display: flex;
-  align-items: center; /* Vertically center the content */
+  align-items: center;
 }
 
 .assignment-card:hover {
   transform: translateY(-5px);
 }
 
-.assignment-card h4 {
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.card-header h4 {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -238,10 +265,26 @@ export default {
   color: #333;
 }
 
-.assignment-card p {
-  display: flex;
-  align-items: center;
-  font-size: 1.2rem;
-  color: #333;
+.card-body {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .assignment-content {
+    flex-direction: column;
+  }
+
+  .content-left,
+  .content-right {
+    padding-left: 0;
+    padding-right: 0;
+    flex: none;
+  }
+
+  .content-right {
+    padding-left: 0;
+  }
 }
 </style>

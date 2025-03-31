@@ -152,7 +152,8 @@ export default {
   margin: 0 auto;
   overflow-y: auto; /* This will enable vertical scrolling */
   max-height: 100%; /* Set a maximum height for the container */
-  
+  background-color: #fff;
+
 }
 .back-btn {
   display: flex;

@@ -28,8 +28,7 @@
                   :key="exam.exam_id"
                   @click.stop="navigateToExamDetail(course.course_id, exam.exam_id)"
                 >
-                  <span class="exam-name">{{ exam.title }}</span>
-                  <span class="exam-date">Date: {{ exam.exam_date }}</span>
+              
                 </li>
               </ul>
             </div>
@@ -129,7 +128,7 @@ export default {
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  background-color: #fff;
 }
 
 .course-header {

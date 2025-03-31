@@ -1,33 +1,36 @@
 <template>
-    <div class="modal">
-      <div class="modal-content">
-        <span class="close" @click="closeModal">&times;</span>
-        <h2>Add New Exam</h2>
-        
-        <label for="title">Exam Title:</label>
-        <input v-model="title" type="text" placeholder="Enter Title" required />
+  <div class="modal">
+    <div class="modal-content">
+      <span class="close" @click="closeModal">&times;</span>
+      <h2>Add New Exam</h2>
+      
+      <label for="title">Exam Title:</label>
+      <input v-model="title" type="text" placeholder="Enter Title" required />
   
-        <label for="description">Exam Description:</label>
-        <textarea v-model="description" placeholder="Enter Description"></textarea>
+      <label for="description">Exam Description:</label>
+      <textarea v-model="description" placeholder="Enter Description"></textarea>
   
-        <label for="exam_date">Exam Date:</label>
-        <input v-model="exam_date" type="date" required />
+      <label for="exam_date">Exam Date:</label>
+      <input v-model="exam_date" type="date" required />
   
-        <label for="duration">Duration (minutes):</label>
-        <input v-model="duration" type="number" placeholder="Enter duration" required />
+      <label for="duration">Duration (minutes):</label>
+      <input v-model="duration" type="number" placeholder="Enter duration" required />
   
-        <label for="file-upload">Upload File (Optional):</label>
-        <input type="file" @change="handleFileUpload" />
-        <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
+      <label for="file-upload">Upload File (Optional):</label>
+      <input type="file" @change="handleFileUpload" />
+      <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
+
+      <label for="external_link">External Link (Optional):</label>
+      <input v-model="externalLink" type="text" placeholder="Enter external link (if any)" />
   
-        <button @click="addExam" :disabled="isSubmitting">Add Exam</button>
-      </div>
+      <button @click="addExam" :disabled="isSubmitting">Add Exam</button>
     </div>
+  </div>
 </template>
-  
+
 <script>
 import axios from "axios";
-  
+
 export default {
   props: {
     courseId: Number,
@@ -40,6 +43,7 @@ export default {
       duration: null,
       file: null,
       fileName: "",
+      externalLink: "",  // New field for external link
       isSubmitting: false,
     };
   },
@@ -53,24 +57,31 @@ export default {
         alert("Please fill in all required fields.");
         return;
       }
-  
+
       this.isSubmitting = true;
-  
+
       const formData = new FormData();
       formData.append("course_id", this.courseId);
       formData.append("title", this.title);
       formData.append("description", this.description);
       formData.append("exam_date", this.exam_date);
       formData.append("duration_minutes", this.duration);
+      
+      // Append the external link if it's provided
+      if (this.externalLink) {
+        formData.append("external_link", this.externalLink);
+      }
+      
+      // Append the file if it's provided
       if (this.file) {
         formData.append("file", this.file);
       }
-  
+
       try {
         const response = await axios.post('http://127.0.0.1:8000/api/exams', formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-  
+
         alert("Exam added successfully!");
         this.$emit("add-exam", response.data);
         this.resetForm();
@@ -88,6 +99,7 @@ export default {
       this.duration = null;
       this.file = null;
       this.fileName = "";
+      this.externalLink = "";  // Reset external link field
       this.$emit("close");
     },
     closeModal() {
@@ -96,7 +108,7 @@ export default {
   },
 };
 </script>
-  
+
 <style scoped>
 .modal {
   position: fixed;
@@ -120,7 +132,6 @@ export default {
 
 .modal-content h2 {
   font-size: 25px;
-  font-family: 'Arial', sans-serif;
   font-weight: bold;
   color: #000;
   margin-bottom: 15px;

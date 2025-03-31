@@ -63,7 +63,6 @@ export default {
   background-color: #002244;
   padding-top: 1rem;
   transition: width 0.3s ease, transform 0.3s ease;
-  font-family: 'Roboto', sans-serif;
   height: 100vh; /* Ensures the sidebar takes the full height of the viewport */
   overflow-y: auto; /* Enables vertical scrolling */
   position: relative; /* Ensures scrolling behavior works as intended */
@@ -129,7 +128,6 @@ export default {
   color: #ffffff;
   font-size: 13px;
   font-weight: bold;
-  font-family: 'Roboto', sans-serif;
   display: flex;
   align-items: center;
   padding: 3px 40px;

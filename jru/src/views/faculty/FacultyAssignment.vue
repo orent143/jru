@@ -280,9 +280,14 @@ export default {
 .assignment-details {
     background-color: #F5F5F5;
     padding: 1rem;
-    border-radius: 0 0 8px 8px;
-    display: flex;
+    padding-top: 0%;
+    border-radius: 8px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    display: flex
+;
     flex-direction: column;
+    min-height: 100px;
 }
 
 .assignment-details p {
@@ -328,14 +333,12 @@ export default {
 
 .modal-content h2 {
     font-size: 25px;
-    font-family: 'Arial', sans-serif;
     font-weight: 1000;
     color: #000000;
 }
 
 .modal-content label {
     font-weight: 600;
-    font-family: 'Arial', sans-serif;
     font-size: 14px;
     margin-bottom: 5px;
     display: block;

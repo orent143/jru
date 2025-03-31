@@ -1,115 +1,103 @@
 <template>
     <div class="quiz-container">
-        <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-        <div class="quiz-content">
-            <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-            <main class="quiz-main">
-                <div class="course-header">
-                    <h2>Quizzes: <span>{{ totalQuizzes }}</span></h2>
-                </div>
-
-                <div class="course-cards">
-                    <div 
-                        class="course-card" 
-                        v-for="course in courses" 
-                        :key="course.id" 
-                        @click="navigateToQuizzes(course.id)" 
-                        :class="{ 'has-quizzes': course.quizzes.length > 0 }"
-                    >
-                        <div class="course-info">
-                            <i class="pi pi-file-edit course-logo"></i>
-                            <h4 class="course-name">{{ course.course_name }}</h4>
-                        </div>
-
-                        <div class="quizzes-list" v-if="course.quizzes.length > 0">
-                            <ul>
-                                <li 
-                                    v-for="quiz in course.quizzes" 
-                                    :key="quiz.id"
-                                    @click.stop="navigateToQuizDetail(course.id, quiz.quiz_id)"
-                                >
-                                    <span class="quiz-name">{{ quiz.title }}</span>
-                                    <span class="quiz-date">Date: {{ quiz.quiz_date }}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
+      <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
+      <div class="quiz-content">
+        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+        <main class="quiz-main">
+          <div class="course-header">
+            <h2>Quizzes: <span>{{ totalQuizzes }}</span></h2>
+          </div>
+  
+          <div class="course-cards">
+            <div 
+              class="course-card" 
+              v-for="course in courses" 
+              :key="course.course_id" 
+              @click="navigateToQuizzes(course.course_id)" 
+              :class="{ 'has-quizzes': course.quizzes.length > 0 }"
+            >
+              <div class="course-info">
+                <i class="pi pi-file-edit course-logo"></i>
+                <h4 class="course-name">{{ course.course_name }}</h4>
+              </div>
+  
+              
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
-</template>
-
-
-<script>
-import Header from '@/components/student/Header.vue';
-import Sidebar from '@/components/student/Sidebar.vue';
-import axios from 'axios';
-
-export default {
+  </template>
+  
+  <script>
+  import Header from '@/components/student/Header.vue';
+  import Sidebar from '@/components/student/Sidebar.vue';
+  import axios from 'axios';
+  
+  export default {
     components: {
-        Header,
-        Sidebar
+      Header,
+      Sidebar
     },
     data() {
-        return {
-            student: null,
-            courses: [],
-            searchQuery: '',
-            isSidebarCollapsed: false,
-        };
+      return {
+        student: null,
+        courses: [],
+        searchQuery: '',
+        isSidebarCollapsed: false,
+      };
     },
     computed: {
-        totalQuizzes() {
-            return this.courses.reduce((total, course) => total + course.quizzes.length, 0);
-        }
+      totalQuizzes() {
+        return this.courses.reduce((total, course) => total + course.quizzes.length, 0);
+      }
     },
     methods: {
-        toggleSidebar() {
-            this.isSidebarCollapsed = !this.isSidebarCollapsed;
-        },
-
-        async fetchQuizzes() {
-            try {
-                const storedUser = JSON.parse(localStorage.getItem('user'));
-                if (storedUser && storedUser.role === 'student') {
-                    this.student = storedUser;
-                    const response = await axios.get(`http://127.0.0.1:8000/api/student_courses/${this.student.user_id}`);
-                    const courses = response.data.courses;
-
-                    for (const course of courses) {
-                        const quizResponse = await axios.get(`http://127.0.0.1:8000/api/student_quizzes/${this.student.user_id}/${course.course_id}`);
-                        course.quizzes = quizResponse.data.quizzes;
-                    }
-
-                    this.courses = courses;
-                } else {
-                    console.error("User is not authenticated or not a student");
-                }
-            } catch (error) {
-                console.error('Error fetching quizzes:', error);
+      toggleSidebar() {
+        this.isSidebarCollapsed = !this.isSidebarCollapsed;
+      },
+  
+      async fetchQuizzes() {
+        try {
+          const storedUser = JSON.parse(localStorage.getItem('user'));
+          if (storedUser && storedUser.role === 'student') {
+            this.student = storedUser;
+            const response = await axios.get(`http://127.0.0.1:8000/api/student_courses/${this.student.user_id}`);
+            const courses = response.data.courses;
+  
+            for (const course of courses) {
+              const quizResponse = await axios.get(`http://127.0.0.1:8000/api/student_quizzes/${this.student.user_id}/${course.course_id}`);
+              course.quizzes = quizResponse.data.quizzes;
             }
-        },
-
-        navigateToQuizzes(courseId) {
-            this.$router.push({
-                name: 'QuizContent',
-                params: { courseId: courseId.toString() }
-            });
-        },
-
-        navigateToQuizDetail(courseId, quizId) {
-            this.$router.push({
-                name: 'QuizDetails',
-                params: { courseId: courseId.toString(), quizId: quizId.toString() }
-            });
+  
+            this.courses = courses;
+          } else {
+            console.error("User is not authenticated or not a student");
+          }
+        } catch (error) {
+          console.error('Error fetching quizzes:', error);
         }
+      },
+  
+      navigateToQuizzes(courseId) {
+        this.$router.push({
+          name: 'QuizContent',
+          params: { courseId: courseId.toString() }
+        });
+      },
+  
+      navigateToQuizDetail(courseId, quizId) {
+        this.$router.push({
+          name: 'QuizDetails',
+          params: { courseId: courseId.toString(), quizId: quizId.toString() }
+        });
+      }
     },
     mounted() {
-        this.fetchQuizzes();
+      this.fetchQuizzes();
     }
-};
-</script>
+  };
+  </script>
 
 <style scoped>
 .quiz-container {
@@ -129,8 +117,8 @@ export default {
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
+    background-color: #fff;
+  }
 
 .course-header {
     background-color: #D9D9D9;

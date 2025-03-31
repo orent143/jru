@@ -12,7 +12,7 @@ import AssignmentDetails from '@/components/student/assignment/AssignmentDetails
 import ExamDashboard from '@/views/student/Exam.vue';
 import ExamContent from '@/components/student/exam/ExamContent.vue';
 import ExamDetails from '@/components/student/exam/ExamDetails.vue';
-import QuizDashboard from '@/views/student/Quiz.vue'; // Ensure this import is correct
+import QuizDashboard from '@/views/student/Quiz.vue';
 import QuizContent from '@/components/student/quiz/QuizContent.vue';
 import QuizDetails from '@/components/student/quiz/QuizDetails.vue';
 import GradeDashboard from '@/views/student/Grades.vue';
@@ -45,13 +45,18 @@ const routes = [
   { path: '/student-dashboard', name: 'StudentDashboard', component: StudentDashboard },
   { path: '/student/course/:courseId', name: 'StudentCourseContent', component: CourseContent, props: true },
   { path: '/course/:courseId/material/:materialId', name: 'StudentMaterialDetail', component: CourseMaterialDetail, props: true },
-  { path: '/student/course/:courseId/assignments', name: 'AssignmentContent', component: AssignmentContent, props: true },
+  {
+    path: '/student/course/:courseId/assignments',
+    name: 'AssignmentContent',
+    component: AssignmentContent,
+    props: true
+  },
   { path: '/student/course/:courseId/assignment/:assignmentId', name: 'AssignmentDetails', component: AssignmentDetails, props: true },
   { path: '/student/assignment-dashboard', name: 'AssignmentDashboard', component: AssignmentDashboard },
   { path: '/student/exam-dashboard', name: 'ExamDashboard', component: ExamDashboard },
   { path: '/student/course/:courseId/exams', name: 'ExamContent', component: ExamContent, props: true },
   { path: '/student/course/:courseId/exam/:examId', name: 'ExamDetails', component: ExamDetails, props: true },
-  { path: '/student/quiz-dashboard', name: 'QuizDashboard', component: QuizDashboard }, // Ensure this route is correct
+  { path: '/student/quiz-dashboard', name: 'QuizDashboard', component: QuizDashboard },
   { path: '/student/course/:courseId/quizzes', name: 'QuizContent', component: QuizContent, props: true },
   { path: '/student/course/:courseId/quiz/:quizId', name: 'QuizDetails', component: QuizDetails, props: true },
   { path: '/student/grade-dashboard', name: 'GradeDashboard', component: GradeDashboard },

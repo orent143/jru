@@ -320,14 +320,12 @@ margin-bottom: 5rem;
 
 .modal-content h2 {
     font-size: 25px;
-    font-family: 'Arial', sans-serif;
     font-weight: 1000;
     color: #000000;
 }
 
 .modal-content label {
     font-weight: 600;
-    font-family: 'Arial', sans-serif;
     font-size: 14px;
     margin-bottom: 5px;
     display: block;

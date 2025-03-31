@@ -1,98 +1,110 @@
 <template>
-    <div class="modal-container">
-      <div class="modal">
-        <div class="modal-content">
-          <span class="close" @click="closeModal">&times;</span>
-          <h2>Add New Assignment</h2>
-          
-          <label for="title">Assignment Title:</label>
-          <input v-model="title" type="text" placeholder="Enter Title" required />
+  <div class="modal-container">
+    <div class="modal">
+      <div class="modal-content">
+        <span class="close" @click="closeModal">&times;</span>
+        <h2>Add New Assignment</h2>
+        
+        <label for="title">Assignment Title:</label>
+        <input v-model="title" type="text" placeholder="Enter Title" required />
   
-          <label for="description">Assignment Description:</label>
-          <textarea v-model="description" placeholder="Enter Description"></textarea>
+        <label for="description">Assignment Description:</label>
+        <textarea v-model="description" placeholder="Enter Description"></textarea>
   
-          <label for="due_date">Due Date:</label>
-          <input v-model="due_date" type="date" required />
+        <label for="due_date">Due Date:</label>
+        <input v-model="due_date" type="date" required />
   
-          <label for="file-upload">Upload File:</label>
-          <input type="file" @change="handleFileUpload" />
-          <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
+        <label for="file-upload">Upload File:</label>
+        <input type="file" @change="handleFileUpload" />
+        <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
+
+        <label for="external-link">External Link (Optional):</label>
+        <input v-model="externalLink" type="url" placeholder="Enter external link (if any)" />
   
-          <button @click="addAssignment" :disabled="isSubmitting">Add Assignment</button>
-        </div>
+        <button @click="addAssignment" :disabled="isSubmitting">Add Assignment</button>
       </div>
     </div>
+  </div>
 </template>
-  
+
 <script>
 import axios from "axios";
   
 export default {
-    props: {
-      courseId: Number,
+  props: {
+    courseId: Number,
+  },
+  data() {
+    return {
+      title: "",
+      description: "",
+      due_date: "",
+      file: null,
+      fileName: "",
+      externalLink: "", // New field to store external link
+      isSubmitting: false,
+    };
+  },
+  methods: {
+    handleFileUpload(event) {
+      this.file = event.target.files[0];
+      this.fileName = this.file ? this.file.name : "";
     },
-    data() {
-      return {
-        title: "",
-        description: "",
-        due_date: "",
-        file: null,
-        fileName: "",
-        isSubmitting: false,
-      };
-    },
-    methods: {
-      handleFileUpload(event) {
-        this.file = event.target.files[0];
-        this.fileName = this.file ? this.file.name : "";
-      },
-      async addAssignment() {
-        if (!this.courseId || !this.title || !this.description || !this.due_date) {
-          alert("Please fill in all required fields.");
-          return;
-        }
-  
-        this.isSubmitting = true;
-  
-        const formData = new FormData();
-        formData.append("course_id", this.courseId);
-        formData.append("title", this.title);
-        formData.append("description", this.description);
-        formData.append("due_date", this.due_date);
-        if (this.file) {
-          formData.append("file", this.file);
-        }
-  
-        try {
-          const response = await axios.post('http://127.0.0.1:8000/api/assignments', formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-  
-          alert("Assignment added successfully!");
-          this.$emit("add-assignment", response.data);
-          this.resetForm();
-        } catch (error) {
-          console.error("Error adding assignment:", error);
-          alert("Failed to add assignment.");
-        } finally {
-          this.isSubmitting = false;
-        }
-      },
-      resetForm() {
-        this.title = "";
-        this.description = "";
-        this.due_date = "";
-        this.file = null;
-        this.fileName = "";
-        this.$emit("close");
-      },
-      closeModal() {
+    async addAssignment() {
+      if (!this.courseId || !this.title || !this.description || !this.due_date) {
+        alert("Please fill in all required fields.");
+        return;
+      }
+
+      this.isSubmitting = true;
+
+      const formData = new FormData();
+      formData.append("course_id", this.courseId);
+      formData.append("title", this.title);
+      formData.append("description", this.description);
+      formData.append("due_date", this.due_date);
+
+      // If file is uploaded, append it to formData
+      if (this.file) {
+        formData.append("file", this.file);
+      }
+
+      // If external link is provided, append it
+      if (this.externalLink) {
+        formData.append("external_link", this.externalLink);
+      }
+
+      try {
+        const response = await axios.post('http://127.0.0.1:8000/api/assignments', formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        alert("Assignment added successfully!");
+        this.$emit("add-assignment", response.data);
         this.resetForm();
-      },
+      } catch (error) {
+        console.error("Error adding assignment:", error);
+        alert("Failed to add assignment.");
+      } finally {
+        this.isSubmitting = false;
+      }
     },
+    resetForm() {
+      this.title = "";
+      this.description = "";
+      this.due_date = "";
+      this.file = null;
+      this.fileName = "";
+      this.externalLink = ""; // Reset external link field
+      this.$emit("close");
+    },
+    closeModal() {
+      this.resetForm();
+    },
+  },
 };
 </script>
-  
+
 <style scoped>
 .modal {
   position: fixed;
@@ -116,7 +128,6 @@ export default {
 
 .modal-content h2 {
   font-size: 25px;
-  font-family: 'Arial', sans-serif;
   font-weight: bold;
   color: #000;
   margin-bottom: 15px;

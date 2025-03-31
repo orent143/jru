@@ -36,12 +36,11 @@
                 <h3>Attachments</h3>
 
                 <!-- Local File Attachment -->
-                <div v-if="currentAssignment.file_path" class="attachment-item" @click="downloadAttachment(currentAssignment.file_path)">
-                  <i class="pi pi-file"></i>
-                  <span>{{ getFileName(currentAssignment.file_path) }}</span>
-                  <i class="pi pi-download"></i>
-                </div>
-
+                <div v-if="currentAssignment.file_path" class="attachment-item" @click="downloadFile(currentAssignment.file_path)">
+  <i class="pi pi-file"></i>
+  <span>{{ getFileName(currentAssignment.file_path) }}</span>
+  <i class="pi pi-download"></i>
+</div>
                 <!-- External Link -->
                 <div v-if="currentAssignment.external_link" class="attachment-item">
                   <i class="pi pi-link"></i>
@@ -193,22 +192,43 @@ export default {
       this.selectedFile = event.target.files[0];
     },
 
+    getFileName(fileUrl) {
+        return fileUrl.split('/').pop();
+      },
+      downloadFile(fileUrl) {
+  if (!fileUrl) return;
+  
+  const formattedUrl = fileUrl.replace(/\\/g, '/'); // Ensure correct path format
+
+  if (formattedUrl.startsWith('http')) {
+    // Open external links directly
+    window.open(formattedUrl, '_blank');
+  } else {
+    // Extract file name and initiate download from the API
+    const fileName = this.getFileName(formattedUrl);
+    const downloadUrl = `http://127.0.0.1:8000/api/assignments/download/${fileName}`;
+    window.open(downloadUrl, '_blank');
+  }
+},
     async submitAssignment() {
       const formData = new FormData();
       formData.append("student_id", this.studentId);
       formData.append("assignment_id", this.assignmentId);
       formData.append("submission_text", this.submissionText);
 
+      // Attach file if selected
       if (this.selectedFile) {
         formData.append("file", this.selectedFile);
       }
+      
+      // Attach external link if provided
       if (this.externalLink) {
         formData.append("external_link", this.externalLink);
       }
 
       try {
-        await axios.post("http://127.0.0.1:8000/api/submit-assignment/", formData, {
-          headers: { "Content-Type": "multipart/form-data" }
+        const response = await axios.post("http://127.0.0.1:8000/api/submit-assignment/", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
 
         this.toast.success("✅ Assignment submitted successfully!");
@@ -221,15 +241,6 @@ export default {
         console.error("Error submitting assignment:", error);
         this.toast.error("❌ Failed to submit assignment. Please try again.");
       }
-    },
-
-    downloadAttachment(filePath) {
-      const formattedPath = filePath.replace(/\\/g, '/').split('/').pop();
-      window.open(`http://127.0.0.1:8000/api/assignments/download/${formattedPath}`, "_blank");
-    },
-
-    getFileName(filePath) {
-      return filePath.split(/[\\/]/).pop();
     },
 
     addComment() {
@@ -250,7 +261,6 @@ export default {
   }
 };
 </script>
-
 
 <style scoped>
 .assignment-detail-container {

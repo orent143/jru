@@ -38,28 +38,10 @@
                 class="exam-card"
                 @click="navigateToExamDetails(exam.exam_id)"
               >
-                <h4>{{ exam.title }}</h4>
-                <p>{{ exam.description }}</p>
-                <p>{{ formatDate(exam.exam_date) }}</p>
-
-                <div v-if="exam.file_url">
-                  <a
-                    :href="getFileUrl(exam.file_url)"
-                    target="_blank"
-                    class="btn-link"
-                  >
-                    Download File
-                  </a>
-                </div>
-                <div v-if="exam.external_link">
-                  <a
-                    :href="exam.external_link"
-                    target="_blank"
-                    class="btn-link"
-                  >
-                    External Link
-                  </a>
-                </div>
+              <div class="card-header">
+                <h4>Teacher posted an exam:</h4>
+                {{ exam.title }}
+              </div>
               </div>
             </div>
             <p v-else>No exams available.</p>
@@ -288,10 +270,11 @@ export default {
     color: #333;
   }
   
-  .exam-card p {
-    display: flex;
-    align-items: center;
-    font-size: 1.2rem;
-    color: #333;
-  }
+  .card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  color: #333;
+}
   </style>

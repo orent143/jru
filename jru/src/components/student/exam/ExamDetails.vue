@@ -378,7 +378,7 @@
 }
 
 .submission-actions button {
-    width: 100%;
+  width: 100%;
     padding: 1rem;
     border: none;
     border-radius: 20px;
@@ -387,7 +387,9 @@
     background-color: #F5F5F5;
     color: rgba(0, 0, 0, 0.781);
     cursor: pointer;
-    display: flex;
+    display: flex
+;
+    font-family: 'Inter', sans-serif;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;

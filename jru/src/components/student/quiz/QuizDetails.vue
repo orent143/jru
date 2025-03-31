@@ -93,11 +93,7 @@
     </div>
 </template>
 
----
 
-### ✅ **Updated Script Section**
-
-```javascript
 <script>
 import Header from '../Header.vue';
 import Sidebar from '../Sidebar.vue';
@@ -406,7 +402,9 @@ export default {
     background-color: #F5F5F5;
     color: rgba(0, 0, 0, 0.781);
     cursor: pointer;
-    display: flex;
+    display: flex
+;
+    font-family: 'Inter', sans-serif;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;

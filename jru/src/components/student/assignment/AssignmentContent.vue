@@ -36,9 +36,8 @@
                   @click="navigateToAssignmentDetails(assignment.assignment_id)"
                 >
                   <div class="card-header">
-                    <h4>{{ assignment.title }}</h4>
-                    <p>{{ assignment.description }}</p>
-                    <p class="due-date">Due: {{ formatDate(assignment.due_date) }}</p>
+                    <h4>Teacher posted a new assignment:</h4>
+                    {{ assignment.title }}
                   </div>
                 </div>
               </div>

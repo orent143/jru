@@ -26,8 +26,8 @@
                      class="material-card"
                      @click="navigateToMaterial(material.content_id)">
                   <div class="card-header">
-                    <h4>{{ material.title }}</h4>
-                    <p>{{ material.description }}</p>
+                    <h4>Teacher posted a new material:</h4>
+                    {{ material.title }}
                   </div>
                 </div>
               </div>

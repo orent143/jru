@@ -40,9 +40,10 @@
       class="quiz-card"
       @click="navigateToQuizDetails(course.course_id, quiz.quiz_id)"
     >
-      <h4>{{ quiz.title }}</h4>
-      <p>{{ quiz.description }}</p>
-      <p class="due-date">Quiz Date: {{ quiz.quiz_date || "No Date" }}</p>
+    <div class="card-header">
+      <h4>Teacher posted a quiz:</h4>
+      {{ quiz.title }}
+    </div>
     </div>
   </div>
 </div>
@@ -261,9 +262,10 @@ h3 {
   color: #333;
 }
 
-.quiz-card p {
+.card-header {
   display: flex;
   align-items: center;
+  gap: 10px;
   font-size: 1.2rem;
   color: #333;
 }

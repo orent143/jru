@@ -34,14 +34,14 @@
               <!-- Attachments Section -->
               <div v-if="currentAssignment.file_path || currentAssignment.external_link" class="attachments">
                 <h3>Attachments</h3>
-                
+
                 <!-- Local File Attachment -->
                 <div v-if="currentAssignment.file_path" class="attachment-item" @click="downloadAttachment(currentAssignment.file_path)">
                   <i class="pi pi-file"></i>
                   <span>{{ getFileName(currentAssignment.file_path) }}</span>
                   <i class="pi pi-download"></i>
                 </div>
-                
+
                 <!-- External Link -->
                 <div v-if="currentAssignment.external_link" class="attachment-item">
                   <i class="pi pi-link"></i>
@@ -49,11 +49,68 @@
                 </div>
               </div>
             </div>
-
-            <!-- Download Section -->
           </div>
 
           <div class="side-content">
+            <div class="content-section submission">
+              <h2>Your Work</h2>
+
+              <!-- Submission Form -->
+              <form @submit.prevent="submitAssignment" enctype="multipart/form-data">
+                <div class="submission-area">
+                  <div class="submission-type-selector">
+                    <label for="submissionType">Choose Submission Type:</label>
+                    <select v-model="submissionType" id="submissionType" class="submission-dropdown">
+                      <option value="">Select submission type</option>
+                      <option value="file">Upload File</option>
+                      <option value="link">External Link</option>
+                    </select>
+                  </div>
+
+                  <div class="submission-inputs" v-if="submissionType">
+                    <!-- File Upload Input -->
+                    <div v-if="submissionType === 'file'" class="file-upload-container">
+                      <label class="file-upload-label">
+                        <input 
+                          type="file" 
+                          @change="handleFileChange" 
+                          class="file-input"
+                        />
+                        <span class="file-upload-text">
+                          <i class="pi pi-upload"></i>
+                          {{ selectedFile ? selectedFile.name : 'Choose file to upload' }}
+                        </span>
+                      </label>
+                    </div>
+
+                    <!-- External Link Input -->
+                    <div v-if="submissionType === 'link'" class="link-input-container">
+                      <input 
+                        type="text" 
+                        v-model="externalLink" 
+                        placeholder="Enter external link here" 
+                        class="link-input"
+                      />
+                    </div>
+
+                    <!-- Submission Text Area -->
+                    <div class="text-area-container">
+                      <textarea 
+                        v-model="submissionText" 
+                        placeholder="Add submission text..." 
+                        required
+                        class="submission-textarea"
+                      ></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                      <i class="pi pi-upload"></i> Submit Assignment
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
             <div class="content-section comments">
               <h2>Class Comments</h2>
               <div class="comment-input">
@@ -74,6 +131,7 @@
               </div>
             </div>
           </div>
+
         </div>  
       </div>
     </div>
@@ -84,17 +142,26 @@
 import Header from '../Header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
+import { useToast } from "vue-toastification";  
 
 export default {
   name: 'AssignmentDetail',
   components: { Header, Sidebar },
   props: ['courseId', 'assignmentId'],
+  setup() {
+    const toast = useToast();
+    return { toast };
+  },
   data() {
     return {
       student: {},
       courses: [],
       currentAssignment: null,
       newComment: "",
+      submissionText: "",
+      externalLink: "",
+      selectedFile: null,
+      submissionType: "",
     };
   },
   async created() {
@@ -122,26 +189,51 @@ export default {
       return date ? new Date(date).toLocaleDateString() : 'N/A';
     },
 
-    downloadAttachment(filePath) {
-  const formattedPath = filePath.replace(/\\/g, '/'); 
+    handleFileChange(event) {
+      this.selectedFile = event.target.files[0];
+    },
 
-  if (formattedPath.startsWith('http')) {
-    window.open(formattedPath, "_blank"); 
-  } else {
-    // Extract only the file name without "uploads/" prefix
-    const cleanedPath = formattedPath.split('/').pop();
-    window.open(`http://127.0.0.1:8000/api/assignments/download/${cleanedPath}`, "_blank");
-  }
-}
-,
+    async submitAssignment() {
+      const formData = new FormData();
+      formData.append("student_id", this.studentId);
+      formData.append("assignment_id", this.assignmentId);
+      formData.append("submission_text", this.submissionText);
+
+      if (this.selectedFile) {
+        formData.append("file", this.selectedFile);
+      }
+      if (this.externalLink) {
+        formData.append("external_link", this.externalLink);
+      }
+
+      try {
+        await axios.post("http://127.0.0.1:8000/api/submit-assignment/", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+
+        this.toast.success("✅ Assignment submitted successfully!");
+        this.submissionText = "";
+        this.externalLink = "";
+        this.selectedFile = null;
+        this.submissionType = "";
+
+      } catch (error) {
+        console.error("Error submitting assignment:", error);
+        this.toast.error("❌ Failed to submit assignment. Please try again.");
+      }
+    },
+
+    downloadAttachment(filePath) {
+      const formattedPath = filePath.replace(/\\/g, '/').split('/').pop();
+      window.open(`http://127.0.0.1:8000/api/assignments/download/${formattedPath}`, "_blank");
+    },
 
     getFileName(filePath) {
-      return filePath.split(/[\\/]/).pop(); // Extract the file name from the file path
+      return filePath.split(/[\\/]/).pop();
     },
 
     addComment() {
       if (!this.newComment.trim()) return;
-      this.currentAssignment.comments = this.currentAssignment.comments || [];
       this.currentAssignment.comments.push({
         id: Date.now(),
         author: "You",
@@ -158,6 +250,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .assignment-detail-container {
@@ -179,7 +272,6 @@ export default {
   overflow-y: auto;
   max-height: 100%;
   background-color: #fff;
-
 }
 
 .back-btn {
@@ -248,6 +340,111 @@ export default {
   margin-bottom: 1.5rem;
   font-size: 1.25rem;
   color: #333;
+}
+
+.submission-type-selector {
+  margin-bottom: 1.5rem;
+}
+
+.submission-dropdown {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.submission-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.file-upload-container {
+  width: 100%;
+}
+
+.file-upload-label {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.file-upload-label:hover {
+  border-color: #007bff;
+  background-color: #f1f8ff;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-upload-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #666;
+}
+
+.link-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.submission-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+}
+
+.submission-message {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f8d7da;
+  color: #721c24;
+  text-align: center;
+}
+
+.submission-message.success {
+  background-color: #d4edda;
+  color: #155724;
 }
 
 .attachment-item {
@@ -327,27 +524,7 @@ export default {
   border-radius: 12px;
 }
 
-.primary {
-  background-color: #007bff;
-}
-
 .status.indicator {
   background-color: #f39c12;
-}
-
-.submission-actions button {
-  width: 100%;
-  padding: 1rem;
-  border: none;
-  border-radius: 20px;
-  font-size: 100%;
-  font-weight: 800;
-  background-color: #F5F5F5;
-  color: rgba(0, 0, 0, 0.781);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
 }
 </style>

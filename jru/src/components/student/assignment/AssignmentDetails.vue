@@ -138,7 +138,7 @@
 </template>
 
 <script>
-import Header from '../Header.vue';
+import Header from '@/components/header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
 import { useToast } from "vue-toastification";  
@@ -153,7 +153,7 @@ export default {
   },
   data() {
     return {
-      student: {},
+      student: JSON.parse(localStorage.getItem("user")),
       courses: [],
       currentAssignment: null,
       newComment: "",
@@ -231,7 +231,7 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        this.toast.success("✅ Assignment submitted successfully!");
+        this.toast.success("Assignment submitted successfully!");
         this.submissionText = "";
         this.externalLink = "";
         this.selectedFile = null;
@@ -239,7 +239,7 @@ export default {
 
       } catch (error) {
         console.error("Error submitting assignment:", error);
-        this.toast.error("❌ Failed to submit assignment. Please try again.");
+        this.toast.error("Failed to submit assignment. Please try again.");
       }
     },
 

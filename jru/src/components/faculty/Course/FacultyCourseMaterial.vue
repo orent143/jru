@@ -13,7 +13,7 @@
         <div class="material-content">
           <div class="main-content">
             <div class="title-section">
-              <h1>{{ material?.title || "Loading..." }}</h1>
+              <h1>Material Title: {{ material?.title || "Loading..." }}</h1>
               <p v-if="material?.posted_at" class="posted-at">
                 Posted at: {{ formatDate(material.posted_at) }}
               </p>
@@ -67,7 +67,7 @@
 
 <script>
 import axios from "axios";
-import Header from "@/components/faculty/header.vue";
+import Header from "@/components/header.vue";
 import Sidebar from "@/components/faculty/SideBar.vue";
 
 export default {
@@ -104,7 +104,10 @@ export default {
       }
     },
     goBack() {
-      this.$router.push({ name: "CourseContent", params: { courseId: this.courseId } });
+      this.$router.push({ 
+        name: "FacultyCourseContent", 
+        params: { courseId: this.courseId } 
+      });
     },
     sendMessage() {
       if (this.newMessage.trim()) {

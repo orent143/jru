@@ -1,86 +1,92 @@
 <template>
-    <div v-if="show" class="modal">
-        <div class="modal-content">
-            <h2>Edit User</h2>
-            <form @submit.prevent="handleSubmit">
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" v-model="formData.name" required />
-                </div>
+  <div v-if="show" class="modal">
+      <div class="modal-content">
+          <h2>Edit User</h2>
+          <form @submit.prevent="handleSubmit">
+              <div class="form-group">
+                  <label for="name">Name</label>
+                  <input type="text" id="name" v-model="formData.name" required />
+              </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" v-model="formData.email" required />
-                </div>
+              <div class="form-group">
+                  <label for="email">Email</label>
+                  <input type="email" id="email" v-model="formData.email" required />
+              </div>
 
-                <div class="form-group">
-                    <label for="role">Role</label>
-                    <select id="role" v-model="formData.role" required>
-                        <option value="student">Student</option>
-                        <option value="faculty">Faculty</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
+              <div class="form-group">
+                  <label for="role">Role</label>
+                  <select id="role" v-model="formData.role" required>
+                      <option value="student">Student</option>
+                      <option value="faculty">Faculty</option>
+                      <option value="admin">Admin</option>
+                  </select>
+              </div>
 
-                <div class="modal-actions">
-                    <button type="button" class="cancel-btn" @click="close">Cancel</button>
-                    <button type="submit" class="save-btn">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
+              <div class="modal-actions">
+                  <button type="button" class="cancel-btn" @click="close">Cancel</button>
+                  <button type="submit" class="save-btn">Save Changes</button>
+              </div>
+          </form>
+      </div>
+  </div>
 </template>
 
 <script>
 import axios from 'axios';
+import { useToast } from 'vue-toastification'; // Import toast
 
 export default {
-  name: 'EditUser',
-  props: {
-    show: { type: Boolean, required: true },
-    user: { type: Object, required: true }
-  },
-  data() {
-    return {
-      formData: { name: '', email: '', role: '' }
-    };
-  },
-  watch: {
-    user: {
-      handler(newUser) {
-        if (newUser && newUser.user_id) {
-          this.formData = { ...newUser };
-        }
-      },
-      immediate: true
-    }
-  },
-  methods: {
-    async handleSubmit() {
-      if (!this.user || !this.user.user_id) {
-        alert("User ID is missing or invalid.");
-        return;
-      }
-
-      try {
-        await axios.put(
-          `http://127.0.0.1:8000/api/users/${this.user.user_id}`,
-          this.formData,
-          { headers: { "Content-Type": "application/json" } }
-        );
-
-        alert('User updated successfully!');
-        this.$emit('update');
-        this.close();
-      } catch (error) {
-        console.error("Error updating user:", error);
-        alert(error.response?.data?.detail || "Error updating user.");
+name: 'EditUser',
+props: {
+  show: { type: Boolean, required: true },
+  user: { type: Object, required: true }
+},
+data() {
+  return {
+    formData: { name: '', email: '', role: '' }
+  };
+},
+watch: {
+  user: {
+    handler(newUser) {
+      if (newUser && newUser.user_id) {
+        this.formData = { ...newUser };
       }
     },
-    close() {
-      this.$emit('close');
-    }
+    immediate: true
   }
+},
+setup() {
+  const toast = useToast(); // Initialize toast
+
+  return { toast };
+},
+methods: {
+  async handleSubmit() {
+    if (!this.user || !this.user.user_id) {
+      this.toast.error('User ID is missing or invalid.'); // Error toast
+      return;
+    }
+
+    try {
+      await axios.put(
+        `http://127.0.0.1:8000/api/users/${this.user.user_id}`,
+        this.formData,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      this.toast.success('User updated successfully!'); // Success toast
+      this.$emit('update');
+      this.close();
+    } catch (error) {
+      console.error("Error updating user:", error);
+      this.toast.error(error.response?.data?.detail || "Error updating user."); // Error toast
+    }
+  },
+  close() {
+    this.$emit('close');
+  }
+}
 };
 </script>
 

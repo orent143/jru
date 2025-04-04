@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import Header from '@/components/student/Header.vue';
+import Header from '@/components/header.vue';
 import Sidebar from '@/components/student/Sidebar.vue';
 import axios from 'axios';
 
@@ -100,6 +100,7 @@ export default {
 
 .header h1 {
     color: #000;
+    font-weight: 900;
 }
 .course-cards {
   display: grid;

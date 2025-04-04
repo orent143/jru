@@ -22,6 +22,7 @@
 
 <script>
 import axios from "axios";
+import { useToast } from 'vue-toastification'; // Import toast
 
 export default {
   props: {
@@ -40,8 +41,10 @@ export default {
       this.file = event.target.files[0];
     },
     async addMaterial() {
+      const toast = useToast(); // Initialize toast
+
       if (!this.courseId || !this.title || !this.content) {
-        alert("Please fill in all required fields.");
+        toast.error('Please fill in all required fields.');
         return;
       }
 
@@ -60,12 +63,12 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        alert("Material added successfully!");
+        toast.success('Material added successfully!'); // Success toast
         this.$emit("add-material", response.data);
         this.resetForm();
       } catch (error) {
         console.error("Error adding material:", error);
-        alert("Failed to add material.");
+        toast.error('Failed to add material.'); // Error toast
       } finally {
         this.isSubmitting = false;
       }
@@ -82,6 +85,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .modal {
@@ -110,7 +114,11 @@ export default {
   color: #000000;
   padding-right: 30px;
 }
-
+.modal-content h2 {
+    font-size: 25px;
+    font-weight: 1000;
+    color: #000000;
+}
 .close {
   position: absolute;
   top: 10px;

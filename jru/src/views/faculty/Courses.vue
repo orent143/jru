@@ -10,13 +10,10 @@
                         <button @click="showCreateCourseForm = true" class="create-course-btn">Create Course</button>
                     </div>
 
-                    <!-- Display loading state -->
                     <p v-if="loading">Loading courses...</p>
-
-                    <!-- Display error message if fetching fails -->
                     <p v-if="error" class="error">{{ error }}</p>
 
-                    <div class="course-cards" v-if="!loading && courses?.length">
+                    <div class="course-cards" v-if="!loading && courses.length">
                         <div 
                             v-for="course in courses" 
                             :key="course.course_id" 
@@ -37,10 +34,8 @@
                         </div>
                     </div>
 
-                    <!-- Display when there are no courses -->
-                    <p v-else-if="!loading && courses && courses.length === 0">No courses found.</p>
-                    <p v-else>Loading courses...</p>
-                    <!-- Create Course Modal -->
+                    <p v-else-if="!loading && courses.length === 0">No courses found.</p>
+
                     <div v-if="showCreateCourseForm" class="modal">
                         <div class="modal-content">
                             <span class="close" @click="closeModal">&times;</span>
@@ -48,7 +43,7 @@
                             <form @submit.prevent="createCourse" class="course-form">
                                 <label for="name">Course Name:</label>
                                 <input type="text" v-model="newCourse.course_name" required>
-                                
+                                  
                                 <label for="section">Section:</label>
                                 <input type="text" v-model="newCourse.section" required>
 
@@ -67,14 +62,12 @@
 
 <script>
 import axios from 'axios';
-import Header from '@/components/faculty/header.vue';
+import { useToast } from 'vue-toastification'; // Import toast
+import Header from '@/components/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
 
 export default {
-    components: {
-        Header,
-        SideBar
-    },
+    components: { Header, SideBar },
     data() {
         return {
             isSidebarCollapsed: false,
@@ -82,86 +75,107 @@ export default {
             loading: false,
             error: null,
             showCreateCourseForm: false,
-            newCourse: {
-                course_name: '',
-                section: '',
-                class_schedule: ''
-            },
-            user: null // Store logged-in user data
+            newCourse: { course_name: '', section: '', class_schedule: '' },
+            user: JSON.parse(localStorage.getItem('user')) || null
         };
     },
     methods: {
         toggleSidebar() {
             this.isSidebarCollapsed = !this.isSidebarCollapsed;
         },
+
         async fetchCourses() {
+            if (!this.user || !this.user.user_id || this.user.role !== 'faculty') {
+                console.error("Invalid user data:", this.user);
+                this.error = "Unauthorized or missing user information.";
+                return;
+            }
+
             this.loading = true;
             this.error = null;
-            
+
             try {
-                const storedUser = localStorage.getItem('user');
-                if (storedUser) {
-                    this.user = JSON.parse(storedUser);
-                }
+                const response = await axios.get("http://127.0.0.1:8000/api/courses/", {
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${this.user.access_token}`
+                    },
+                    params: { user_id: this.user.user_id }
+                });
 
-                if (!this.user || this.user.role !== 'faculty') {
-                    this.error = "Unauthorized access.";
-                    return;
-                }
-
-                const response = await axios.get(`http://127.0.0.1:8000/api/courses/?user_id=${this.user.user_id}`);
                 this.courses = response.data;
+
             } catch (err) {
-                this.error = 'Failed to fetch courses.';
+                console.error("Error fetching courses:", err.response?.data || err.message);
+                this.error = err.response?.data?.detail || "Failed to fetch courses.";
             } finally {
                 this.loading = false;
             }
         },
+
         async createCourse() {
+            const toast = useToast(); // Initialize toast
+
+            if (!this.user) return;
+
             try {
-                if (!this.user) return;
-                
                 const response = await axios.post('http://127.0.0.1:8000/api/courses/', {
-                    course_name: this.newCourse.course_name,
-                    section: this.newCourse.section,
-                    class_schedule: this.newCourse.class_schedule,
+                    ...this.newCourse,
                     user_id: this.user.user_id
                 });
-                
+
+                // Add the new course to the list
                 this.courses.push({ ...this.newCourse, course_id: response.data.course_id });
-                this.showCreateCourseForm = false;
-                this.newCourse = { course_name: '', section: '', class_schedule: '' };
+                toast.success('Course created successfully!'); // Success toast
+                this.closeModal();
+                this.resetNewCourseForm();
             } catch (err) {
-                this.error = 'Failed to create course.';
+                console.error('Error creating course:', err);
+                toast.error(err.response?.data?.detail || 'Failed to create course.'); // Error toast
             }
         },
+
         async deleteCourse(course_id) {
+            const toast = useToast(); // Initialize toast
+
+            if (!this.user) return;
+
             try {
-                if (!this.user) return;
-                
                 await axios.delete(`http://127.0.0.1:8000/api/courses/${course_id}`, {
                     params: { user_id: this.user.user_id }
                 });
-                
+
                 this.courses = this.courses.filter(course => course.course_id !== course_id);
+                toast.success('Course deleted successfully!'); // Success toast
             } catch (err) {
-                this.error = 'Failed to delete course.';
+                console.error('Error deleting course:', err);
+                toast.error(err.response?.data?.detail || 'Failed to delete course.'); // Error toast
             }
         },
+
         goToCourseContent(course_id) {
-            this.$router.push({ name: 'CourseContent', params: { courseId: course_id } });
+            this.$router.push({ 
+                name: 'FacultyCourseContent', 
+                params: { courseId: course_id } 
+            });
         },
 
         closeModal() {
             this.showCreateCourseForm = false;
+        },
+
+        resetNewCourseForm() {
+            this.newCourse = { course_name: '', section: '', class_schedule: '' };
         }
     },
+
     mounted() {
-        this.fetchCourses();
+        setTimeout(() => {
+            this.fetchCourses();
+        }, 500); // Adjust delay if needed
     }
 };
 </script>
- 
 
 <style scoped>
 .dashboard-container {

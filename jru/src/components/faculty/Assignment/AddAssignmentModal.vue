@@ -29,7 +29,8 @@
 
 <script>
 import axios from "axios";
-  
+import { useToast } from 'vue-toastification'; // Import toast
+
 export default {
   props: {
     courseId: Number,
@@ -51,8 +52,10 @@ export default {
       this.fileName = this.file ? this.file.name : "";
     },
     async addAssignment() {
+      const toast = useToast(); // Initialize toast
+
       if (!this.courseId || !this.title || !this.description || !this.due_date) {
-        alert("Please fill in all required fields.");
+        toast.error('Please fill in all required fields.');
         return;
       }
 
@@ -79,12 +82,12 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        alert("Assignment added successfully!");
+        toast.success('Assignment added successfully!'); // Success toast
         this.$emit("add-assignment", response.data);
         this.resetForm();
       } catch (error) {
         console.error("Error adding assignment:", error);
-        alert("Failed to add assignment.");
+        toast.error('Failed to add assignment.'); // Error toast
       } finally {
         this.isSubmitting = false;
       }
@@ -104,6 +107,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .modal {

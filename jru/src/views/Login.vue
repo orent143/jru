@@ -12,6 +12,7 @@
                         v-model="email" 
                         placeholder="Email"
                         required
+                        :disabled="loading"
                     >
                 </div>
                 <div class="form-group">
@@ -20,10 +21,12 @@
                         v-model="password" 
                         placeholder="Password"
                         required
+                        :disabled="loading"
                     >
                 </div>
                 <button type="submit" class="login-btn" :disabled="loading">
-                    {{ loading ? "Logging in..." : "Login" }}
+                    <span v-if="loading" class="loading-spinner"></span>
+                    {{ loading ? "Please wait..." : "Login" }}
                 </button>
             </form>
             <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -52,34 +55,46 @@ export default {
     },
     methods: {
         async handleLogin() {
-    this.loading = true;
-    this.errorMessage = '';
+            this.loading = true;
+            this.errorMessage = '';
 
-    console.log("🔍 Sending login request:", this.email, this.password);  // Debugging
+            try {
+                const response = await axios.post('http://127.0.0.1:8000/api/login/', {
+                    email: this.email,
+                    password: this.password
+                });
 
-    try {
-        const response = await axios.post('http://127.0.0.1:8000/api/login/', {
-            email: this.email,
-            password: this.password
-        });
+                console.log("🔹 Backend Response:", response.data); // Debugging log
 
-        console.log("✅ Login successful, user data:", response.data); // Debugging
+                if (response.data.access_token) {
+                    console.log("✅ Login successful, storing user data...");
 
-        localStorage.setItem('user', JSON.stringify(response.data));
-        switch (response.data.role) {
-            case 'student': this.$router.push('/student-dashboard'); break;
-            case 'faculty': this.$router.push('/faculty-dashboard'); break;
-            case 'admin': this.$router.push('/admin-dashboard'); break;
-            default: this.$router.push('/dashboard');
+                    // Store complete user data before verification
+                    localStorage.setItem('tempUserData', JSON.stringify({
+                        user_id: response.data.user_id,
+                        name: response.data.name,
+                        email: response.data.email,
+                        role: response.data.role,
+                        access_token: response.data.access_token,
+                        courses: response.data.courses
+                    }));
+
+                    // Redirect to verification page
+                    this.$router.push({
+                        name: 'VerifyCode',
+                        query: { email: this.email }
+                    }).catch(err => console.error("❌ Navigation Error:", err));
+                } else {
+                    console.log("⚠️ Unexpected response:", response.data);
+                    this.errorMessage = "Unexpected response. Please try again.";
+                }
+            } catch (error) {
+                console.error("❌ Login error:", error.response ? error.response.data : error);
+                this.errorMessage = error.response?.data?.detail || "Invalid email or password";
+            } finally {
+                this.loading = false;
+            }
         }
-    } catch (error) {
-        console.error("❌ Login error:", error.response ? error.response.data : error);
-        this.errorMessage = "Invalid email or password";
-    } finally {
-        this.loading = false;
-    }
-}
-
     }
 }
 </script>
@@ -130,6 +145,11 @@ input {
     margin-bottom: 1rem;
 }
 
+input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
 .login-btn {
     width: 100%;
     padding: 12px;
@@ -140,10 +160,39 @@ input {
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s;
+    position: relative;
 }
 
 .login-btn:hover {
     background-color: #007BF6;
+}
+
+.login-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-message {
+    color: #dc3545;
+    margin-top: 1rem;
 }
 
 .forgot-password {

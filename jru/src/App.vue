@@ -1,18 +1,21 @@
 <template>
   <div id="app">
-    <router-view />  <!-- Renders the component based on the current route -->
+    <router-view />  
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'; // Importing the router to programmatically navigate
+import { useRouter } from 'vue-router';
 import { onMounted } from 'vue';
 
 const router = useRouter();
 
-// Redirect to the Welcome page when the app is loaded
+// 🚀 Redirect to the last visited page on refresh
 onMounted(() => {
-  router.push('/');
+  const lastPage = localStorage.getItem('lastPage');
+  if (lastPage) {
+    router.replace(lastPage);
+  }
 });
 </script>
 

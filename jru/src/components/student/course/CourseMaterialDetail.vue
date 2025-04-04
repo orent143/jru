@@ -64,7 +64,7 @@
 </template>
 
 <script>
-import Header from '../Header.vue';
+import Header from '@/components/header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
 
@@ -77,7 +77,7 @@ export default {
   props: ['courseId', 'materialId'],
   data() {
     return {
-      student: {},
+      student: JSON.parse(localStorage.getItem("user")),
       courses: [],
       currentMaterial: null,
       newComment: "",

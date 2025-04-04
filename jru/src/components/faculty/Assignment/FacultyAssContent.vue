@@ -52,7 +52,7 @@
 
 <script>
 import axios from 'axios';
-import Header from "@/components/faculty/header.vue";
+import Header from "@/components/header.vue";
 import Sidebar from "@/components/faculty/SideBar.vue";
 import AddAssignmentModal from "@/components/faculty/Assignment/AddAssignmentModal.vue";
 

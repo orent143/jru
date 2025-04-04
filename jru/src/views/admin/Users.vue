@@ -75,7 +75,8 @@
 
 <script>
 import axios from 'axios';
-import Header from '@/components/admin/header.vue';
+import { useToast } from 'vue-toastification'; // Import toast
+import Header from '@/components/header.vue';
 import SideBar from '@/components/admin/sidebar.vue';
 import AddUser from '@/components/admin/users/AddUser.vue';
 import EditUser from '@/components/admin/users/EditUser.vue';
@@ -141,12 +142,14 @@ export default {
       }
     },
     async deleteUser(userId) {
+      const toast = useToast(); // Initialize toast
+
       try {
         await axios.delete(`http://127.0.0.1:8000/api/users/${userId}`);
-        alert('User deleted successfully!');
-        this.fetchUsers();
+        this.toast.success('✅ User deleted successfully!'); // Success toast
+        this.fetchUsers(); // Refresh the users list
       } catch (error) {
-        alert('Error deleting user: ' + (error.response?.data?.detail || error.message));
+        this.toast.error('❌ Error deleting user. Please try again.'); // Error toast
         console.error('Error deleting user:', error);
       }
     }
@@ -156,6 +159,7 @@ export default {
   }
 };
 </script>
+
 
   <style scoped>
 

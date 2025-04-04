@@ -1,205 +1,209 @@
 <template>
-    <div class="exam-details-container">
-      <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-  
-      <div class="exam-detail">
-        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-  
-        <div class="exam-detail-container" v-if="currentExam">
-          <button class="back-btn" @click="goBack">
-            <i class="pi pi-arrow-left"></i> Back to Course
-          </button>
-  
-          <div class="exam-content">
-            <div class="main-content">
-              <div class="exam-header">
-                <h1>{{ currentExam.title }}</h1>
-                <div class="exam-meta">
-                  <span class="posted-date">
-                    <i class="pi pi-calendar"></i> Posted: {{ formatDate(currentExam.exam_date) }}
-                  </span>
-                </div>
-              </div>
-  
-              <div class="content-section instructions">
-                <h2>Instructions</h2>
-                <p>{{ currentExam.description }}</p>
-  
-                <!-- Attachments Section -->
-                <div v-if="currentExam.file_url || currentExam.external_link" class="attachments">
-                  <h3>Attachments</h3>
-  
-                  <!-- Local File Attachment -->
-                  <div v-if="currentExam.file_url" class="attachment-item" @click="downloadFile(currentExam.file_url)">
-                    <i class="pi pi-file"></i>
-                    <span>{{ getFileName(currentExam.file_url) }}</span>
-                    <i class="pi pi-download"></i>
-                  </div>
-  
-                  <!-- External Link -->
-                  <div v-if="currentExam.external_link" class="attachment-item">
-                    <i class="pi pi-link"></i>
-                    <a :href="currentExam.external_link" target="_blank">{{ getFileName(currentExam.external_link) }}</a>
-                </div>
-                </div>
+  <div class="exam-details-container">
+    <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
+
+    <div class="exam-detail">
+      <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+
+      <div class="exam-detail-container" v-if="currentExam">
+        <button class="back-btn" @click="goBack">
+          <i class="pi pi-arrow-left"></i> Back to Course
+        </button>
+
+        <div class="exam-content">
+          <div class="main-content">
+            <div class="exam-header">
+              <h1>{{ currentExam.title }}</h1>
+              <div class="exam-meta">
+                <span class="posted-date">
+                  <i class="pi pi-calendar"></i> Posted: {{ formatDate(currentExam.exam_date) }}
+                </span>
               </div>
             </div>
-  
-            <div class="side-content">
-              <div class="content-section submission">
-                <h2>Your Work</h2>
-                <div class="submission-area">
-                  <div class="submission-actions">
-                    <button class="upload-btn primary">
-                      <i class="pi pi-upload"></i> Add or create
-                    </button>
-                  </div>
+
+            <div class="content-section instructions">
+              <h2>Instructions</h2>
+              <p>{{ currentExam.description }}</p>
+
+              <!-- Attachments Section -->
+              <div v-if="currentExam.file_url || currentExam.external_link" class="attachments">
+                <h3>Attachments</h3>
+
+                <!-- Local File Attachment -->
+                <div v-if="currentExam.file_url" class="attachment-item" @click="downloadFile(currentExam.file_url)">
+                  <i class="pi pi-file"></i>
+                  <span>{{ getFileName(currentExam.file_url) }}</span>
+                  <i class="pi pi-download"></i>
                 </div>
-              </div>
-  
-              <div class="content-section comments">
-                <h2>Class Comments</h2>
-                <div class="comments-section">
-                  <div class="comment-input">
-                    <input type="text" v-model="newComment" placeholder="Add class comment..."
-                           @keyup.enter="addComment" />
-                    <button class="send-btn" @click="addComment">
-                      <i class="pi pi-send"></i>
-                    </button>
-                  </div>
-                  <div class="comments-list" v-if="currentExam.comments?.length">
-                    <div v-for="comment in currentExam.comments" :key="comment.id" class="comment">
-                      <img :src="comment.authorAvatar || '/default-avatar.png'" :alt="comment.author" />
-                      <div class="comment-content">
-                        <div class="comment-header">
-                          <h4>{{ comment.author }}</h4>
-                          <span class="comment-date">{{ formatDate(comment.date) }}</span>
-                        </div>
-                        <p>{{ comment.text }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <p v-else>No comments yet.</p>
+
+                <!-- External Link -->
+                <div v-if="currentExam.external_link" class="attachment-item">
+                  <i class="pi pi-link"></i>
+                  <a :href="currentExam.external_link" target="_blank">{{ getFileName(currentExam.external_link) }}</a>
                 </div>
               </div>
             </div>
           </div>
+
+          <div class="side-content">
+            <div class="content-section submission">
+              <h2>Your Work</h2>
+              <div class="submission-area">
+                <div class="submission-actions">
+                  <button class="upload-btn primary">
+                    <i class="pi pi-upload"></i> Add or create
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="content-section comments">
+              <h2>Class Comments</h2>
+              <div class="comments-section">
+                <div class="comment-input">
+                  <input type="text" v-model="newComment" placeholder="Add class comment..."
+                         @keyup.enter="addComment" />
+                  <button class="send-btn" @click="addComment">
+                    <i class="pi pi-send"></i>
+                  </button>
+                </div>
+                <div class="comments-list" v-if="currentExam.comments?.length">
+                  <div v-for="comment in currentExam.comments" :key="comment.id" class="comment">
+                    <img :src="comment.authorAvatar || '/default-avatar.png'" :alt="comment.author" />
+                    <div class="comment-content">
+                      <div class="comment-header">
+                        <h4>{{ comment.author }}</h4>
+                        <span class="comment-date">{{ formatDate(comment.date) }}</span>
+                      </div>
+                      <p>{{ comment.text }}</p>
+                    </div>
+                  </div>
+                </div>
+                <p v-else>No comments yet.</p>
+              </div>
+            </div>
+          </div>
         </div>
-  
-        <div v-else class="loading">Loading exam details...</div>
       </div>
+
+      <div v-else class="loading">Loading exam details...</div>
     </div>
-  </template>
-  
-  <script>
-  import Header from '../Header.vue';
-  import Sidebar from '../Sidebar.vue';
-  import axios from 'axios';
-  
-  export default {
-    name: 'ExamDetails',
-    components: {
-      Header,
-      Sidebar
-    },
-    data() {
-      return {
-        student: {},
-        searchQuery: '',
-        isSidebarCollapsed: false,
-        courses: [],
-        currentExam: null,
-        newComment: '',
-      };
-    },
-    methods: {
-      async fetchData() {
-        try {
-          const storedUser = JSON.parse(localStorage.getItem('user'));
-          if (storedUser && storedUser.role === 'student') {
-            this.student = {
-              id: storedUser.user_id,
-              name: storedUser.name
-            };
-          } else {
-            console.error('No valid student data found');
-            return;
-          }
-  
-          const courseId = parseInt(this.$route.params.courseId);
-          const examId = parseInt(this.$route.params.examId);
-  
-          const res = await axios.get(`http://127.0.0.1:8000/api/student_exams/${this.student.id}/${courseId}`);
-          if (res.status === 200) {
-            const exams = res.data.exams;
-            this.currentExam = exams.find(exam => exam.exam_id === examId) || null;
-          }
-        } catch (error) {
-          console.error('Error fetching exam data:', error);
+  </div>
+</template>
+
+<script>
+import Header from '@/components/header.vue';
+import Sidebar from '../Sidebar.vue';
+import axios from 'axios';
+import { useToast } from "vue-toastification";  // Import toast
+
+export default {
+  name: 'ExamDetails',
+  components: {
+    Header,
+    Sidebar
+  },
+  setup() {
+    const toast = useToast();
+    return { toast };
+  },
+  data() {
+    return {
+      student: JSON.parse(localStorage.getItem("user")),
+      searchQuery: '',
+      isSidebarCollapsed: false,
+      courses: [],
+      currentExam: null,
+      newComment: '',
+    };
+  },
+  methods: {
+    async fetchData() {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser && storedUser.role === 'student') {
+          this.student = {
+            id: storedUser.user_id,
+            name: storedUser.name
+          };
+        } else {
+          console.error('No valid student data found');
+          return;
         }
-      },
-  
-      // Helper function to extract the file name from the URL
-      getFileName(fileUrl) {
-        return fileUrl.split('/').pop();
-      },
-  
-      downloadFile(fileUrl) {
-  const formattedUrl = fileUrl.replace(/\\/g, '/'); // In case the file path uses backslashes
-  
-  if (formattedUrl.startsWith('http')) {
-    // Open the URL in a new tab
-    window.open(formattedUrl, '_blank'); 
-  } else {
-    // Extract the file name and open the download link in a new tab
-    const fileName = this.getFileName(formattedUrl);
-    window.open(`http://127.0.0.1:8000/api/assignments/download/${fileName}`, '_blank');
-  }
-},
-      toggleSidebar() {
-        this.isSidebarCollapsed = !this.isSidebarCollapsed;
-      },
-  
-      formatDate(date) {
-        return date ? new Date(date).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        }) : 'N/A';
-      },
-  
-      async addComment() {
-        if (!this.newComment.trim()) return;
-  
-        try {
-          const res = await axios.post(`http://127.0.0.1:8000/api/exam/${this.currentExam.exam_id}/comments`, {
-            text: this.newComment,
-            author: this.student.name
-          });
-  
-          if (res.status === 201) {
-            this.currentExam.comments.push({
-              id: res.data.id,
-              text: this.newComment,
-              author: this.student.name,
-              date: new Date().toISOString()
-            });
-            this.newComment = '';
-          }
-        } catch (error) {
-          console.error('Error adding comment:', error);
+
+        const courseId = parseInt(this.$route.params.courseId);
+        const examId = parseInt(this.$route.params.examId);
+
+        const res = await axios.get(`http://127.0.0.1:8000/api/student_exams/${this.student.id}/${courseId}`);
+        if (res.status === 200) {
+          const exams = res.data.exams;
+          this.currentExam = exams.find(exam => exam.exam_id === examId) || null;
         }
-      },
-  
-      goBack() {
-        this.$router.go(-1);
+      } catch (error) {
+        console.error('Error fetching exam data:', error);
       }
     },
-    async mounted() {
-      await this.fetchData();
+
+    // Helper function to extract the file name from the URL
+    getFileName(fileUrl) {
+      return fileUrl.split('/').pop();
+    },
+
+    downloadFile(fileUrl) {
+      const formattedUrl = fileUrl.replace(/\\/g, '/'); // In case the file path uses backslashes
+
+      if (formattedUrl.startsWith('http')) {
+        // Open the URL in a new tab
+        window.open(formattedUrl, '_blank');
+      } else {
+        // Extract the file name and open the download link in a new tab
+        const fileName = this.getFileName(formattedUrl);
+        window.open(`http://127.0.0.1:8000/api/assignments/download/${fileName}`, '_blank');
+      }
+    },
+
+    formatDate(date) {
+      return date ? new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }) : 'N/A';
+    },
+
+    async addComment() {
+      if (!this.newComment.trim()) return;
+
+      try {
+        const res = await axios.post(`http://127.0.0.1:8000/api/exam/${this.currentExam.exam_id}/comments`, {
+          text: this.newComment,
+          author: this.student.name
+        });
+
+        if (res.status === 201) {
+          this.currentExam.comments.push({
+            id: res.data.id,
+            text: this.newComment,
+            author: this.student.name,
+            date: new Date().toISOString()
+          });
+          this.newComment = '';
+          this.toast.success('Comment added successfully!');  // Show success toast
+        }
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        this.toast.error('Failed to add comment. Please try again.');  // Show error toast
+      }
+    },
+
+    goBack() {
+      this.$router.go(-1);
     }
-  };
-  </script>
+  },
+  async mounted() {
+    await this.fetchData();
+  }
+};
+</script>
 
 <style scoped>
 .exam-details-container {

@@ -87,8 +87,8 @@
   </template>
   
   <script>
-  import Header from '@/components/admin/header.vue';
-  import SideBar from '@/components/admin/sidebar.vue';
+import Header from '@/components/header.vue';
+import SideBar from '@/components/admin/sidebar.vue';
   
   export default {
     name: 'AdminDashboard',

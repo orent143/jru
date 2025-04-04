@@ -54,7 +54,7 @@
 
 <script>
 import axios from 'axios';
-import Header from '@/components/faculty/header.vue';
+import Header from '@/components/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
 
 export default {

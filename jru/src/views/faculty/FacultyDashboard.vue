@@ -120,7 +120,7 @@
 </template>
 
 <script>
-import Header from '@/components/faculty/header.vue'; // Header component import
+import Header from '@/components/header.vue'; // Header component import
 import SideBar from '@/components/faculty/SideBar.vue'; // Sidebar component import
 
 export default {

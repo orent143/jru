@@ -6,23 +6,23 @@
       
       <label for="title">Exam Title:</label>
       <input v-model="title" type="text" placeholder="Enter Title" required />
-  
+
       <label for="description">Exam Description:</label>
       <textarea v-model="description" placeholder="Enter Description"></textarea>
-  
+
       <label for="exam_date">Exam Date:</label>
       <input v-model="exam_date" type="date" required />
-  
+
       <label for="duration">Duration (minutes):</label>
       <input v-model="duration" type="number" placeholder="Enter duration" required />
-  
+
       <label for="file-upload">Upload File (Optional):</label>
       <input type="file" @change="handleFileUpload" />
       <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
 
       <label for="external_link">External Link (Optional):</label>
       <input v-model="externalLink" type="text" placeholder="Enter external link (if any)" />
-  
+
       <button @click="addExam" :disabled="isSubmitting">Add Exam</button>
     </div>
   </div>
@@ -30,6 +30,7 @@
 
 <script>
 import axios from "axios";
+import { useToast } from 'vue-toastification'; // Import the toast module
 
 export default {
   props: {
@@ -53,8 +54,11 @@ export default {
       this.fileName = this.file ? this.file.name : "";
     },
     async addExam() {
+      const toast = useToast(); // Initialize toast notifications
+
+      // Validation
       if (!this.courseId || !this.title || !this.description || !this.exam_date || !this.duration) {
-        alert("Please fill in all required fields.");
+        toast.error('Please fill in all required fields.'); // Error toast
         return;
       }
 
@@ -66,13 +70,13 @@ export default {
       formData.append("description", this.description);
       formData.append("exam_date", this.exam_date);
       formData.append("duration_minutes", this.duration);
-      
-      // Append the external link if it's provided
+
+      // Append external link if provided
       if (this.externalLink) {
         formData.append("external_link", this.externalLink);
       }
-      
-      // Append the file if it's provided
+
+      // Append file if provided
       if (this.file) {
         formData.append("file", this.file);
       }
@@ -82,12 +86,12 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        alert("Exam added successfully!");
+        toast.success('Exam added successfully!'); // Success toast
         this.$emit("add-exam", response.data);
         this.resetForm();
       } catch (error) {
         console.error("Error adding exam:", error);
-        alert("Failed to add exam.");
+        toast.error('Failed to add exam.'); // Error toast
       } finally {
         this.isSubmitting = false;
       }
@@ -108,6 +112,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .modal {

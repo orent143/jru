@@ -15,7 +15,7 @@
                     <!-- Show error message if request fails -->
                     <p v-if="error" class="error">{{ error }}</p>
 
-                    <<div v-if="!loading && assignments.length" class="assignment-cards">
+                    <div v-if="!loading && assignments.length" class="assignment-cards">
     <div 
         v-for="assignment in assignments" 
         :key="assignment.assignment_id" 
@@ -64,7 +64,7 @@
 
 <script>
 import axios from 'axios';
-import Header from '@/components/faculty/header.vue';
+import Header from '@/components/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
 
 export default {

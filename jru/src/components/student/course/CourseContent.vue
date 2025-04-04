@@ -40,7 +40,7 @@
 </template>
 
 <script>
-import Header from '@/components/student/Header.vue';
+import Header from '@/components/header.vue';
 import Sidebar from '@/components/student/Sidebar.vue';
 import axios from 'axios';
 
@@ -52,7 +52,7 @@ export default {
   props: ['courseId'],
   data() {
     return {
-      student: {},
+      student: JSON.parse(localStorage.getItem("user")),
       courses: [],
       course: null,
       courseMaterials: [],

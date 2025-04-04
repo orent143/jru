@@ -40,7 +40,7 @@
                    class="material-card" 
                    @click="viewMaterial(material)">
 
-                <h4>{{ material.user_name }} posted a material:</h4>
+                <h4>You posted a material:</h4>
                 <p>{{ material.title }}</p>
 
               </div>
@@ -62,7 +62,7 @@
 
 <script>
 import axios from "axios";
-import Header from "@/components/faculty/header.vue";
+import Header from "@/components/header.vue";
 import Sidebar from "@/components/faculty/SideBar.vue";
 import AddMaterialModal from "@/components/faculty/Course/AddMaterialModal.vue";
 
@@ -83,6 +83,10 @@ export default {
     };
   },
   methods: {
+    getUserRole() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user ? user.role : null;
+  },
   async fetchCourseContent() {
     try {
       const response = await axios.get(`http://127.0.0.1:8000/api/course_materials/${this.courseId}`);
@@ -104,18 +108,30 @@ export default {
     this.courseContent.push(newMaterial);
   },
   viewMaterial(material) {
-    console.log("Material object:", material); // Debug log
+  console.log("Material object:", material); // Debug log
 
-    if (!material || !material.content_id) {
-      console.error("Error: materialId is missing", material);
-      return;
-    }
+  if (!material || !material.content_id) {
+    console.error("Error: materialId is missing", material);
+    return;
+  }
 
+  const role = this.getUserRole(); // Assume you have a way to check if the user is a student or faculty
+  
+  // Adjusting the route name based on the user role
+  if (role === 'faculty') {
     this.$router.push({
-      name: "MaterialDetail",
+      name: "FacultyMaterialDetail",
       params: { courseId: this.courseId, materialId: material.content_id }
     });
-  },
+  } else if (role === 'student') {
+    this.$router.push({
+      name: "StudentMaterialDetail",
+      params: { courseId: this.courseId, materialId: material.content_id }
+    });
+  } else {
+    console.error("Role not recognized, unable to navigate to material details.");
+  }
+},
   viewStudents() {
     this.$router.push({ name: "StudentList", params: { courseId: this.courseId } });
   }
@@ -245,7 +261,7 @@ export default {
   align-items: center;
   padding: 1rem;
   gap: 7px;
-
+  margin-bottom: 25px;
 }
 .material-card h4 {
   font-size: 1.2rem;

@@ -38,10 +38,10 @@
                 class="exam-card"
                 @click="navigateToExamDetails(exam.exam_id)"
               >
-              <div class="card-header">
-                <h4>Teacher posted an exam:</h4>
-                {{ exam.title }}
-              </div>
+                <div class="card-header">
+                  <h4>Teacher posted an exam:</h4>
+                  {{ exam.title }}
+                </div>
               </div>
             </div>
             <p v-else>No exams available.</p>
@@ -54,7 +54,7 @@
 
 <script>
 import axios from "axios";
-import Header from "../Header.vue";
+import Header from '@/components/header.vue';
 import Sidebar from "../Sidebar.vue";
 
 export default {
@@ -64,9 +64,10 @@ export default {
   },
   data() {
     return {
-      student: { id: 27, name: "John Doe" }, // Mock student ID
+      student: JSON.parse(localStorage.getItem("user")),
       isSidebarCollapsed: false,
       exams: [],
+      courses: [],
     };
   },
   computed: {
@@ -81,33 +82,48 @@ export default {
     }
   },
   methods: {
-    // ✅ Fetch exams for the current course
     async fetchExams() {
       try {
-        const { id: studentId } = this.student;
+        const token = this.student?.access_token;
+        if (!token) {
+          console.error("No authentication token found");
+          this.$router.push("/");
+          return;
+        }
+
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/student_exams/${studentId}/${this.courseId}`,
+          `http://127.0.0.1:8000/api/student_exams/${this.student.user_id}/${this.courseId}`,
           {
-            withCredentials: true,
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
         );
 
-        this.exams = response.data.exams.map((exam) => ({
-          ...exam,
-          completed: false,
-        }));
+        if (response.data) {
+          this.exams = response.data.exams.map((exam) => ({
+            ...exam,
+            completed: false,
+          }));
+          
+          this.courses = [{
+            id: this.courseId,
+            name: response.data.course_name || "Course Name Not Available",
+            exams: this.exams
+          }];
+        }
       } catch (error) {
         console.error("Error fetching exams:", error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          this.$router.push("/");
+        }
       }
     },
 
     navigateToExamDetails(examId) {
-  this.$router.push(`/student/course/${this.courseId}/exam/${examId}`);
-},
+      this.$router.push(`/student/course/${this.courseId}/exam/${examId}`);
+    },
 
     // ✅ Toggle sidebar
     toggleSidebar() {
@@ -140,7 +156,18 @@ export default {
   },
 
   async created() {
-    await this.fetchExams();
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (!storedUser) {
+      this.$router.push('/');
+      return;
+    }
+    
+    if (storedUser.role === "student") {
+      this.student = storedUser;
+      await this.fetchExams();
+    } else {
+      this.$router.push('/');
+    }
   },
 };
 </script>

@@ -58,6 +58,7 @@
 
 <script>
 import axios from 'axios';
+import { useToast } from 'vue-toastification'; // Import toast
 
 export default {
     name: 'AddUser',
@@ -77,21 +78,39 @@ export default {
             }
         };
     },
+    setup() {
+        const toast = useToast(); // Initialize toast
+
+        return { toast };
+    },
     methods: {
         async handleSubmit() {
             try {
-                await axios.post('http://127.0.0.1:8000/api/users/', this.formData);
-                alert('User added successfully!');
+                const payload = {
+                    name: this.formData.name.trim(),
+                    email: this.formData.email.trim(),
+                    password: this.formData.password,
+                    role: this.formData.role
+                };
+
+                const response = await axios.post('http://127.0.0.1:8000/api/users/', payload);
+
+                this.toast.success('User added successfully!'); // Success toast
                 this.$emit('user-added');
                 this.closeModal();
                 this.resetForm();
             } catch (error) {
-                if (error.response && error.response.data.detail) {
-                    alert('Error: ' + error.response.data.detail);
+                if (error.response) {
+                    if (error.response.status === 422) {
+                        const validationErrors = error.response.data.detail;
+                        this.toast.error(`Validation Error: ${validationErrors.map(err => err.msg).join(', ')}`); // Error toast
+                    } else {
+                        this.toast.error(`Error: ${error.response.data.detail || 'An unexpected error occurred.'}`); // Error toast
+                    }
                 } else {
-                    alert('An unexpected error occurred. Please try again.');
-                    console.error('Error adding user:', error);
+                    this.toast.error('Failed to connect to the server. Please try again.'); // Error toast
                 }
+                console.error('Error adding user:', error);
             }
         },
         closeModal() {

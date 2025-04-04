@@ -1,48 +1,49 @@
 <template>
   <div class="modal">
-      <div class="modal-content">
-          <span class="close" @click="closeModal">&times;</span>
-          <h2>Add New Quiz</h2>
-          
-          <label for="title">Quiz Title:</label>
-          <input v-model="title" type="text" placeholder="Enter Title" required />
+    <div class="modal-content">
+      <span class="close" @click="closeModal">&times;</span>
+      <h2>Add New Quiz</h2>
+      
+      <label for="title">Quiz Title:</label>
+      <input v-model="title" type="text" placeholder="Enter Title" required />
 
-          <label for="description">Quiz Description:</label>
-          <textarea v-model="description" placeholder="Enter Description"></textarea>
+      <label for="description">Quiz Description:</label>
+      <textarea v-model="description" placeholder="Enter Description"></textarea>
 
-          <label for="quiz_date">Quiz Date:</label>
-          <input v-model="quiz_date" type="date" required />
+      <label for="quiz_date">Quiz Date:</label>
+      <input v-model="quiz_date" type="date" required />
 
-          <label for="duration">Duration (minutes):</label>
-          <input v-model="duration" type="number" placeholder="Enter duration" required />
+      <label for="duration">Duration (minutes):</label>
+      <input v-model="duration" type="number" placeholder="Enter duration" required />
 
-          <label for="file-upload">Upload File (Optional):</label>
-          <input type="file" @change="handleFileUpload" />
-          <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
+      <label for="file-upload">Upload File (Optional):</label>
+      <input type="file" @change="handleFileUpload" />
+      <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
 
-          <!-- URL Input for external link -->
-          <label for="external-link">External Link (Optional):</label>
-          <input v-model="link" type="url" placeholder="Enter a URL" />
+      <!-- URL Input for external link -->
+      <label for="external-link">External Link (Optional):</label>
+      <input v-model="link" type="url" placeholder="Enter a URL" />
 
-          <!-- Display the file URL after successful upload -->
-          <div v-if="fileUrl">
-              <p>Uploaded File:</p>
-              <a :href="fileUrl" target="_blank">Download File</a>
-          </div>
-
-          <!-- Display the entered URL after successful submission -->
-          <div v-if="link">
-              <p>External Link:</p>
-              <a :href="link" target="_blank">{{ link }}</a>
-          </div>
-
-          <button @click="addQuiz" :disabled="isSubmitting">Add Quiz</button>
+      <!-- Display the file URL after successful upload -->
+      <div v-if="fileUrl">
+        <p>Uploaded File:</p>
+        <a :href="fileUrl" target="_blank">Download File</a>
       </div>
+
+      <!-- Display the entered URL after successful submission -->
+      <div v-if="link">
+        <p>External Link:</p>
+        <a :href="link" target="_blank">{{ link }}</a>
+      </div>
+
+      <button @click="addQuiz" :disabled="isSubmitting">Add Quiz</button>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import { useToast } from 'vue-toastification'; // Importing toast for notifications
 
 export default {
   props: {
@@ -67,11 +68,14 @@ export default {
       this.file = event.target.files[0];
       this.fileName = this.file ? this.file.name : "";
     },
-    
+
     // Add quiz and handle the file upload and external link
     async addQuiz() {
+      const toast = useToast(); // Initialize toast notifications
+
+      // Validation check
       if (!this.courseId || !this.title || !this.description || !this.quiz_date || !this.duration) {
-        alert("Please fill in all required fields.");
+        toast.error('Please fill in all required fields.'); // Error toast for missing fields
         return;
       }
 
@@ -87,7 +91,7 @@ export default {
         formData.append("file", this.file);
       }
       if (this.link) {
-        formData.append("external_link", this.link); // Add the external link
+        formData.append("external_link", this.link); // Add the external link if provided
       }
 
       try {
@@ -95,7 +99,7 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        alert("Quiz added successfully!");
+        toast.success('Quiz added successfully!'); // Success toast
         this.$emit("add-quiz", response.data);
 
         // If a file was uploaded, get the file URL from the response
@@ -111,12 +115,12 @@ export default {
         this.resetForm();
       } catch (error) {
         console.error("Error adding quiz:", error);
-        alert("Failed to add quiz.");
+        toast.error('Failed to add quiz.'); // Error toast for failure
       } finally {
         this.isSubmitting = false;
       }
     },
-    
+
     // Reset the form fields
     resetForm() {
       this.title = "";
@@ -129,7 +133,7 @@ export default {
       this.link = ""; // Reset the link
       this.$emit("close");
     },
-    
+
     // Close the modal
     closeModal() {
       this.resetForm();
@@ -137,6 +141,7 @@ export default {
   },
 };
 </script>
+
   
 <style scoped>
 .modal {

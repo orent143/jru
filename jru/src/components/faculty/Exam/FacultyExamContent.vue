@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import Header from '../header.vue';
+import Header from '../../header.vue';
 import Sidebar from '../SideBar.vue';
 import AddExamModal from '@/components/faculty/Exam/AddExamModal.vue';
 import axios from 'axios';

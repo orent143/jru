@@ -3,26 +3,21 @@
     <Header :student="student" @toggleSidebar="toggleSidebar" />
     <div class="quizzes-content">
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+
       <main class="quizzes-main" v-if="course">
         <div class="quizzes-header">
           <h2>{{ course.course_name }} - Quizzes</h2>
         </div>
 
         <div class="quizzes-hero">
-          <!-- Left Side: Quiz Cards -->
+          <!-- Left Side: Quiz Summary Cards -->
           <div class="content-left">
             <section class="quizzes-cards">
-              <!-- Quizzes Card -->
-              <router-link
-                class="quizzes-card"
-                :to="`/quizzes/${course.course_id}`"
-                tag="div"
-              >
+              <div class="quizzes-card">
                 <h3>Quizzes</h3>
                 <p>{{ pendingQuizzes.length }} Pending</p>
-              </router-link>
+              </div>
 
-              <!-- Completed Quizzes Card -->
               <div class="quizzes-card completed">
                 <h3>Completed Quizzes</h3>
                 <p>{{ completedQuizzes.length }} Completed</p>
@@ -30,24 +25,24 @@
             </section>
           </div>
 
-          <!-- Right Side: Quizzes List -->
-<div class="content-right">
-  <h3>Quizzes:</h3>
-  <div class="quiz-cards">
-    <div
-      v-for="quiz in quizzes"
-      :key="quiz.quiz_id"
-      class="quiz-card"
-      @click="navigateToQuizDetails(course.course_id, quiz.quiz_id)"
-    >
-    <div class="card-header">
-      <h4>Teacher posted a quiz:</h4>
-      {{ quiz.title }}
-    </div>
-    </div>
-  </div>
-</div>
-
+          <!-- Right Side: Quiz List -->
+          <div class="content-right">
+            <h3>Quizzes:</h3>
+            <div class="quiz-cards">
+              <div
+                v-for="quiz in quizzes"
+                :key="quiz.quiz_id"
+                class="quiz-card"
+                @click="navigateToQuizDetails(course.course_id, quiz.quiz_id)"
+              >
+                <div class="card-header">
+                  <h4>Teacher posted a quiz:</h4>
+                  {{ quiz.title }}
+                </div>
+              </div>
+            </div>
+            <p v-if="!quizzes.length">No quizzes available.</p>
+          </div>
         </div>
       </main>
     </div>
@@ -56,10 +51,11 @@
 
 <script>
 import axios from "axios";
-import Header from "@/components/student/Header.vue";
+import Header from "@/components/header.vue";
 import Sidebar from "@/components/student/Sidebar.vue";
 
 export default {
+  name: 'QuizContent',
   components: {
     Header,
     Sidebar,
@@ -71,72 +67,92 @@ export default {
       isSidebarCollapsed: false,
       quizzes: [],
       courses: [],
-      course: { course_id: null, course_name: "Loading..." }, // Default placeholder before API fetch
-      studentId: null
+      course: { course_name: "Loading..." },
+      studentId: null,
     };
   },
   async created() {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser && storedUser.role === "student") {
+    if (!storedUser) {
+      this.$router.push('/');
+      return;
+    }
+    
+    if (storedUser.role === "student") {
       this.studentId = storedUser.user_id;
       await this.fetchQuizzes();
+    } else {
+      this.$router.push('/');
     }
   },
   watch: {
     courseId: {
       handler() {
-        if (this.courseId) {
+        if (this.studentId) {
           this.fetchQuizzes();
         }
       },
-      immediate: true
-    }
+      immediate: true,
+    },
   },
   computed: {
     pendingQuizzes() {
-      console.log("Pending Quizzes Computed:", this.quizzes);
-      return this.quizzes.filter((q) => q.completed === false || q.completed === null);
+      return this.quizzes.filter((quiz) => !quiz.completed);
     },
     completedQuizzes() {
-      return this.quizzes.filter((q) => q.completed === true);
-    }
+      return this.quizzes.filter((quiz) => quiz.completed);
+    },
   },
   methods: {
     async fetchQuizzes() {
-    if (!this.courseId) {
-      console.warn("fetchQuizzes skipped: Missing courseId");
-      return;
-    }
+      if (!this.studentId || !this.courseId) return;
 
-    try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/quizzes/${this.courseId}`);
-      console.log("Fetched Quiz Data:", response.data);
-
-      if (response.data) {
-        this.course = {
-          course_id: this.courseId,
-          course_name: response.data.course_name || "Not Available",
-        };
-        this.quizzes = response.data.quizzes || [];
+      const token = this.student?.access_token;
+      if (!token) {
+        console.error("No authentication token found.");
+        this.$router.push("/");
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching quizzes:", error);
-      alert("Failed to load quizzes. Please try again.");
-    }
-  },
+
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/student_quizzes/${this.studentId}/${this.courseId}`,
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+
+        console.log("Fetched Quizzes:", response.data);
+        
+        if (response.data) {
+          this.quizzes = response.data.quizzes || [];
+          this.course = { 
+            course_id: response.data.course_id,
+            course_name: response.data.course_name || "Course Name Not Available" 
+          };
+        }
+      } catch (error) {
+        console.error("Error fetching quizzes:", error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          this.$router.push("/");
+        }
+      }
+    },
     navigateToQuizDetails(courseId, quizId) {
       this.$router.push({
         name: "QuizDetails",
-        params: { courseId: courseId, quizId }
+        params: { courseId, quizId },
       });
     },
     toggleSidebar() {
       this.isSidebarCollapsed = !this.isSidebarCollapsed;
-    }
-  }
+    },
+  },
 };
 </script>
-
 
 <style scoped>
 .quizzes-container {
@@ -157,7 +173,6 @@ export default {
   flex-direction: column;
   gap: 2rem;
   background-color: #fff;
-
 }
 
 .quizzes-header {
@@ -172,21 +187,19 @@ export default {
   color: #000;
 }
 
-/* Quizzes Hero Layout */
 .quizzes-hero {
   display: flex;
   justify-content: space-between;
   gap: 2rem;
 }
 
-/* Left Side: Cards */
 .content-left {
   display: flex;
   flex-direction: column;
   gap: 2rem;
   flex: 1;
   width: 20%;
-  overflow: auto; /* Allow scrolling */
+  overflow: auto;
 }
 
 .quizzes-cards {
@@ -202,24 +215,30 @@ export default {
   cursor: pointer;
   color: black;
   font-weight: bold;
+  transition: transform 0.3s ease;
 }
+
+.quizzes-card:hover {
+  transform: translateY(-2px);
+  background: #cecece;
+}
+
 .quizzes-card h3 {
   font-size: 17px;
   font-weight: 600;
   color: #000000d2;
 }
-.quizzes-card:hover {
-  background: #d9d9d9;
-}
+
 .quizzes-card p {
   font-size: 1.1rem;
   color: #444;
+  margin-top: 0.5rem;
 }
+
 .completed {
   background: #d9d9d9;
 }
 
-/* Right Side: Quiz Cards */
 .content-right {
   flex: 2;
 }
@@ -227,6 +246,7 @@ export default {
 h3 {
   font-size: 1.5rem;
   color: #2c3e50;
+  margin-bottom: 1rem;
 }
 
 .quiz-cards {
@@ -241,25 +261,14 @@ h3 {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: transform 0.3s ease;
-  flex-direction: row; /* Make the layout horizontal */
   padding: 1rem;
-  gap: 10px;
-
   display: flex;
-  align-items: center; /* Vertically center the content */
+  align-items: center;
 }
 
 .quiz-card:hover {
   transform: translateY(-5px);
-}
-
-.quiz-card h4 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #333;
+  background-color: #cecece;
 }
 
 .card-header {
@@ -268,5 +277,22 @@ h3 {
   gap: 10px;
   font-size: 1.2rem;
   color: #333;
+}
+
+.card-header h4 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .quizzes-hero {
+    flex-direction: column;
+  }
+
+  .content-left,
+  .content-right {
+    width: 100%;
+  }
 }
 </style>

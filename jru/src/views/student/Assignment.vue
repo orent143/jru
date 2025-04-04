@@ -49,7 +49,7 @@
 </template>
 
 <script>
-import Header from '@/components/student/Header.vue';
+import Header from '@/components/header.vue';
 import Sidebar from '@/components/student/Sidebar.vue';
 import axios from 'axios';
 

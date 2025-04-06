@@ -51,7 +51,7 @@
                   </div>
                 </div>
                 <div class="submission-actions">
-                  <button class="upload-btn primary" @click="submitQuiz">
+                  <button class="upload-btn primary" @click="confirmSubmitQuiz">
                     <i class="pi pi-upload"></i> Submit Quiz
                   </button>
                 </div>
@@ -66,9 +66,9 @@
                     type="text" 
                     v-model="newComment" 
                     placeholder="Add class comment..." 
-                    @keyup.enter="addComment" 
+                    @keyup.enter="confirmAddComment" 
                   />
-                  <button class="send-btn" @click="addComment">
+                  <button class="send-btn" @click="confirmAddComment">
                     <i class="pi pi-send"></i>
                   </button>
                 </div>
@@ -91,6 +91,26 @@
       </div>
     </div>
   </div>
+
+  <ConfirmationModal
+    :show="showSubmitConfirmation"
+    title="Submit Quiz"
+    message="Are you sure you want to submit this quiz? This action cannot be undone."
+    confirmText="Submit"
+    type="primary"
+    @confirm="handleQuizSubmission"
+    @cancel="showSubmitConfirmation = false"
+  />
+
+  <ConfirmationModal
+    :show="showCommentConfirmation"
+    title="Post Comment"
+    message="Are you sure you want to post this comment?"
+    confirmText="Post"
+    type="primary"
+    @confirm="handleCommentSubmission"
+    @cancel="showCommentConfirmation = false"
+  />
 </template>
 
 <script>
@@ -98,12 +118,14 @@ import Header from '@/components/header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
 import { useToast } from "vue-toastification";  // Importing toast
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
   name: 'QuizDetails',
   components: {
     Header,
-    Sidebar
+    Sidebar,
+    ConfirmationModal
   },
   data() {
     return {
@@ -114,7 +136,10 @@ export default {
       currentQuiz: null,
       comments: [],
       newComment: '',
-      toast: useToast() // Setup toast
+      toast: useToast(),
+      showSubmitConfirmation: false,
+      showCommentConfirmation: false,
+      pendingComment: ''
     };
   },
   async created() {
@@ -174,22 +199,50 @@ export default {
       }
     },
 
-    async submitQuiz() {
+    async confirmSubmitQuiz() {
+      this.showSubmitConfirmation = true;
+    },
+
+    async handleQuizSubmission() {
+      this.showSubmitConfirmation = false;
       try {
         const submission = {
           student_id: this.student.id,
           quiz_id: this.currentQuiz.quiz_id,
-          answers: {}  // Send actual quiz answers here
+          answers: {}
         };
 
         const response = await axios.post('http://127.0.0.1:8000/api/quiz_submissions/', submission);
 
         if (response.status === 200) {
-          this.toast.success('Quiz submitted successfully!');  // Toast notification on success
+          this.toast.success('Quiz submitted successfully!');
         }
       } catch (error) {
         console.error('Error submitting quiz:', error);
-        this.toast.error('Failed to submit quiz. Please try again.');  // Toast notification on error
+        this.toast.error('Failed to submit quiz. Please try again.');
+      }
+    },
+
+    confirmAddComment() {
+      if (!this.newComment.trim()) return;
+      this.pendingComment = this.newComment;
+      this.showCommentConfirmation = true;
+    },
+
+    async handleCommentSubmission() {
+      this.showCommentConfirmation = false;
+      if (this.pendingComment.trim()) {
+        const newCommentObj = {
+          id: Date.now(),
+          author: this.student.name,
+          authorAvatar: '/avatar.png',
+          text: this.pendingComment,
+          date: new Date().toISOString()
+        };
+        this.comments.unshift(newCommentObj);
+        this.newComment = '';
+        this.pendingComment = '';
+        this.toast.info('Comment added!');
       }
     },
 
@@ -218,28 +271,10 @@ export default {
 
     getQuizStatus(quiz) {
       return quiz ? 'Not Submitted' : 'Submitted';  // Example logic for status
-    },
-
-    addComment() {
-      if (this.newComment.trim()) {
-        const newCommentObj = {
-          id: Date.now(),
-          author: this.student.name,
-          authorAvatar: '/avatar.png',
-          text: this.newComment,
-          date: new Date().toISOString()
-        };
-        this.comments.unshift(newCommentObj);
-        this.newComment = '';
-        this.toast.info('Comment added!');  // Toast notification when comment is added
-      }
     }
   }
 };
 </script>
-
-
-
 
 <style scoped>
 .quiz-details-container {

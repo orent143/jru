@@ -23,13 +23,16 @@ a,
 }
 
 html, body {
-  overflow: hidden; /* Prevent scroll */
-  height: 100%; /* Ensure body takes full height */
-  margin: 0; /* Remove any default margin */
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden; /* 👈 prevents sidewards scroll */
+
 }
 /* #app takes up full viewport */
 #app {
-  min-height: 100vh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   color: #ececec00;

@@ -55,7 +55,7 @@
               <h2>Your Work</h2>
 
               <!-- Submission Form -->
-              <form @submit.prevent="submitAssignment" enctype="multipart/form-data">
+              <form @submit.prevent="confirmSubmitAssignment" enctype="multipart/form-data">
                 <div class="submission-area">
                   <div class="submission-type-selector">
                     <label for="submissionType">Choose Submission Type:</label>
@@ -113,8 +113,13 @@
             <div class="content-section comments">
               <h2>Class Comments</h2>
               <div class="comment-input">
-                <input type="text" v-model="newComment" placeholder="Add class comment..." @keyup.enter="addComment" />
-                <button class="send-btn" @click="addComment">
+                <input 
+                  type="text" 
+                  v-model="newComment" 
+                  placeholder="Add class comment..." 
+                  @keyup.enter="confirmAddComment" 
+                />
+                <button class="send-btn" @click="confirmAddComment">
                   <i class="pi pi-send"></i>
                 </button>
               </div>
@@ -135,6 +140,27 @@
       </div>
     </div>
   </div>
+
+  <!-- Add confirmation modals at the end of the template -->
+  <ConfirmationModal
+    :show="showSubmitConfirmation"
+    title="Submit Assignment"
+    message="Are you sure you want to submit this assignment? This action cannot be undone."
+    confirmText="Submit"
+    type="primary"
+    @confirm="handleAssignmentSubmission"
+    @cancel="showSubmitConfirmation = false"
+  />
+
+  <ConfirmationModal
+    :show="showCommentConfirmation"
+    title="Post Comment"
+    message="Are you sure you want to post this comment?"
+    confirmText="Post"
+    type="primary"
+    @confirm="handleCommentSubmission"
+    @cancel="showCommentConfirmation = false"
+  />
 </template>
 
 <script>
@@ -142,10 +168,15 @@ import Header from '@/components/header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
 import { useToast } from "vue-toastification";  
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
   name: 'AssignmentDetail',
-  components: { Header, Sidebar },
+  components: { 
+    Header, 
+    Sidebar,
+    ConfirmationModal 
+  },
   props: ['courseId', 'assignmentId'],
   setup() {
     const toast = useToast();
@@ -161,6 +192,9 @@ export default {
       externalLink: "",
       selectedFile: null,
       submissionType: "",
+      showSubmitConfirmation: false,
+      showCommentConfirmation: false,
+      pendingComment: ''
     };
   },
   async created() {
@@ -210,18 +244,38 @@ export default {
     window.open(downloadUrl, '_blank');
   }
 },
-    async submitAssignment() {
+    confirmSubmitAssignment(event) {
+      event.preventDefault();
+      if (!this.submissionType) {
+        this.toast.error("Please select a submission type");
+        return;
+      }
+      if (!this.submissionText.trim()) {
+        this.toast.error("Please add submission text");
+        return;
+      }
+      if (this.submissionType === 'file' && !this.selectedFile) {
+        this.toast.error("Please select a file to upload");
+        return;
+      }
+      if (this.submissionType === 'link' && !this.externalLink.trim()) {
+        this.toast.error("Please enter an external link");
+        return;
+      }
+      this.showSubmitConfirmation = true;
+    },
+
+    async handleAssignmentSubmission() {
+      this.showSubmitConfirmation = false;
       const formData = new FormData();
       formData.append("student_id", this.studentId);
       formData.append("assignment_id", this.assignmentId);
       formData.append("submission_text", this.submissionText);
 
-      // Attach file if selected
       if (this.selectedFile) {
         formData.append("file", this.selectedFile);
       }
       
-      // Attach external link if provided
       if (this.externalLink) {
         formData.append("external_link", this.externalLink);
       }
@@ -243,16 +297,30 @@ export default {
       }
     },
 
-    addComment() {
+    confirmAddComment() {
       if (!this.newComment.trim()) return;
-      this.currentAssignment.comments.push({
-        id: Date.now(),
-        author: "You",
-        authorAvatar: "/default-avatar.png",
-        text: this.newComment,
-        date: new Date().toISOString(),
-      });
-      this.newComment = "";
+      this.pendingComment = this.newComment;
+      this.showCommentConfirmation = true;
+    },
+
+    async handleCommentSubmission() {
+      this.showCommentConfirmation = false;
+      try {
+        // Here you would typically make an API call to save the comment
+        this.currentAssignment.comments.push({
+          id: Date.now(),
+          author: this.student.name,
+          authorAvatar: "/default-avatar.png",
+          text: this.pendingComment,
+          date: new Date().toISOString(),
+        });
+        this.newComment = "";
+        this.pendingComment = "";
+        this.toast.success("Comment added successfully!");
+      } catch (error) {
+        console.error("Error adding comment:", error);
+        this.toast.error("Failed to add comment. Please try again.");
+      }
     },
 
     goBack() {

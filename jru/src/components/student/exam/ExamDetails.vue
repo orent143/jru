@@ -50,7 +50,7 @@
               <h2>Your Work</h2>
               <div class="submission-area">
                 <div class="submission-actions">
-                  <button class="upload-btn primary">
+                  <button class="upload-btn primary" @click="confirmSubmitExam">
                     <i class="pi pi-upload"></i> Add or create
                   </button>
                 </div>
@@ -62,8 +62,8 @@
               <div class="comments-section">
                 <div class="comment-input">
                   <input type="text" v-model="newComment" placeholder="Add class comment..."
-                         @keyup.enter="addComment" />
-                  <button class="send-btn" @click="addComment">
+                         @keyup.enter="confirmAddComment" />
+                  <button class="send-btn" @click="confirmAddComment">
                     <i class="pi pi-send"></i>
                   </button>
                 </div>
@@ -88,6 +88,27 @@
 
       <div v-else class="loading">Loading exam details...</div>
     </div>
+
+    <!-- Add confirmation modals -->
+    <ConfirmationModal
+      :show="showSubmitConfirmation"
+      title="Submit Exam"
+      message="Are you sure you want to submit this exam? This action cannot be undone."
+      confirmText="Submit"
+      type="primary"
+      @confirm="handleExamSubmission"
+      @cancel="showSubmitConfirmation = false"
+    />
+
+    <ConfirmationModal
+      :show="showCommentConfirmation"
+      title="Post Comment"
+      message="Are you sure you want to post this comment?"
+      confirmText="Post"
+      type="primary"
+      @confirm="handleCommentSubmission"
+      @cancel="showCommentConfirmation = false"
+    />
   </div>
 </template>
 
@@ -96,12 +117,14 @@ import Header from '@/components/header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
 import { useToast } from "vue-toastification";  // Import toast
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
   name: 'ExamDetails',
   components: {
     Header,
-    Sidebar
+    Sidebar,
+    ConfirmationModal
   },
   setup() {
     const toast = useToast();
@@ -115,6 +138,9 @@ export default {
       courses: [],
       currentExam: null,
       newComment: '',
+      showSubmitConfirmation: false,
+      showCommentConfirmation: false,
+      pendingComment: ''
     };
   },
   methods: {
@@ -170,28 +196,51 @@ export default {
       }) : 'N/A';
     },
 
-    async addComment() {
-      if (!this.newComment.trim()) return;
+    // Add confirmation methods for exam submission
+    confirmSubmitExam() {
+      this.showSubmitConfirmation = true;
+    },
 
+    async handleExamSubmission() {
+      this.showSubmitConfirmation = false;
+      try {
+        // Add your exam submission logic here
+        this.toast.success('Exam submitted successfully!');
+      } catch (error) {
+        console.error('Error submitting exam:', error);
+        this.toast.error('Failed to submit exam. Please try again.');
+      }
+    },
+
+    // Add confirmation methods for comments
+    confirmAddComment() {
+      if (!this.newComment.trim()) return;
+      this.pendingComment = this.newComment;
+      this.showCommentConfirmation = true;
+    },
+
+    async handleCommentSubmission() {
+      this.showCommentConfirmation = false;
       try {
         const res = await axios.post(`http://127.0.0.1:8000/api/exam/${this.currentExam.exam_id}/comments`, {
-          text: this.newComment,
+          text: this.pendingComment,
           author: this.student.name
         });
 
         if (res.status === 201) {
           this.currentExam.comments.push({
             id: res.data.id,
-            text: this.newComment,
+            text: this.pendingComment,
             author: this.student.name,
             date: new Date().toISOString()
           });
           this.newComment = '';
-          this.toast.success('Comment added successfully!');  // Show success toast
+          this.pendingComment = '';
+          this.toast.success('Comment added successfully!');
         }
       } catch (error) {
         console.error('Error adding comment:', error);
-        this.toast.error('Failed to add comment. Please try again.');  // Show error toast
+        this.toast.error('Failed to add comment. Please try again.');
       }
     },
 

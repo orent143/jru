@@ -94,6 +94,7 @@ export default {
                 );
 
                 if (response.data.message === "Verification successful") {
+                    // Get stored user data
                     let userData = JSON.parse(localStorage.getItem('tempUserData'));
                     if (!userData) {
                         this.errorMessage = "Session expired. Please log in again.";
@@ -101,25 +102,43 @@ export default {
                         return;
                     }
 
+                    // Update the access token with the new verified token
+                    userData.access_token = response.data.access_token;
+                    
+                    // Store the verified user data
                     localStorage.setItem('user', JSON.stringify(userData));
                     localStorage.removeItem('tempUserData');
 
-                    // Redirect based on role
-                    switch (userData.role) {
-                        case 'student': this.$router.push('/student-dashboard'); break;
-                        case 'faculty': this.$router.push('/faculty-dashboard'); break;
-                        case 'admin': this.$router.push('/admin-dashboard'); break;
-                        default: this.$router.push('/');
-                    }
-
                     // Show success toast notification
                     this.toast.success("Verification successful!");
+
+                    // Redirect based on role
+                    switch (userData.role) {
+                        case 'student': 
+                            this.$router.push('/student-dashboard');
+                            break;
+                        case 'faculty': 
+                            this.$router.push('/faculty-dashboard');
+                            break;
+                        case 'admin': 
+                            this.$router.push('/admin-dashboard');
+                            break;
+                        default: 
+                            this.$router.push('/');
+                    }
                 }
             } catch (error) {
+                console.error("Verification error:", error.response?.data || error);
                 this.errorMessage = error.response?.data?.detail || "Verification failed. Please try again.";
+                this.toast.error(this.errorMessage);
 
-                // Show error toast notification
-                this.toast.error("Verification failed. Please try again.");
+                // If code is expired or invalid, redirect back to login
+                if (error.response?.data?.detail === "Code expired." || 
+                    error.response?.data?.detail === "No verification code found for this email.") {
+                    setTimeout(() => {
+                        this.goBackToLogin();
+                    }, 3000);
+                }
             } finally {
                 this.loading = false;
             }

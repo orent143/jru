@@ -32,7 +32,7 @@
 
                         <!-- Exam Materials Section -->
                         <div class="content-section uploaded-materials" v-if="currentExam.file_path || currentExam.external_link">
-    <h2>Exam Materials</h2>
+    <h2>Exam Materials:</h2>
     <div class="materials-list">
         <!-- If there's a file path (local file), display the download option -->
         <div v-if="currentExam.file_path" class="material-item" @click="downloadAttachment(currentExam.file_path)">

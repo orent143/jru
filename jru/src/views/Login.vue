@@ -37,20 +37,38 @@
                 <router-link to="/">Back to Home</router-link>
             </div>
         </div>
+
+        <!-- Add Confirmation Modal -->
+        <ConfirmationModal
+            :show="showConfirmation"
+            :title="'Login Successful'"
+            :message="'Welcome back, ' + userName + '! You will be redirected to your dashboard.'"
+            :confirmText="'Continue'"
+            type="primary"
+            @confirm="proceedToRedirect"
+            @cancel="cancelLogin"
+        />
     </div>
 </template>
 
 <script>
 import axios from 'axios'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
 
 export default {
     name: 'Login',
+    components: {
+        ConfirmationModal
+    },
     data() {
         return {
             email: '',
             password: '',
             loading: false,
-            errorMessage: ''
+            errorMessage: '',
+            showConfirmation: false,
+            userName: '',
+            pendingUserData: null
         }
     },
     methods: {
@@ -59,31 +77,29 @@ export default {
             this.errorMessage = '';
 
             try {
-                const response = await axios.post('http://127.0.0.1:8000/api/login/', {
+                const response = await axios.post('http://127.0.0.1:8000/api/login/?skip_verification=true', {
                     email: this.email,
                     password: this.password
                 });
 
-                console.log("🔹 Backend Response:", response.data); // Debugging log
+                console.log("🔹 Backend Response:", response.data);
 
                 if (response.data.access_token) {
-                    console.log("✅ Login successful, storing user data...");
+                    console.log("✅ Login successful, processing response...");
 
-                    // Store complete user data before verification
-                    localStorage.setItem('tempUserData', JSON.stringify({
+                    // Store user data temporarily
+                    this.pendingUserData = {
                         user_id: response.data.user_id,
                         name: response.data.name,
                         email: response.data.email,
                         role: response.data.role,
                         access_token: response.data.access_token,
                         courses: response.data.courses
-                    }));
+                    };
 
-                    // Redirect to verification page
-                    this.$router.push({
-                        name: 'VerifyCode',
-                        query: { email: this.email }
-                    }).catch(err => console.error("❌ Navigation Error:", err));
+                    // Set user name and show confirmation
+                    this.userName = response.data.name;
+                    this.showConfirmation = true;
                 } else {
                     console.log("⚠️ Unexpected response:", response.data);
                     this.errorMessage = "Unexpected response. Please try again.";
@@ -94,6 +110,38 @@ export default {
             } finally {
                 this.loading = false;
             }
+        },
+
+        proceedToRedirect() {
+            if (!this.pendingUserData) return;
+
+            // Store the user data
+            localStorage.setItem('user', JSON.stringify(this.pendingUserData));
+            
+            // Redirect based on role
+            switch (this.pendingUserData.role) {
+                case 'student': 
+                    console.log("🏫 Redirecting to student dashboard...");
+                    this.$router.push('/student-dashboard');
+                    break;
+                case 'faculty': 
+                    console.log("👨‍🏫 Redirecting to faculty dashboard...");
+                    this.$router.push('/faculty-dashboard');
+                    break;
+                case 'admin': 
+                    console.log("👑 Redirecting to admin dashboard...");
+                    this.$router.push('/admin-dashboard');
+                    break;
+                default: 
+                    console.log("🏠 Redirecting to home...");
+                    this.$router.push('/');
+            }
+        },
+
+        cancelLogin() {
+            this.showConfirmation = false;
+            this.pendingUserData = null;
+            this.userName = '';
         }
     }
 }

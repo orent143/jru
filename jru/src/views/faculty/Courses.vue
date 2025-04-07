@@ -7,7 +7,7 @@
                 <div class="courses">
                     <div class="header">
                         <h1>Courses</h1>
-                        <button @click="showCreateCourseForm = true" class="create-course-btn">Create Course</button>
+                        <button @click="showCreateConfirmation" class="create-course-btn">Create Course</button>
                     </div>
 
                     <p v-if="loading">Loading courses...</p>
@@ -24,8 +24,8 @@
                                 <h2>{{ course.course_name }}</h2>
                                 <p>Section: {{ course.section }}</p>
                                 <div class="card-actions">
-                                    <button @click.stop="editCourse(course.course_id)"><i class="pi pi-pencil"></i></button>
-                                    <button @click.stop="deleteCourse(course.course_id)"><i class="pi pi-trash"></i></button>
+                                    <button @click.stop="editCourse(course)"><i class="pi pi-pencil"></i></button>
+                                    <button @click.stop="showDeleteConfirmation(course)"><i class="pi pi-trash"></i></button>
                                 </div>
                             </div>
                             <div class="schedule-container">
@@ -40,7 +40,7 @@
                         <div class="modal-content">
                             <span class="close" @click="closeModal">&times;</span>
                             <h2>Create Course</h2>
-                            <form @submit.prevent="createCourse" class="course-form">
+                            <form @submit.prevent="showCreateConfirmation" class="course-form">
                                 <label for="name">Course Name:</label>
                                 <input type="text" v-model="newCourse.course_name" required>
                                   
@@ -54,6 +54,26 @@
                             </form>
                         </div>
                     </div>
+
+                    <ConfirmationModal
+                        :show="showDeleteModal"
+                        title="Delete Course"
+                        :message="'Are you sure you want to delete ' + (selectedCourse?.course_name || 'this course') + '?'"
+                        confirmText="Delete"
+                        type="danger"
+                        @confirm="confirmDelete"
+                        @cancel="cancelDelete"
+                    />
+
+                    <ConfirmationModal
+                        :show="showCreateModal"
+                        title="Create Course"
+                        :message="'Create new course: ' + newCourse.course_name + ' - ' + newCourse.section"
+                        confirmText="Create"
+                        type="primary"
+                        @confirm="confirmCreate"
+                        @cancel="cancelCreate"
+                    />
                 </div>
             </main>
         </div>
@@ -65,9 +85,10 @@ import axios from 'axios';
 import { useToast } from 'vue-toastification'; // Import toast
 import Header from '@/components/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
-    components: { Header, SideBar },
+    components: { Header, SideBar, ConfirmationModal },
     data() {
         return {
             isSidebarCollapsed: false,
@@ -75,6 +96,9 @@ export default {
             loading: false,
             error: null,
             showCreateCourseForm: false,
+            showDeleteModal: false,
+            showCreateModal: false,
+            selectedCourse: null,
             newCourse: { course_name: '', section: '', class_schedule: '' },
             user: JSON.parse(localStorage.getItem('user')) || null
         };
@@ -111,6 +135,51 @@ export default {
             } finally {
                 this.loading = false;
             }
+        },
+
+        showDeleteConfirmation(course) {
+            this.selectedCourse = course;
+            this.showDeleteModal = true;
+        },
+
+        showCreateConfirmation(event) {
+            event?.preventDefault();
+            if (!this.newCourse.course_name || !this.newCourse.section) {
+                useToast().error('Please fill in all required fields');
+                return;
+            }
+            this.showCreateModal = true;
+        },
+
+        async confirmDelete() {
+            if (!this.selectedCourse) return;
+            
+            try {
+                await this.deleteCourse(this.selectedCourse.course_id);
+                this.showDeleteModal = false;
+                this.selectedCourse = null;
+            } catch (error) {
+                console.error('Error in delete confirmation:', error);
+            }
+        },
+
+        async confirmCreate() {
+            try {
+                await this.createCourse();
+                this.showCreateModal = false;
+                this.showCreateCourseForm = false;
+            } catch (error) {
+                console.error('Error in create confirmation:', error);
+            }
+        },
+
+        cancelDelete() {
+            this.showDeleteModal = false;
+            this.selectedCourse = null;
+        },
+
+        cancelCreate() {
+            this.showCreateModal = false;
         },
 
         async createCourse() {

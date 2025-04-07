@@ -13,35 +13,73 @@
 
         <label for="file-upload">Upload File:</label>
         <input type="file" @change="handleFileUpload" />
+        <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
 
-        <button @click="addMaterial" :disabled="isSubmitting">Add Material</button>
+        <button @click="showConfirmation" :disabled="isSubmitting">Add Material</button>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      :show="showConfirmModal"
+      title="Add Material"
+      :message="'Add new material: ' + title"
+      confirmText="Add"
+      type="primary"
+      @confirm="confirmAdd"
+      @cancel="cancelAdd"
+    />
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
+  components: {
+    ConfirmationModal
+  },
   props: {
-    courseId: Number, // Ensure the parent component passes the courseId
+    courseId: Number,
   },
   data() {
     return {
       title: "",
       content: "",
       file: null,
+      fileName: "",
       isSubmitting: false,
+      showConfirmModal: false
     };
   },
   methods: {
     handleFileUpload(event) {
       this.file = event.target.files[0];
+      this.fileName = this.file ? this.file.name : "";
     },
+
+    showConfirmation() {
+      const toast = useToast();
+      if (!this.courseId || !this.title || !this.content) {
+        toast.error('Please fill in all required fields.');
+        return;
+      }
+      this.showConfirmModal = true;
+    },
+
+    async confirmAdd() {
+      await this.addMaterial();
+      this.showConfirmModal = false;
+    },
+
+    cancelAdd() {
+      this.showConfirmModal = false;
+    },
+
     async addMaterial() {
-      const toast = useToast(); // Initialize toast
+      const toast = useToast();
 
       if (!this.courseId || !this.title || !this.content) {
         toast.error('Please fill in all required fields.');
@@ -63,26 +101,29 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        toast.success('Material added successfully!'); // Success toast
+        toast.success('Material added successfully!');
         this.$emit("add-material", response.data);
         this.resetForm();
       } catch (error) {
         console.error("Error adding material:", error);
-        toast.error('Failed to add material.'); // Error toast
+        toast.error('Failed to add material.');
       } finally {
         this.isSubmitting = false;
       }
     },
+
     resetForm() {
       this.title = "";
       this.content = "";
       this.file = null;
+      this.fileName = "";
       this.$emit("close");
     },
+
     closeModal() {
       this.resetForm();
-    },
-  },
+    }
+  }
 };
 </script>
 

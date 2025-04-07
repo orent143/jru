@@ -23,16 +23,31 @@
       <label for="external_link">External Link (Optional):</label>
       <input v-model="externalLink" type="text" placeholder="Enter external link (if any)" />
 
-      <button @click="addExam" :disabled="isSubmitting">Add Exam</button>
+      <button @click="showConfirmation" :disabled="isSubmitting">Add Exam</button>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      :show="showConfirmModal"
+      title="Add Exam"
+      :message="'Add new exam: ' + title + ' on ' + exam_date"
+      confirmText="Add"
+      type="primary"
+      @confirm="confirmAdd"
+      @cancel="cancelAdd"
+    />
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { useToast } from 'vue-toastification'; // Import the toast module
+import { useToast } from 'vue-toastification';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
+  components: {
+    ConfirmationModal
+  },
   props: {
     courseId: Number,
   },
@@ -44,8 +59,9 @@ export default {
       duration: null,
       file: null,
       fileName: "",
-      externalLink: "",  // New field for external link
+      externalLink: "",
       isSubmitting: false,
+      showConfirmModal: false
     };
   },
   methods: {
@@ -53,12 +69,30 @@ export default {
       this.file = event.target.files[0];
       this.fileName = this.file ? this.file.name : "";
     },
-    async addExam() {
-      const toast = useToast(); // Initialize toast notifications
 
-      // Validation
+    showConfirmation() {
+      const toast = useToast();
       if (!this.courseId || !this.title || !this.description || !this.exam_date || !this.duration) {
-        toast.error('Please fill in all required fields.'); // Error toast
+        toast.error('Please fill in all required fields.');
+        return;
+      }
+      this.showConfirmModal = true;
+    },
+
+    async confirmAdd() {
+      await this.addExam();
+      this.showConfirmModal = false;
+    },
+
+    cancelAdd() {
+      this.showConfirmModal = false;
+    },
+
+    async addExam() {
+      const toast = useToast();
+
+      if (!this.courseId || !this.title || !this.description || !this.exam_date || !this.duration) {
+        toast.error('Please fill in all required fields.');
         return;
       }
 
@@ -71,12 +105,10 @@ export default {
       formData.append("exam_date", this.exam_date);
       formData.append("duration_minutes", this.duration);
 
-      // Append external link if provided
       if (this.externalLink) {
         formData.append("external_link", this.externalLink);
       }
 
-      // Append file if provided
       if (this.file) {
         formData.append("file", this.file);
       }
@@ -86,16 +118,17 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        toast.success('Exam added successfully!'); // Success toast
+        toast.success('Exam added successfully!');
         this.$emit("add-exam", response.data);
         this.resetForm();
       } catch (error) {
         console.error("Error adding exam:", error);
-        toast.error('Failed to add exam.'); // Error toast
+        toast.error('Failed to add exam.');
       } finally {
         this.isSubmitting = false;
       }
     },
+
     resetForm() {
       this.title = "";
       this.description = "";
@@ -103,13 +136,14 @@ export default {
       this.duration = null;
       this.file = null;
       this.fileName = "";
-      this.externalLink = "";  // Reset external link field
+      this.externalLink = "";
       this.$emit("close");
     },
+
     closeModal() {
       this.resetForm();
-    },
-  },
+    }
+  }
 };
 </script>
 

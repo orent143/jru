@@ -25,10 +25,7 @@
         <div class="card-header">
             <h2>{{ getCourseName(assignment.course_id) }} </h2>
             <p>Section: {{ getCourseSection(assignment.course_id) }}</p>
-            <div class="card-actions">
-                                    <button @click.stop="editQuiz(quiz.id)"><i class="pi pi-pencil"></i></button>
-                                    <button @click.stop="deleteQuiz(quiz.id)"><i class="pi pi-trash"></i></button>
-                                </div>
+
         </div>
         <div class="assignment-details">
             <p><strong>Description:</strong> {{ assignment.description }}</p>

@@ -20,10 +20,7 @@
                             <div class="card-header">
                                 <h2>{{ getCourseName(exam.course_id) }}</h2>
                                 <p>Section: {{ getCourseSection(exam.course_id) }}</p>
-                                <div class="card-actions">
-                                    <button @click.stop="editExam(exam.id)"><i class="pi pi-pencil"></i></button>
-                                    <button @click.stop="deleteExam(exam.id)"><i class="pi pi-trash"></i></button>
-                                </div>
+                                
                             </div>
                             <div class="exam-details">
                                 <p>Duration: {{ exam.duration }} minutes</p>

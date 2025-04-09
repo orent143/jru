@@ -3,7 +3,7 @@
     <div class="modal">
       <div class="modal-content">
         <span class="close" @click="closeModal">&times;</span>
-        <h2>Add New Assignment</h2>
+        <h2>Edit Assignment</h2>
         
         <label for="title">Assignment Title:</label>
         <input v-model="title" type="text" placeholder="Enter Title" required />
@@ -14,32 +14,32 @@
         <label for="due_date">Due Date:</label>
         <input v-model="due_date" type="date" required />
   
-        <label for="file-upload">Upload File:</label>
+        <label for="file-upload">Upload New File (Optional):</label>
         <input type="file" @change="handleFileUpload" />
         <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
 
         <label for="external-link">External Link (Optional):</label>
         <input v-model="externalLink" type="url" placeholder="Enter external link (if any)" />
   
-        <button @click="confirmAddAssignment" :disabled="isSubmitting">Add Assignment</button>
+        <button @click="confirmEditAssignment" :disabled="isSubmitting">Update Assignment</button>
       </div>
     </div>
   </div>
 
   <ConfirmationModal
     :show="showConfirmation"
-    title="Add Assignment"
-    message="Are you sure you want to add this assignment?"
-    confirmText="Add"
+    title="Update Assignment"
+    message="Are you sure you want to update this assignment?"
+    confirmText="Update"
     type="primary"
-    @confirm="handleAssignmentSubmission"
+    @confirm="handleAssignmentUpdate"
     @cancel="showConfirmation = false"
   />
 </template>
 
 <script>
 import axios from "axios";
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
@@ -47,7 +47,10 @@ export default {
     ConfirmationModal
   },
   props: {
-    courseId: Number,
+    assignment: {
+      type: Object,
+      required: true
+    }
   },
   data() {
     return {
@@ -62,16 +65,29 @@ export default {
       pendingAssignment: null
     };
   },
+  watch: {
+    assignment: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal) {
+          this.title = newVal.title;
+          this.description = newVal.description;
+          this.due_date = newVal.due_date;
+          this.externalLink = newVal.external_link || "";
+        }
+      }
+    }
+  },
   methods: {
     handleFileUpload(event) {
       this.file = event.target.files[0];
       this.fileName = this.file ? this.file.name : "";
     },
 
-    confirmAddAssignment() {
+    confirmEditAssignment() {
       const toast = useToast();
 
-      if (!this.courseId || !this.title || !this.description || !this.due_date) {
+      if (!this.title || !this.description || !this.due_date) {
         toast.error('Please fill in all required fields.');
         return;
       }
@@ -87,14 +103,13 @@ export default {
       this.showConfirmation = true;
     },
 
-    async handleAssignmentSubmission() {
+    async handleAssignmentUpdate() {
       this.showConfirmation = false;
       const toast = useToast();
 
       this.isSubmitting = true;
 
       const formData = new FormData();
-      formData.append("course_id", this.courseId);
       formData.append("title", this.pendingAssignment.title);
       formData.append("description", this.pendingAssignment.description);
       formData.append("due_date", this.pendingAssignment.due_date);
@@ -108,36 +123,33 @@ export default {
       }
 
       try {
-        const response = await axios.post('http://127.0.0.1:8000/api/assignments', formData, {
+        await axios.put(`http://127.0.0.1:8000/api/assignments/${this.assignment.assignment_id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        toast.success('Assignment added successfully!');
-        this.$emit("add-assignment", response.data);
-        this.resetForm();
+        toast.success('Assignment updated successfully!');
+        this.$emit("update-assignment", {
+          ...this.assignment,
+          title: this.pendingAssignment.title,
+          description: this.pendingAssignment.description,
+          due_date: this.pendingAssignment.due_date,
+          external_link: this.pendingAssignment.externalLink
+        });
+        this.closeModal();
       } catch (error) {
-        console.error("Error adding assignment:", error);
-        toast.error('Failed to add assignment.');
+        console.error("Error updating assignment:", error);
+        toast.error('Failed to update assignment.');
       } finally {
         this.isSubmitting = false;
       }
     },
-    resetForm() {
-      this.title = "";
-      this.description = "";
-      this.due_date = "";
-      this.file = null;
-      this.fileName = "";
-      this.externalLink = "";
-      this.$emit("close");
-    },
+
     closeModal() {
-      this.resetForm();
-    },
-  },
+      this.$emit("close");
+    }
+  }
 };
 </script>
-
 
 <style scoped>
 .modal {
@@ -150,6 +162,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .modal-content {
@@ -216,4 +229,9 @@ export default {
   display: flex;
   justify-content: center;
 }
-</style>
+
+.modal-content button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+</style> 

@@ -26,6 +26,7 @@ import FacultyCourses from '@/views/faculty/Courses.vue';
 import FacultyCourseContent from '@/components/faculty/Course/coursescontent.vue';
 import FacultyCourseMaterialDetail from '@/components/faculty/Course/FacultyCourseMaterial.vue';
 import StudentList from '@/components/faculty/Course/StudentList.vue';
+import GradeCreation from '@/components/faculty/Course/GradeCreation.vue';
 import FacultyQuiz from '@/views/faculty/FacultyQuiz.vue';
 import FacultyQuizContent from '@/components/faculty/Quiz/FacultyQuizContent.vue';
 import FacultyQuizDetails from '@/components/faculty/Quiz/FacultyQuizDetails.vue';
@@ -35,6 +36,13 @@ import FacultyExamDetails from '@/components/faculty/Exam/FacultyExamDetails.vue
 import FacultyAssignment from '@/views/faculty/FacultyAssignment.vue';
 import FacultyAssignmentContent from '@/components/faculty/Assignment/FacultyAssContent.vue';
 import FacultyAssignmentDetails from '@/components/faculty/Assignment/FacultyAssignmentDetails.vue';
+import QuizSubmissions from '@/components/faculty/Quiz/QuizSubmissions.vue';
+import ExamSubmissions from '@/components/faculty/Exam/ExamSubmissions.vue';
+import FacultyAssignmentSubmissions from '@/components/faculty/Assignment/AssignmentSubmission.vue';
+import AssignmentSubmissionDetails from '@/components/faculty/Assignment/AssignmentSubmissionDetails.vue';
+import QuizSubmissionDetails from '@/components/faculty/Quiz/QuizSubmissionDetails.vue';
+import ExamSubmissionDetails from '@/components/faculty/Exam/ExamSubmissionDetails.vue';
+import CalendarView from '@/components/faculty/Calendar/CalendarView.vue';
 
 // Admin Views
 import AdminDashboard from '@/views/admin/Home.vue';
@@ -67,15 +75,23 @@ const routes = [
   { path: '/faculty/course/:courseId', name: 'FacultyCourseContent', component: FacultyCourseContent },
   { path: '/faculty/course/:courseId/material/:materialId', name: 'FacultyMaterialDetail', component: FacultyCourseMaterialDetail, props: true },
   { path: '/faculty/course/:courseId/students', name: 'StudentList', component: StudentList, props: true },
+  { path: '/faculty/course/:courseId/grades', name: 'GradeCreation', component: GradeCreation, props: true },
   { path: '/faculty/quizzes', name: 'FacultyQuiz', component: FacultyQuiz },
   { path: '/faculty/course/:courseId/quizzes', name: 'FacultyQuizContent', component: FacultyQuizContent, props: true },
   { path: '/faculty/course/:courseId/quiz/:quizId', name: 'FacultyQuizDetails', component: FacultyQuizDetails, props: true },
+  { path: '/faculty/course/:courseId/quiz/:quizId/submissions', name: 'QuizSubmissions', component: QuizSubmissions, meta: { requiresAuth: true, role: 'faculty' } },
+  { path: '/faculty/course/:courseId/quiz/:quizId/submission/:submissionId', name: 'QuizSubmissionDetails', component: QuizSubmissionDetails, meta: { requiresAuth: true, role: 'faculty' } },
   { path: '/faculty/exams', name: 'FacultyExam', component: FacultyExam },
   { path: '/faculty/course/:courseId/exams', name: 'FacultyExamContent', component: FacultyExamContent, props: true },
   { path: '/faculty/course/:courseId/exam/:examId', name: 'FacultyExamDetails', component: FacultyExamDetails, props: true },
+  { path: '/faculty/course/:courseId/exam/:examId/submissions', name: 'ExamSubmissions', component: ExamSubmissions, props: true },
+  { path: '/faculty/course/:courseId/exam/:examId/submission/:submissionId', name: 'ExamSubmissionDetails', component: ExamSubmissionDetails, meta: { requiresAuth: true, role: 'faculty' } },
   { path: '/faculty/assignments', name: 'FacultyAssignment', component: FacultyAssignment },
   { path: '/faculty/course/:courseId/assignments', name: 'FacultyAssignmentContent', component: FacultyAssignmentContent, props: true },
   { path: '/faculty/course/:courseId/assignment/:assignmentId', name: 'FacultyAssignmentDetails', component: FacultyAssignmentDetails, props: true },
+  { path: '/faculty/course/:courseId/assignment/:assignmentId/submissions', name: 'FacultyAssignmentSubmissions', component: FacultyAssignmentSubmissions, props: true },
+  { path: '/faculty/course/:courseId/assignment/:assignmentId/submission/:submissionId', name: 'AssignmentSubmissionDetails', component: AssignmentSubmissionDetails, meta: { requiresAuth: true, role: 'faculty' } },
+  { path: '/view-calendar', name: 'CalendarView', component: CalendarView },
 
   // Admin Routes
   { path: '/admin-dashboard', name: 'AdminDashboard', component: AdminDashboard },

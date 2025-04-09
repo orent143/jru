@@ -29,10 +29,9 @@
                   <div class="card-header">
                     <i class="pi pi-file"></i>
                     <h4>{{ exam.title }}</h4>
+                    <i class="pi pi-trash" @click.stop="confirmDeleteExam(exam.exam_id)" style="cursor: pointer; margin-left: auto;"></i>
                   </div>
-                  <div class="card-status">
-                    Scheduled for: {{ exam.exam_date }}
-                  </div>
+
                 </div>
               </div>
             </section>
@@ -46,6 +45,17 @@
                   :courseId="this.$route.params.courseId"
                   @close="showAddExamModal = false"
                   @add-exam="fetchExams" />
+
+                  
+    <ConfirmationModal
+    :show="showDeleteConfirmation"
+    title="Delete Exam"
+    :message="'Are you sure you want to delete this exam?'"
+    confirmText="Delete"
+    type="danger"
+    @confirm="handleDeleteExam"
+    @cancel="cancelDeleteExam"
+    />
   </div>
 </template>
 
@@ -53,10 +63,11 @@
 import Header from '../../header.vue';
 import Sidebar from '../SideBar.vue';
 import AddExamModal from '@/components/faculty/Exam/AddExamModal.vue';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import axios from 'axios';
 
 export default {
-  components: { Header, Sidebar, AddExamModal },
+  components: { Header, Sidebar, AddExamModal, ConfirmationModal },
   data() {
     return {
       teacher: {},
@@ -65,6 +76,8 @@ export default {
       course: null,
       showAddExamModal: false,
       upcomingExams: [],
+      showDeleteConfirmation: false,
+      pendingDeleteExamId: null
     };
   },
   async created() {
@@ -94,6 +107,27 @@ export default {
         name: 'FacultyExamDetails', 
         params: { examId: exam.exam_id } 
       });
+    },
+    confirmDeleteExam(examId) {
+      this.pendingDeleteExamId = examId;
+      this.showDeleteConfirmation = true;
+    },
+    async handleDeleteExam() {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/exams/${this.pendingDeleteExamId}`);
+        this.course.exams = this.course.exams.filter(
+          exam => exam.exam_id !== this.pendingDeleteExamId
+        );
+      } catch (error) {
+        console.error("Error deleting exam:", error);
+      } finally {
+        this.showDeleteConfirmation = false;
+        this.pendingDeleteExamId = null;
+      }
+    },
+    cancelDeleteExam() {
+      this.showDeleteConfirmation = false;
+      this.pendingDeleteExamId = null;
     },
   },
 };
@@ -210,6 +244,7 @@ export default {
     display: flex;
     align-items: center;
     padding: 1rem;
+    position: relative;
 }
 
 .material-card:hover {
@@ -222,12 +257,19 @@ export default {
     gap: 10px;
     font-size: 1.2rem;
     color: #333;
+    width: 100%;
 }
 
 .card-header h4 {
     font-size: 1.2rem;
     font-weight: 500;
     color: #333;
+}
+
+.card-header i.pi-trash {
+    font-size: 15px;
+    color: #e74c3c;
+    cursor: pointer;
 }
 
 .exam-summary {

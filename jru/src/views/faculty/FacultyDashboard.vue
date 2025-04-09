@@ -4,9 +4,7 @@
         <div class="dashboard-content">
             <SideBar :isCollapsed="isSidebarCollapsed" />
             <main class="dashboard-main">
-                <h1>Greeting</h1>
-                <!-- Greeting component goes here -->
-
+                <h1>Welcome back, {{ instructor?.name }}!</h1>
                 <div class="una-container">
                     <table>
                         <thead>
@@ -133,12 +131,15 @@ export default {
         return {
             // Add component data here
             searchQuery: '', // Example search query
-            student: { // Example student data
-                name: 'John Doe',
-                id: '12345'
-            },
+            instructor: null, // Initialize as null
             isSidebarCollapsed: false, // Sidebar collapsed state
         };
+    },
+    mounted() {
+        const userData = localStorage.getItem("user");
+        if (userData) {
+            this.instructor = JSON.parse(userData);
+        }
     },
     methods: {
         toggleSidebar() {

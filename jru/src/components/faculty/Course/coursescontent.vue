@@ -10,7 +10,7 @@
       <!-- Main Course Content Section -->
       <main class="course-main">
         <div class="course-header">
-          <h2>{{ courseName || "Loading..." }} - Course Content</h2> 
+          <h2>{{ courseName || "Loading..." }} - Course Content</h2>
           <button class="add-btn" @click="openAddMaterialModal">+</button>
         </div>
 
@@ -19,6 +19,13 @@
             <section class="announcements">
               <h3>Students Enrolled:</h3>
               <button class="view-btn" @click="viewStudents">View All</button>
+            </section>
+            
+            <section class="grades-section">
+              <div class="grades-header">
+                <h3>Grades Management</h3>
+                <button class="view-grades-btn" @click="viewGrades">View Grades</button>
+              </div>
             </section>
           </div>
 
@@ -34,15 +41,18 @@
                 <p>No materials available.</p>
               </div>
 
-              <!-- ✅ Clicking a material now redirects to MaterialDetail.vue -->
-              <div v-for="(material, index) in courseContent" 
-                   :key="index" 
-                   class="material-card" 
+              <div v-for="(material, index) in courseContent"
+                   :key="index"
+                   class="material-card"
                    @click="viewMaterial(material)">
-
-                <h4>You posted a material:</h4>
-                <p>{{ material.title }}</p>
-
+                <div class="card-header">
+                  <i class="pi pi-file"></i>
+                  <h4>You posted a material:</h4>
+                  <p>{{ material.title }}</p>
+                  <i class="pi pi-trash"
+                     @click.stop="confirmDeleteMaterial(material.content_id)"
+                     style="cursor: pointer; margin-left: auto;"></i>
+                </div>
               </div>
             </section>
           </div>
@@ -51,26 +61,38 @@
     </div>
 
     <!-- Add Material Modal -->
-    <AddMaterialModal 
-      :courseId="courseId"  
-      v-if="showAddMaterialModal" 
-      @close="showAddMaterialModal = false" 
-      @add-material="addMaterial" 
+    <AddMaterialModal
+      :courseId="courseId"
+      v-if="showAddMaterialModal"
+      @close="showAddMaterialModal = false"
+      @add-material="addMaterial"
+    />
+
+    <!-- Reusable Confirmation Modal -->
+    <ConfirmationModal
+      :show="showDeleteConfirmation"
+      title="Delete Material"
+      message="Are you sure you want to delete this material?"
+      confirmText="Delete"
+      type="danger"
+      @confirm="handleDeleteMaterial"
+      @cancel="cancelDeleteMaterial"
     />
   </div>
 </template>
-
 <script>
 import axios from "axios";
 import Header from "@/components/header.vue";
 import Sidebar from "@/components/faculty/SideBar.vue";
 import AddMaterialModal from "@/components/faculty/Course/AddMaterialModal.vue";
+import ConfirmationModal from "@/components/ConfirmationModal.vue";
 
 export default {
   components: {
     Header,
     Sidebar,
-    AddMaterialModal
+    AddMaterialModal,
+    ConfirmationModal
   },
   data() {
     return {
@@ -79,68 +101,84 @@ export default {
       courseContent: [],
       loading: true,
       isSidebarCollapsed: false,
-      showAddMaterialModal: false
+      showAddMaterialModal: false,
+      showDeleteConfirmation: false,
+      pendingDeleteMaterialId: null,
     };
-  },
-  methods: {
-    getUserRole() {
-    const user = JSON.parse(localStorage.getItem('user'));
-    return user ? user.role : null;
-  },
-  async fetchCourseContent() {
-    try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/course_materials/${this.courseId}`);
-      this.courseName = response.data.course_name;
-      this.courseContent = response.data.materials;
-      this.loading = false;
-    } catch (error) {
-      console.error("Error fetching course content:", error);
-      this.loading = false;
-    }
-  },
-  toggleSidebar() {
-    this.isSidebarCollapsed = !this.isSidebarCollapsed;
-  },
-  openAddMaterialModal() {
-    this.showAddMaterialModal = true;
-  },
-  addMaterial(newMaterial) {
-    this.courseContent.push(newMaterial);
-  },
-  viewMaterial(material) {
-  console.log("Material object:", material); // Debug log
-
-  if (!material || !material.content_id) {
-    console.error("Error: materialId is missing", material);
-    return;
-  }
-
-  const role = this.getUserRole(); // Assume you have a way to check if the user is a student or faculty
-  
-  // Adjusting the route name based on the user role
-  if (role === 'faculty') {
-    this.$router.push({
-      name: "FacultyMaterialDetail",
-      params: { courseId: this.courseId, materialId: material.content_id }
-    });
-  } else if (role === 'student') {
-    this.$router.push({
-      name: "StudentMaterialDetail",
-      params: { courseId: this.courseId, materialId: material.content_id }
-    });
-  } else {
-    console.error("Role not recognized, unable to navigate to material details.");
-  }
-},
-  viewStudents() {
-    this.$router.push({ name: "StudentList", params: { courseId: this.courseId } });
-  }
   },
   mounted() {
     this.fetchCourseContent();
+  },
+  methods: {
+    getUserRole() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      return user ? user.role : null;
+    },
+    async fetchCourseContent() {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/course_materials/${this.courseId}`);
+        this.courseName = response.data.course_name;
+        this.courseContent = response.data.materials;
+        this.loading = false;
+      } catch (error) {
+        console.error("Error fetching course content:", error);
+        this.loading = false;
+      }
+    },
+    toggleSidebar() {
+      this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    },
+    openAddMaterialModal() {
+      this.showAddMaterialModal = true;
+    },
+    addMaterial(newMaterial) {
+      this.courseContent.push(newMaterial);
+    },
+    viewMaterial(material) {
+      if (!material || !material.content_id) {
+        console.error("Material ID missing");
+        return;
+      }
+
+      const role = this.getUserRole();
+      const routeName = role === 'faculty' ? 'FacultyMaterialDetail' : 'StudentMaterialDetail';
+
+      this.$router.push({
+        name: routeName,
+        params: { courseId: this.courseId, materialId: material.content_id },
+      });
+    },
+    viewStudents() {
+      this.$router.push({ name: "StudentList", params: { courseId: this.courseId } });
+    },
+    viewGrades() {
+      this.$router.push({ name: "GradeCreation", params: { courseId: this.courseId } });
+    },
+    confirmDeleteMaterial(materialId) {
+      this.pendingDeleteMaterialId = materialId;
+      this.showDeleteConfirmation = true;
+    },
+    async handleDeleteMaterial() {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/course-content/${this.pendingDeleteMaterialId}`);
+        this.courseContent = this.courseContent.filter(
+          material => material.content_id !== this.pendingDeleteMaterialId
+        );
+      } catch (error) {
+        console.error("Error deleting material:", error);
+      } finally {
+        this.showDeleteConfirmation = false;
+        this.pendingDeleteMaterialId = null;
+      }
+    },
+    cancelDeleteMaterial() {
+      this.showDeleteConfirmation = false;
+      this.pendingDeleteMaterialId = null;
+    }
   }
 };
 </script>
+
 
 <style scoped>
 .course-content-container {
@@ -262,6 +300,8 @@ export default {
   padding: 1rem;
   gap: 7px;
   margin-bottom: 25px;
+  position: relative;
+
 }
 .material-card h4 {
   font-size: 1.2rem;
@@ -276,10 +316,6 @@ export default {
   transform: translateY(-5px);
 }
 
-.material-card i {
-  font-size: 1.5rem;
-  color: #2c3e50;
-}
 
 /* Announcements & Assignments */
 .announcements {
@@ -296,12 +332,18 @@ export default {
   gap: 10px;
   font-size: 1.2rem;
   color: #333;
+  width: 100%;
 }
 
 .card-header h4 {
   font-size: 1.2rem;
   font-weight: 500;
   color: #333;
+}
+.material-card i.pi-trash {
+  font-size: 15px;
+  color: #e74c3c;
+  cursor: pointer;
 }
 
 .card-body {
@@ -398,5 +440,64 @@ export default {
   .content-right {
     padding-left: 0;
   }
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #45a049;
+}
+
+.grades-section {
+  background-color: #D9D9D9;
+  padding: 1rem;
+  border-radius: 8px;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.grades-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.grades-header h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #000000d2;
+  margin: 0;
+}
+
+.view-grades-btn {
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.view-grades-btn:hover {
+  background-color: #1a252f;
 }
 </style>

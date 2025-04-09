@@ -16,10 +16,6 @@
       <label for="duration">Duration (minutes):</label>
       <input v-model="duration" type="number" placeholder="Enter duration" required />
 
-      <label for="file-upload">Upload File (Optional):</label>
-      <input type="file" @change="handleFileUpload" />
-      <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
-
       <!-- URL Input for external link -->
       <label for="external-link">External Link (Optional):</label>
       <input v-model="link" type="url" placeholder="Enter a URL" />
@@ -154,6 +150,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .modal-content {

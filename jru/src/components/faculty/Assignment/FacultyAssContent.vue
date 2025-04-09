@@ -30,8 +30,9 @@
                 <div v-for="assignment in assignments" :key="assignment.assignment_id" class="material-card" @click="navigateToAssignment(assignment)">
                   <div class="card-header">
                     <i class="pi pi-file-edit"></i>
-                    <h4>Teacher posted a new assignment:</h4>
-                    {{ assignment.title }}
+                    <h4>You posted a new assignment:</h4>
+                    <p>{{ assignment.title }}</p>
+                    <i class="pi pi-trash" @click.stop="confirmDeleteAssignment(assignment.assignment_id)" style="cursor: pointer; margin-left: auto;"></i>
                   </div>
                 </div>
               </div>
@@ -47,6 +48,16 @@
         @add-assignment="addAssignment"
         :courseId="courseId" 
     />
+
+    <ConfirmationModal
+    :show="showDeleteConfirmation"
+    title="Delete Assignment"
+    :message="'Are you sure you want to delete this assignment?'"
+    confirmText="Delete"
+    type="danger"
+    @confirm="handleDeleteAssignment"
+    @cancel="cancelDeleteAssignment"
+    />
   </div>
 </template>
 
@@ -55,13 +66,15 @@ import axios from 'axios';
 import Header from "@/components/header.vue";
 import Sidebar from "@/components/faculty/SideBar.vue";
 import AddAssignmentModal from "@/components/faculty/Assignment/AddAssignmentModal.vue";
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
   name: 'FacultyAssignmentContent',
   components: {
     Header,
     Sidebar,
-    AddAssignmentModal
+    AddAssignmentModal,
+    ConfirmationModal
   },
   data() {
     return {
@@ -71,7 +84,9 @@ export default {
       showAddAssignmentModal: false,
       teacher: {},
       searchQuery: '',
-      isSidebarCollapsed: false
+      isSidebarCollapsed: false,
+      showDeleteConfirmation: false,
+      pendingDeleteAssignmentId: null
     };
   },
   props: {
@@ -123,6 +138,27 @@ export default {
     },
     formatDate(dateString) {
       return new Date(dateString).toLocaleDateString();
+    },
+    confirmDeleteAssignment(assignmentId) {
+      this.pendingDeleteAssignmentId = assignmentId;
+      this.showDeleteConfirmation = true;
+    },
+    async handleDeleteAssignment() {
+      try {
+        const response = await axios.delete(`http://127.0.0.1:8000/api/assignments/${this.pendingDeleteAssignmentId}`);
+        this.assignments = this.assignments.filter(assignment => assignment.assignment_id !== this.pendingDeleteAssignmentId);
+        this.showDeleteConfirmation = false;
+        this.pendingDeleteAssignmentId = null;
+        console.log(response.data.message);
+      } catch (error) {
+        console.error("Error deleting assignment:", error);
+        this.showDeleteConfirmation = false;
+        this.pendingDeleteAssignmentId = null;
+      }
+    },
+    cancelDeleteAssignment() {
+      this.showDeleteConfirmation = false;
+      this.pendingDeleteAssignmentId = null;
     }
   },
   mounted() {
@@ -250,6 +286,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 1rem;
+  position: relative;
 }
 
 .material-card:hover {
@@ -269,19 +306,29 @@ export default {
   width: 100%;
   position: relative;
 }
-
+.material-card p{
+    font-size: 1rem;
+    color: #666;
+}
 .card-header {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 1.2rem;
   color: #333;
+  width: 100%;
 }
 
 .card-header h4 {
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #333;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.card-header i.pi-trash {
+    font-size: 15px;
+    color: #e74c3c;
+    cursor: pointer;
 }
 
 .card-body {

@@ -170,17 +170,32 @@ export default {
   align-items: center;
   cursor: pointer;
   gap: 0.5rem;
+  transition: all 0.3s ease;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.profile-dropdown:hover {
+  background-color: rgba(0, 123, 246, 0.1);
+  color: #007BF6;
+}
+
+.profile-dropdown:hover .profile-icon,
+.profile-dropdown:hover .user-name {
+  color: #007BF6;
 }
 
 .profile-icon {
   color: #666;
   font-size: 18px;
+  transition: color 0.3s ease;
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 500;
   color: #333;
+  transition: color 0.3s ease;
 }
 
 .logo-text {

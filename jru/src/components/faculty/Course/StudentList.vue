@@ -16,8 +16,8 @@
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
+                  <th>Student Name</th>
+                  <th>Student Email</th>
                   <th>Section</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -46,7 +46,7 @@
             <h2>Enroll Student</h2>
             <label for="user">Select Student:</label>
             <select v-model="selectedUserId">
-              <option v-for="user in allUsers" :key="user.student_id" :value="user.student_id">
+              <option v-for="user in allUsers" :key="user.user_id" :value="user.user_id">
                 {{ user.name }} ({{ user.email }})
               </option>
             </select>
@@ -62,6 +62,7 @@
 import axios from "axios";
 import Header from "@/components/header.vue";
 import Sidebar from "@/components/faculty/SideBar.vue";
+
 export default {
   components: {
     Header,
@@ -70,7 +71,7 @@ export default {
   props: {
     courses: {
       type: Array,
-      required: false, // Set to `true` if courses are always expected
+      required: false,
       default: () => [],
     },
   },
@@ -80,6 +81,8 @@ export default {
       allUsers: [],
       selectedUserId: null,
       showEnrollModal: false,
+      searchQuery: "",
+      isSidebarCollapsed: false,
     };
   },
   methods: {
@@ -87,55 +90,102 @@ export default {
       const courseId = this.$route.params.courseId;
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/course_students/${courseId}`);
-        this.students = response.data.students;
+        console.log("Course students response:", response.data);
+        
+        // Check if the response has the expected structure
+        if (response.data && response.data.students) {
+          this.students = response.data.students;
+          console.log("Processed students:", this.students);
+        } else {
+          console.error("Unexpected response format:", response.data);
+          this.students = []; // Reset to empty array if format is unexpected
+        }
       } catch (error) {
         console.error("Error fetching students:", error);
+        this.students = []; // Reset to empty array on error
       }
     },
+
     async fetchUsers() {
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/students/`);
         this.allUsers = response.data;
+        console.log("Fetched users:", this.allUsers); // Add logging to debug
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     },
+
+    // Method to enroll student
     async enrollStudent() {
       if (!this.selectedUserId) return;
       const courseId = this.$route.params.courseId;
+
+      const payload = {
+        user_id: this.selectedUserId,
+        course_id: courseId
+      };
+      
+      console.log("Enrolling student with payload:", payload); // Add logging
+
       try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/assign_student_to_course/`, {
-          course_id: courseId,
-          student_id: this.selectedUserId,
-        });
-        this.fetchStudents();
-        this.showEnrollModal = false;
+        const response = await axios.post("http://127.0.0.1:8000/api/student_courses/", payload);
+        console.log("Enrollment response:", response.data); // Add logging
+        if (response.status === 200) {
+          alert(response.data.message);
+          this.fetchStudents(); // Refresh student list after enrollment
+          this.showEnrollModal = false; // Close the modal
+        }
       } catch (error) {
         console.error("Error enrolling student:", error);
+        if (error.response && error.response.data.detail) {
+          alert(error.response.data.detail); // Show error message if any
+        }
+      }
+    },
+
+    // Method to delete student
+    async deleteStudent(studentId) {
+      if (!studentId) {
+        console.error("No student ID provided for deletion");
+        return;
+      }
+      
+      const courseId = this.$route.params.courseId;
+      console.log(`Removing student ${studentId} from course ${courseId}`);
+      
+      try {
+        const response = await axios.delete(`http://127.0.0.1:8000/api/student_courses/${studentId}/${courseId}`);
+        console.log("Remove response:", response.data);
+        
+        // Show success message
+        if (response.data && response.data.message) {
+          alert(response.data.message);
+        }
+        
+        // Refresh the student list after successful removal
+        await this.fetchStudents();
+      } catch (error) {
+        console.error("Error removing student from course:", error);
         if (error.response && error.response.data.detail) {
           alert(error.response.data.detail);
         }
       }
     },
-    async deleteStudent(studentId) {
-      try {
-        await axios.delete(`http://127.0.0.1:8000/api/students/${studentId}`);
-        this.fetchStudents();
-      } catch (error) {
-        console.error("Error deleting student:", error);
-      }
+
+    toggleSidebar() {
+      this.isSidebarCollapsed = !this.isSidebarCollapsed;
     },
   },
+
   mounted() {
     this.fetchStudents();
     this.fetchUsers();
   },
-  closeModal() {
-      this.resetForm();
-    },
 };
-
 </script>
+
+
 
 <style scoped>
 .container {
@@ -143,14 +193,12 @@ export default {
   margin: 0 auto;
   overflow-x: auto;
   height: 100vh;
-
 }
 
 .content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  height: calc(100vh - 50px);
   background-color: #fff;
 }
 
@@ -172,6 +220,13 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.student-details  {
+  overflow-x: auto;
+  margin-top: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .student-details table {
@@ -198,9 +253,10 @@ export default {
 }
 
 h1 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
+  font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
 }
 
 .add-student-btn {
@@ -277,18 +333,15 @@ h1 {
   padding: 2rem;
   border-radius: 8px;
   color: #000000;
-
   width: 400px;
   position: relative;
 }
+
 .modal-content h2 {
   font-size: 25px;
   font-weight: 1000;
   color: #000000;
   padding-right: 30px;
-}
-
-.modal-content h2 {
   margin-bottom: 20px;
 }
 
@@ -318,8 +371,8 @@ h1 {
   cursor: pointer;
   transition: background-color 0.3s;
   width: 100%;
-  display: flex;          /* Add this */
-  justify-content: center; /* Add this */
+  display: flex;
+  justify-content: center;
 }
 
 .modal-content button:hover {

@@ -47,14 +47,22 @@
                     </div>
                 
                     <div class="submission-container" v-if="submissions.length">
-                        <h2>Submissions:</h2>
+                        <div class="submission-header">
+                            <h2>Submissions</h2>
+                            <button class="view-all-btn" @click="viewAllSubmissions">
+                                <i class="pi pi-list"></i> View All Submissions
+                            </button>
+                        </div>
                         <div class="submission-list">
-                            <div class="submission-item" v-for="(submission, index) in submissions" :key="index">
+                            <div class="submission-item" v-for="(submission, index) in submissions.slice(0, 3)" :key="index">
                                 <div class="student-info">
                                     <span>{{ submission.studentName }}</span>
                                     <span>{{ formatDate(submission.submissionDate) }}</span>
                                     <span :class="['status', submission.status.toLowerCase()]">{{ submission.status }}</span>
                                 </div>
+                            </div>
+                            <div v-if="submissions.length > 3" class="view-more">
+                                <button @click="viewAllSubmissions">View {{ submissions.length - 3 }} more submissions...</button>
                             </div>
                         </div>
                     </div>
@@ -64,6 +72,12 @@
                 <p>No quiz found.</p>
             </div>
         </div>
+        <EditQuizModal
+            v-if="showEditModal"
+            :quiz="currentQuiz"
+            @update-quiz="handleQuizUpdate"
+            @close="showEditModal = false"
+        />
     </div>
 </template>
 
@@ -71,12 +85,18 @@
 import Header from '../../header.vue';
 import Sidebar from '../SideBar.vue';
 import axios from 'axios';
+import EditQuizModal from './EditQuizModal.vue';
 
 export default {
-    components: { Header, Sidebar },
+    components: { 
+        Header, 
+        Sidebar,
+        EditQuizModal
+    },
     data() {
         return {
             currentQuiz: null,
+            showEditModal: false,
             submissions: [
                 {
                     studentName: 'John Doe',
@@ -130,7 +150,22 @@ export default {
 
         // Edit quiz details
         editQuiz() {
-            this.$router.push(`/edit-quiz/${this.currentQuiz.quiz_id}`);
+            this.showEditModal = true;
+        },
+
+        handleQuizUpdate(updatedQuiz) {
+            this.currentQuiz = updatedQuiz;
+            this.showEditModal = false;
+        },
+
+        viewAllSubmissions() {
+            this.$router.push({
+                name: 'QuizSubmissions',
+                params: { 
+                    courseId: this.$route.params.courseId,
+                    quizId: this.$route.params.quizId 
+                }
+            });
         }
     },
 
@@ -334,5 +369,46 @@ export default {
 .status.pending {
     background-color: #FFDD57;
     color: black;
+}
+
+.submission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.view-all-btn {
+    background-color: #007BF6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.view-all-btn:hover {
+    background-color: #005bb5;
+}
+
+.view-more {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.view-more button {
+    background: none;
+    border: none;
+    color: #007BF6;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.view-more button:hover {
+    text-decoration: underline;
 }
 </style>

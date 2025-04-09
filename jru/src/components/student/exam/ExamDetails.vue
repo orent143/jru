@@ -48,13 +48,61 @@
           <div class="side-content">
             <div class="content-section submission">
               <h2>Your Work</h2>
-              <div class="submission-area">
-                <div class="submission-actions">
-                  <button class="upload-btn primary" @click="confirmSubmitExam">
-                    <i class="pi pi-upload"></i> Add or create
-                  </button>
+
+              <!-- Submission Form -->
+              <form @submit.prevent="confirmSubmitExam" enctype="multipart/form-data">
+                <div class="submission-area">
+                  <div class="submission-type-selector">
+                    <label for="submissionType">Choose Submission Type:</label>
+                    <select v-model="submissionType" id="submissionType" class="submission-dropdown">
+                      <option value="">Select submission type</option>
+                      <option value="file">Upload File</option>
+                      <option value="link">External Link</option>
+                    </select>
+                  </div>
+
+                  <div class="submission-inputs" v-if="submissionType">
+                    <!-- File Upload Input -->
+                    <div v-if="submissionType === 'file'" class="file-upload-container">
+                      <label class="file-upload-label">
+                        <input 
+                          type="file" 
+                          @change="handleFileChange" 
+                          class="file-input"
+                        />
+                        <span class="file-upload-text">
+                          <i class="pi pi-upload"></i>
+                          {{ selectedFile ? selectedFile.name : 'Choose file to upload' }}
+                        </span>
+                      </label>
+                    </div>
+
+                    <!-- External Link Input -->
+                    <div v-if="submissionType === 'link'" class="link-input-container">
+                      <input 
+                        type="text" 
+                        v-model="externalLink" 
+                        placeholder="Enter external link here" 
+                        class="link-input"
+                      />
+                    </div>
+
+                    <!-- Submission Text Area -->
+                    <div class="text-area-container">
+                      <textarea 
+                        v-model="submissionText" 
+                        placeholder="Add submission text..." 
+                        required
+                        class="submission-textarea"
+                      ></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                      <i class="pi pi-upload"></i> Submit Assignment
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </form>
             </div>
 
             <div class="content-section comments">
@@ -136,6 +184,11 @@ export default {
       searchQuery: '',
       isSidebarCollapsed: false,
       courses: [],
+      newComment: "",
+      submissionText: "",
+      externalLink: "",
+      selectedFile: null,
+      submissionType: "",
       currentExam: null,
       newComment: '',
       showSubmitConfirmation: false,
@@ -446,5 +499,124 @@ export default {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+}
+
+.submission-type-selector {
+  margin-bottom: 1.5rem;
+}
+
+.submission-dropdown {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.submission-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.file-upload-container {
+  width: 100%;
+}
+.file-upload-label {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.file-upload-label:hover {
+  border-color: #007bff;
+  background-color: #f1f8ff;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-upload-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #666;
+}
+
+.link-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.submission-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+}
+
+.submission-message {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f8d7da;
+  color: #721c24;
+  text-align: center;
+}
+
+.submission-message.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #fff;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.attachment-item i {
+  font-size: 1.25rem;
 }
 </style>

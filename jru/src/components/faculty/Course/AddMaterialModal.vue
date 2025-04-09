@@ -14,17 +14,31 @@
         <label for="file-upload">Upload File:</label>
         <input type="file" @change="handleFileUpload" />
 
-        <button @click="addMaterial" :disabled="isSubmitting">Add Material</button>
+        <button @click="confirmAddMaterial" :disabled="isSubmitting">Add Material</button>
       </div>
     </div>
   </div>
+
+  <ConfirmationModal
+    :show="showConfirmation"
+    title="Add Material"
+    message="Are you sure you want to add this material?"
+    confirmText="Add"
+    type="primary"
+    @confirm="handleMaterialSubmission"
+    @cancel="showConfirmation = false"
+  />
 </template>
 
 <script>
 import axios from "axios";
 import { useToast } from 'vue-toastification'; // Import toast
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
+  components: {
+    ConfirmationModal
+  },
   props: {
     courseId: Number, // Ensure the parent component passes the courseId
   },
@@ -34,28 +48,44 @@ export default {
       content: "",
       file: null,
       isSubmitting: false,
+      showConfirmation: false,
+      pendingMaterial: null
     };
   },
   methods: {
     handleFileUpload(event) {
       this.file = event.target.files[0];
     },
-    async addMaterial() {
-      const toast = useToast(); // Initialize toast
+
+    confirmAddMaterial() {
+      const toast = useToast();
 
       if (!this.courseId || !this.title || !this.content) {
         toast.error('Please fill in all required fields.');
         return;
       }
 
+      this.pendingMaterial = {
+        title: this.title,
+        content: this.content,
+        file: this.file
+      };
+
+      this.showConfirmation = true;
+    },
+
+    async handleMaterialSubmission() {
+      this.showConfirmation = false;
+      const toast = useToast();
+
       this.isSubmitting = true;
 
       const formData = new FormData();
       formData.append("course_id", this.courseId);
-      formData.append("title", this.title);
-      formData.append("content", this.content);
-      if (this.file) {
-        formData.append("file", this.file);
+      formData.append("title", this.pendingMaterial.title);
+      formData.append("content", this.pendingMaterial.content);
+      if (this.pendingMaterial.file) {
+        formData.append("file", this.pendingMaterial.file);
       }
 
       try {
@@ -63,12 +93,12 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        toast.success('Material added successfully!'); // Success toast
+        toast.success('Material added successfully!');
         this.$emit("add-material", response.data);
         this.resetForm();
       } catch (error) {
         console.error("Error adding material:", error);
-        toast.error('Failed to add material.'); // Error toast
+        toast.error('Failed to add material.');
       } finally {
         this.isSubmitting = false;
       }

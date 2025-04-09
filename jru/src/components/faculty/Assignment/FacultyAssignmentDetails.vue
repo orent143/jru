@@ -13,7 +13,7 @@
             <div class="assignment-header">
               <div class="header-content">
                 <h1>{{ currentAssignment.title }}</h1>
-                <button class="edit-btn" @click="editAssignment">
+                <button class="edit-btn" @click="showEditModal = true">
                   <i class="pi pi-pencil"></i> Edit
                 </button>
               </div>
@@ -52,21 +52,26 @@
           </div>
 
           <div class="submission-container" v-if="submissions.length">
-            <h2>Submissions:</h2>
-            <div class="submission-list">
-              <div
-                class="submission-item"
-                v-for="(submission, index) in submissions"
-                :key="index"
-              >
-                <div class="student-info">
-                  <span>{{ submission.studentName }}</span>
-                  <span>{{ formatDate(submission.submissionDate) }}</span>
-                  <span :class="['status', submission.status.toLowerCase()]">{{ submission.status }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div class="submission-header">
+    <h2>Submissions:</h2>
+    <button class="view-all-btn" @click="viewAllSubmissions">
+      <i class="pi pi-list"></i> View All Submissions
+    </button>
+  </div>
+  <div class="submission-list">
+    <div
+      class="submission-item"
+      v-for="(submission, index) in submissions"
+      :key="index"
+    >
+      <div class="student-info">
+        <span>{{ submission.studentName }}</span>
+        <span>{{ formatDate(submission.submissionDate) }}</span>
+        <span :class="['status', submission.status.toLowerCase()]">{{ submission.status }}</span>
+      </div>
+    </div>
+  </div>
+</div>
         </div>
       </div>
       <div v-else>
@@ -74,18 +79,26 @@
       </div>
     </div>
   </div>
+  <EditAssignmentModal
+    v-if="showEditModal"
+    :assignment="currentAssignment"
+    @update-assignment="handleAssignmentUpdate"
+    @close="showEditModal = false"
+  />
 </template>
 
 <script>
 import axios from 'axios';
 import Header from '../../header.vue';
 import Sidebar from '../SideBar.vue';
+import EditAssignmentModal from './EditAssignmentModal.vue';
 
 export default {
   name: 'FacultyAssignmentDetails',
   components: {
     Header,
-    Sidebar
+    Sidebar,
+    EditAssignmentModal
   },
   data() {
     return {
@@ -94,6 +107,7 @@ export default {
       isSidebarCollapsed: false,
       courses: [],
       currentAssignment: null,
+      showEditModal: false,
       submissions: [
         {
           studentName: 'John Doe',
@@ -141,6 +155,20 @@ export default {
     },
     editAssignment() {
       this.$router.push(`/edit-assignment/${this.currentAssignment.assignment_id}`);
+    },
+    viewAllSubmissions() {
+    // Navigate to the FacultyAssignmentSubmissions route
+    this.$router.push({
+      name: 'FacultyAssignmentSubmissions',
+      params: {
+        courseId: this.$route.params.courseId,
+        assignmentId: this.$route.params.assignmentId
+      }
+    });
+  },
+    handleAssignmentUpdate(updatedAssignment) {
+      this.currentAssignment = updatedAssignment;
+      this.showEditModal = false;
     }
   },
   mounted() {
@@ -280,6 +308,31 @@ export default {
     background-color: #D9D9D9;
     color: #212121;
 }
+
+.submission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.view-all-btn {
+    background-color: #007BF6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.view-all-btn:hover {
+    background-color: #005bb5;
+}
+
 .submission-container h2{
   font-weight: bold;
   margin-bottom:10px;

@@ -3,43 +3,43 @@
     <div class="modal">
       <div class="modal-content">
         <span class="close" @click="closeModal">&times;</span>
-        <h2>Add New Assignment</h2>
+        <h2>Edit Quiz</h2>
         
-        <label for="title">Assignment Title:</label>
+        <label for="title">Quiz Title:</label>
         <input v-model="title" type="text" placeholder="Enter Title" required />
   
-        <label for="description">Assignment Description:</label>
+        <label for="description">Quiz Description:</label>
         <textarea v-model="description" placeholder="Enter Description"></textarea>
   
-        <label for="due_date">Due Date:</label>
-        <input v-model="due_date" type="date" required />
+        <label for="quiz_date">Quiz Date:</label>
+        <input v-model="quiz_date" type="date" required />
+
+        <label for="duration">Duration (minutes):</label>
+        <input v-model="duration" type="number" placeholder="Enter duration" required />
   
-        <label for="file-upload">Upload File:</label>
-        <input type="file" @change="handleFileUpload" />
-        <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
 
         <label for="external-link">External Link (Optional):</label>
         <input v-model="externalLink" type="url" placeholder="Enter external link (if any)" />
   
-        <button @click="confirmAddAssignment" :disabled="isSubmitting">Add Assignment</button>
+        <button @click="confirmEditQuiz" :disabled="isSubmitting">Update Quiz</button>
       </div>
     </div>
   </div>
 
   <ConfirmationModal
     :show="showConfirmation"
-    title="Add Assignment"
-    message="Are you sure you want to add this assignment?"
-    confirmText="Add"
+    title="Update Quiz"
+    message="Are you sure you want to update this quiz?"
+    confirmText="Update"
     type="primary"
-    @confirm="handleAssignmentSubmission"
+    @confirm="handleQuizUpdate"
     @cancel="showConfirmation = false"
   />
 </template>
 
 <script>
 import axios from "axios";
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
@@ -47,20 +47,38 @@ export default {
     ConfirmationModal
   },
   props: {
-    courseId: Number,
+    quiz: {
+      type: Object,
+      required: true
+    }
   },
   data() {
     return {
       title: "",
       description: "",
-      due_date: "",
+      quiz_date: "",
+      duration: null,
       file: null,
       fileName: "",
       externalLink: "",
       isSubmitting: false,
       showConfirmation: false,
-      pendingAssignment: null
+      pendingQuiz: null
     };
+  },
+  watch: {
+    quiz: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal) {
+          this.title = newVal.title;
+          this.description = newVal.description;
+          this.quiz_date = newVal.quiz_date;
+          this.duration = newVal.duration_minutes;
+          this.externalLink = newVal.external_link || "";
+        }
+      }
+    }
   },
   methods: {
     handleFileUpload(event) {
@@ -68,18 +86,19 @@ export default {
       this.fileName = this.file ? this.file.name : "";
     },
 
-    confirmAddAssignment() {
+    confirmEditQuiz() {
       const toast = useToast();
 
-      if (!this.courseId || !this.title || !this.description || !this.due_date) {
+      if (!this.title || !this.description || !this.quiz_date || !this.duration) {
         toast.error('Please fill in all required fields.');
         return;
       }
 
-      this.pendingAssignment = {
+      this.pendingQuiz = {
         title: this.title,
         description: this.description,
-        due_date: this.due_date,
+        quiz_date: this.quiz_date,
+        duration_minutes: this.duration,
         file: this.file,
         externalLink: this.externalLink
       };
@@ -87,57 +106,48 @@ export default {
       this.showConfirmation = true;
     },
 
-    async handleAssignmentSubmission() {
+    async handleQuizUpdate() {
       this.showConfirmation = false;
       const toast = useToast();
 
       this.isSubmitting = true;
 
-      const formData = new FormData();
-      formData.append("course_id", this.courseId);
-      formData.append("title", this.pendingAssignment.title);
-      formData.append("description", this.pendingAssignment.description);
-      formData.append("due_date", this.pendingAssignment.due_date);
-
-      if (this.pendingAssignment.file) {
-        formData.append("file", this.pendingAssignment.file);
-      }
-
-      if (this.pendingAssignment.externalLink) {
-        formData.append("external_link", this.pendingAssignment.externalLink);
-      }
-
       try {
-        const response = await axios.post('http://127.0.0.1:8000/api/assignments', formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        // Send data as JSON instead of FormData
+        const quizData = {
+          title: this.pendingQuiz.title,
+          description: this.pendingQuiz.description,
+          quiz_date: this.pendingQuiz.quiz_date,
+          duration_minutes: parseInt(this.pendingQuiz.duration_minutes),
+          external_link: this.pendingQuiz.externalLink || null
+        };
 
-        toast.success('Assignment added successfully!');
-        this.$emit("add-assignment", response.data);
-        this.resetForm();
+        await axios.put(`http://127.0.0.1:8000/api/quizzes/${this.quiz.quiz_id}`, quizData);
+
+        toast.success('Quiz updated successfully!');
+        this.$emit("update-quiz", {
+          ...this.quiz,
+          title: this.pendingQuiz.title,
+          description: this.pendingQuiz.description,
+          quiz_date: this.pendingQuiz.quiz_date,
+          duration_minutes: this.pendingQuiz.duration_minutes,
+          external_link: this.pendingQuiz.externalLink
+        });
+        this.closeModal();
       } catch (error) {
-        console.error("Error adding assignment:", error);
-        toast.error('Failed to add assignment.');
+        console.error("Error updating quiz:", error);
+        toast.error('Failed to update quiz.');
       } finally {
         this.isSubmitting = false;
       }
     },
-    resetForm() {
-      this.title = "";
-      this.description = "";
-      this.due_date = "";
-      this.file = null;
-      this.fileName = "";
-      this.externalLink = "";
-      this.$emit("close");
-    },
+
     closeModal() {
-      this.resetForm();
-    },
-  },
+      this.$emit("close");
+    }
+  }
 };
 </script>
-
 
 <style scoped>
 .modal {
@@ -150,6 +160,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .modal-content {
@@ -216,4 +227,9 @@ export default {
   display: flex;
   justify-content: center;
 }
-</style>
+
+.modal-content button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+</style> 

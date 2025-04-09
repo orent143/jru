@@ -25,11 +25,20 @@
             <section class="quizzes">
               <h3>All Quizzes</h3>
               <div class="material-cards">
-                <div v-for="quiz in course.quizzes" :key="quiz.quiz_id" class="material-card" @click="navigateToQuiz(quiz)">
+                <div
+                  v-for="quiz in course.quizzes"
+                  :key="quiz.quiz_id"
+                  class="material-card"
+                  @click="navigateToQuiz(quiz)"
+                >
                   <div class="card-header">
                     <i class="pi pi-file-edit"></i>
                     <h4>{{ quiz.title }}</h4>
-                    <i class="pi pi-trash" @click.stop="deleteQuiz(quiz.quiz_id)" style="cursor: pointer; margin-left: auto;"></i> <!-- Delete Icon -->
+                    <i
+                      class="pi pi-trash"
+                      @click.stop="confirmDeleteQuiz(quiz.quiz_id)"
+                      style="cursor: pointer; margin-left: auto;"
+                    ></i>
                   </div>
                 </div>
               </div>
@@ -39,10 +48,23 @@
       </main>
     </div>
 
-    <AddQuizModal v-if="showAddQuizModal" 
-                  :courseId="this.$route.params.courseId"
-                  @close="showAddQuizModal = false" 
-                  @add-quiz="fetchQuizzes" />
+    <AddQuizModal
+      v-if="showAddQuizModal"
+      :courseId="$route.params.courseId"
+      @close="showAddQuizModal = false"
+      @add-quiz="fetchQuizzes"
+    />
+
+    <!-- Reusable Confirmation Modal -->
+    <ConfirmationModal
+      :show="showDeleteConfirmation"
+      title="Delete Quiz"
+      message="Are you sure you want to delete this quiz?"
+      confirmText="Delete"
+      type="danger"
+      @confirm="performDeleteQuiz"
+      @cancel="cancelDeleteQuiz"
+    />
   </div>
 </template>
 
@@ -51,9 +73,10 @@ import axios from "axios";
 import Header from "../../header.vue";
 import Sidebar from "../SideBar.vue";
 import AddQuizModal from "@/components/faculty/Quiz/AddQuizModal.vue";
+import ConfirmationModal from "@/components/ConfirmationModal.vue"; // adjust path as needed
 
 export default {
-  components: { Header, Sidebar, AddQuizModal },
+  components: { Header, Sidebar, AddQuizModal, ConfirmationModal },
   data() {
     return {
       teacher: {},
@@ -62,6 +85,8 @@ export default {
       course: null,
       showAddQuizModal: false,
       upcomingQuizzes: [],
+      showDeleteConfirmation: false,
+      pendingDeleteQuizId: null,
     };
   },
   async created() {
@@ -72,13 +97,10 @@ export default {
       try {
         const courseId = this.$route.params.courseId;
         const response = await axios.get(`http://127.0.0.1:8000/api/quizzes/quizzes/${courseId}`);
-
         this.course = {
           name: response.data.course_name,
           quizzes: response.data.quizzes,
         };
-
-        // Filter upcoming quizzes
         this.upcomingQuizzes = this.course.quizzes.filter(quiz => {
           return new Date(quiz.quiz_date) >= new Date();
         });
@@ -87,25 +109,38 @@ export default {
       }
     },
     navigateToQuiz(quiz) {
-      this.$router.push({ 
-        name: 'FacultyQuizDetails', 
-        params: { courseId: this.$route.params.courseId, quizId: quiz.quiz_id } 
+      this.$router.push({
+        name: "FacultyQuizDetails",
+        params: { courseId: this.$route.params.courseId, quizId: quiz.quiz_id },
       });
     },
-    // Method to delete a quiz
-    async deleteQuiz(quiz_id) {
+    confirmDeleteQuiz(quizId) {
+      this.pendingDeleteQuizId = quizId;
+      this.showDeleteConfirmation = true;
+    },
+    async performDeleteQuiz() {
       try {
-        const response = await axios.delete(`http://127.0.0.1:8000/api/quizzes/${quiz_id}`);
-        // After successful deletion, remove the quiz from the course.quizzes array
-        this.course.quizzes = this.course.quizzes.filter(quiz => quiz.quiz_id !== quiz_id);
-        console.log(response.data.message);
+        await axios.delete(`http://127.0.0.1:8000/api/quizzes/${this.pendingDeleteQuizId}`);
+        this.course.quizzes = this.course.quizzes.filter(
+          quiz => quiz.quiz_id !== this.pendingDeleteQuizId
+        );
+        this.upcomingQuizzes = this.upcomingQuizzes.filter(
+          quiz => quiz.quiz_id !== this.pendingDeleteQuizId
+        );
       } catch (error) {
-        console.error("Error deleting quiz:", error);
+        console.error("Failed to delete quiz:", error);
+      } finally {
+        this.showDeleteConfirmation = false;
+        this.pendingDeleteQuizId = null;
       }
-    }
+    },
+    cancelDeleteQuiz() {
+      this.showDeleteConfirmation = false;
+      this.pendingDeleteQuizId = null;
+    },
   },
 };
-</script>-
+</script>
 
 <style scoped>
 .course-content-container {
@@ -253,7 +288,10 @@ export default {
   font-size: 1.2rem;
   color: #333;
   width: 100%;
+  position: relative;  /* Add this if not already present */
+  z-index: 1;  /* Ensure it's on top of other elements */
 }
+
 
 .card-header h4 {
   font-size: 1.2rem;
@@ -264,8 +302,8 @@ export default {
   font-size: 15px;
   color: #e74c3c;
   cursor: pointer;
+  z-index: 2;  /* Ensure it's above other content */
 }
-
 
 .card-body {
   font-size: 1rem;
@@ -341,6 +379,38 @@ export default {
 
 .view-btn:hover {
   background-color: #1a252f;
+}
+.confirmation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirmation-modal {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.modal-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.modal-buttons button {
+  padding: 8px 15px;
+  font-weight: bold;
+  cursor: pointer;
 }
 /* Responsive Design */
 @media (max-width: 768px) {

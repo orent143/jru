@@ -25,7 +25,7 @@
                                 <p>Section: {{ course.section }}</p>
                                 <div class="card-actions">
                                     <button @click.stop="editCourse(course.course_id)"><i class="pi pi-pencil"></i></button>
-                                    <button @click.stop="deleteCourse(course.course_id)"><i class="pi pi-trash"></i></button>
+                                    <button @click.stop="confirmDeleteCourse(course.course_id)"><i class="pi pi-trash"></i></button>
                                 </div>
                             </div>
                             <div class="schedule-container">
@@ -40,7 +40,7 @@
                         <div class="modal-content">
                             <span class="close" @click="closeModal">&times;</span>
                             <h2>Create Course</h2>
-                            <form @submit.prevent="createCourse" class="course-form">
+                            <form @submit.prevent="confirmCreateCourse" class="course-form">
                                 <label for="name">Course Name:</label>
                                 <input type="text" v-model="newCourse.course_name" required>
                                   
@@ -58,6 +58,34 @@
             </main>
         </div>
     </div>
+
+    <!-- Add confirmation modals -->
+    <ConfirmationModal
+        :show="showCreateConfirmation"
+        title="Create Course"
+        message="Are you sure you want to create this course?"
+        confirmText="Create"
+        type="primary"
+        @confirm="handleCreateCourse"
+        @cancel="showCreateConfirmation = false"
+    />
+
+    <ConfirmationModal
+        :show="showDeleteConfirmation"
+        title="Delete Course"
+        message="Are you sure you want to delete this course? This action cannot be undone."
+        confirmText="Delete"
+        type="danger"
+        @confirm="handleDeleteCourse"
+        @cancel="showDeleteConfirmation = false"
+    />
+
+    <EditCourseModal
+        v-if="showEditCourseModal"
+        :course="courseToEdit"
+        @close="showEditCourseModal = false"
+        @update-course="handleCourseUpdate"
+    />
 </template>
 
 <script>
@@ -65,9 +93,16 @@ import axios from 'axios';
 import { useToast } from 'vue-toastification'; // Import toast
 import Header from '@/components/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
+import EditCourseModal from '@/components/faculty/Course/EditCourseModal.vue';
 
 export default {
-    components: { Header, SideBar },
+    components: { 
+        Header, 
+        SideBar,
+        ConfirmationModal,
+        EditCourseModal
+    },
     data() {
         return {
             isSidebarCollapsed: false,
@@ -76,7 +111,13 @@ export default {
             error: null,
             showCreateCourseForm: false,
             newCourse: { course_name: '', section: '', class_schedule: '' },
-            user: JSON.parse(localStorage.getItem('user')) || null
+            user: JSON.parse(localStorage.getItem('user')) || null,
+            showCreateConfirmation: false,
+            showDeleteConfirmation: false,
+            pendingCourse: null,
+            courseToDelete: null,
+            showEditCourseModal: false,
+            courseToEdit: null
         };
     },
     methods: {
@@ -113,43 +154,58 @@ export default {
             }
         },
 
-        async createCourse() {
-            const toast = useToast(); // Initialize toast
+        confirmCreateCourse() {
+            if (!this.newCourse.course_name || !this.newCourse.section) {
+                this.toast.error("Please fill in all required fields");
+                return;
+            }
+            this.pendingCourse = { ...this.newCourse };
+            this.showCreateConfirmation = true;
+        },
+
+        async handleCreateCourse() {
+            this.showCreateConfirmation = false;
+            const toast = useToast();
 
             if (!this.user) return;
 
             try {
                 const response = await axios.post('http://127.0.0.1:8000/api/courses/', {
-                    ...this.newCourse,
+                    ...this.pendingCourse,
                     user_id: this.user.user_id
                 });
 
-                // Add the new course to the list
-                this.courses.push({ ...this.newCourse, course_id: response.data.course_id });
-                toast.success('Course created successfully!'); // Success toast
+                this.courses.push({ ...this.pendingCourse, course_id: response.data.course_id });
+                toast.success('Course created successfully!');
                 this.closeModal();
                 this.resetNewCourseForm();
             } catch (err) {
                 console.error('Error creating course:', err);
-                toast.error(err.response?.data?.detail || 'Failed to create course.'); // Error toast
+                toast.error(err.response?.data?.detail || 'Failed to create course.');
             }
         },
 
-        async deleteCourse(course_id) {
-            const toast = useToast(); // Initialize toast
+        confirmDeleteCourse(course_id) {
+            this.courseToDelete = course_id;
+            this.showDeleteConfirmation = true;
+        },
+
+        async handleDeleteCourse() {
+            this.showDeleteConfirmation = false;
+            const toast = useToast();
 
             if (!this.user) return;
 
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/courses/${course_id}`, {
+                await axios.delete(`http://127.0.0.1:8000/api/courses/${this.courseToDelete}`, {
                     params: { user_id: this.user.user_id }
                 });
 
-                this.courses = this.courses.filter(course => course.course_id !== course_id);
-                toast.success('Course deleted successfully!'); // Success toast
+                this.courses = this.courses.filter(course => course.course_id !== this.courseToDelete);
+                toast.success('Course deleted successfully!');
             } catch (err) {
                 console.error('Error deleting course:', err);
-                toast.error(err.response?.data?.detail || 'Failed to delete course.'); // Error toast
+                toast.error(err.response?.data?.detail || 'Failed to delete course.');
             }
         },
 
@@ -166,6 +222,19 @@ export default {
 
         resetNewCourseForm() {
             this.newCourse = { course_name: '', section: '', class_schedule: '' };
+        },
+
+        editCourse(course_id) {
+            this.courseToEdit = this.courses.find(course => course.course_id === course_id);
+            this.showEditCourseModal = true;
+        },
+
+        handleCourseUpdate(updatedCourse) {
+            const index = this.courses.findIndex(course => course.course_id === updatedCourse.course_id);
+            if (index !== -1) {
+                this.courses[index] = updatedCourse;
+            }
+            this.showEditCourseModal = false;
         }
     },
 
@@ -306,7 +375,7 @@ export default {
 .modal-content {
     background-color: #ffffff;
     padding: 20px;
-    border-radius: 15px;
+    border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.459);
     position: fixed; 
     right: 50%;

@@ -23,16 +23,30 @@
       <label for="external_link">External Link (Optional):</label>
       <input v-model="externalLink" type="text" placeholder="Enter external link (if any)" />
 
-      <button @click="addExam" :disabled="isSubmitting">Add Exam</button>
+      <button @click="confirmAddExam" :disabled="isSubmitting">Add Exam</button>
     </div>
   </div>
+
+  <ConfirmationModal
+    :show="showConfirmation"
+    title="Add Exam"
+    message="Are you sure you want to add this exam?"
+    confirmText="Add"
+    type="primary"
+    @confirm="handleExamSubmission"
+    @cancel="showConfirmation = false"
+  />
 </template>
 
 <script>
 import axios from "axios";
 import { useToast } from 'vue-toastification'; // Import the toast module
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
+  components: {
+    ConfirmationModal
+  },
   props: {
     courseId: Number,
   },
@@ -44,8 +58,10 @@ export default {
       duration: null,
       file: null,
       fileName: "",
-      externalLink: "",  // New field for external link
+      externalLink: "",
       isSubmitting: false,
+      showConfirmation: false,
+      pendingExam: null
     };
   },
   methods: {
@@ -53,32 +69,46 @@ export default {
       this.file = event.target.files[0];
       this.fileName = this.file ? this.file.name : "";
     },
-    async addExam() {
-      const toast = useToast(); // Initialize toast notifications
 
-      // Validation
+    confirmAddExam() {
+      const toast = useToast();
+
       if (!this.courseId || !this.title || !this.description || !this.exam_date || !this.duration) {
-        toast.error('Please fill in all required fields.'); // Error toast
+        toast.error('Please fill in all required fields.');
         return;
       }
+
+      this.pendingExam = {
+        title: this.title,
+        description: this.description,
+        exam_date: this.exam_date,
+        duration: this.duration,
+        file: this.file,
+        externalLink: this.externalLink
+      };
+
+      this.showConfirmation = true;
+    },
+
+    async handleExamSubmission() {
+      this.showConfirmation = false;
+      const toast = useToast();
 
       this.isSubmitting = true;
 
       const formData = new FormData();
       formData.append("course_id", this.courseId);
-      formData.append("title", this.title);
-      formData.append("description", this.description);
-      formData.append("exam_date", this.exam_date);
-      formData.append("duration_minutes", this.duration);
+      formData.append("title", this.pendingExam.title);
+      formData.append("description", this.pendingExam.description);
+      formData.append("exam_date", this.pendingExam.exam_date);
+      formData.append("duration_minutes", this.pendingExam.duration);
 
-      // Append external link if provided
-      if (this.externalLink) {
-        formData.append("external_link", this.externalLink);
+      if (this.pendingExam.externalLink) {
+        formData.append("external_link", this.pendingExam.externalLink);
       }
 
-      // Append file if provided
-      if (this.file) {
-        formData.append("file", this.file);
+      if (this.pendingExam.file) {
+        formData.append("file", this.pendingExam.file);
       }
 
       try {
@@ -86,12 +116,12 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        toast.success('Exam added successfully!'); // Success toast
+        toast.success('Exam added successfully!');
         this.$emit("add-exam", response.data);
         this.resetForm();
       } catch (error) {
         console.error("Error adding exam:", error);
-        toast.error('Failed to add exam.'); // Error toast
+        toast.error('Failed to add exam.');
       } finally {
         this.isSubmitting = false;
       }
@@ -103,7 +133,7 @@ export default {
       this.duration = null;
       this.file = null;
       this.fileName = "";
-      this.externalLink = "";  // Reset external link field
+      this.externalLink = "";
       this.$emit("close");
     },
     closeModal() {

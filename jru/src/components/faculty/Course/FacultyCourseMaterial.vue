@@ -12,11 +12,19 @@
 
         <div class="material-content">
           <div class="main-content">
-            <div class="title-section">
-              <h1>Material Title: {{ material?.title || "Loading..." }}</h1>
-              <p v-if="material?.posted_at" class="posted-at">
-                Posted at: {{ formatDate(material.posted_at) }}
-              </p>
+            <div class="course-header">
+              <div class="header-content">
+                <h1>Material Title: {{ material?.title || "Loading..." }}</h1>
+                <button class="edit-btn" @click="openEditModal">
+                  <i class="pi pi-pencil"></i> Edit
+                </button>
+              </div>
+              <div class="course-meta">
+                <span class="posted-date">
+                  <i class="pi pi-calendar"></i>
+                  Posted at: {{ formatDate(material?.posted_at) }}
+                </span>
+              </div>
             </div>
             <div class="content-section">
               <h2>Content description:</h2>
@@ -62,6 +70,13 @@
         </div>
       </div>
     </div>
+    <EditMaterialModal
+  v-if="showEditModal"
+  :courseId="courseId"
+  :material="selectedMaterial"
+  @update-material="handleMaterialUpdate"
+  @close="showEditModal = false"
+/>
   </div>
 </template>
 
@@ -69,11 +84,13 @@
 import axios from "axios";
 import Header from "@/components/header.vue";
 import Sidebar from "@/components/faculty/SideBar.vue";
+import EditMaterialModal from './EditMaterialModal.vue';
 
 export default {
   components: {
     Header,
-    Sidebar
+    Sidebar,
+    EditMaterialModal
   },
   props: ["courseId", "materialId"],
   data() {
@@ -82,9 +99,19 @@ export default {
       loading: true,
       messages: [],
       newMessage: "",
+      showEditModal: false,
+      selectedMaterial: null,
     };
   },
   methods: {
+    openEditModal() {
+  this.selectedMaterial = this.material;
+  this.showEditModal = true;
+},
+handleMaterialUpdate(updatedMaterial) {
+  this.material = updatedMaterial;
+  this.showEditModal = false;
+},
     async fetchMaterialDetails() {
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/course_materials/${this.courseId}`);
@@ -185,7 +212,34 @@ export default {
   border-radius: 20px;
   background-color: #D9D9D9;
 }
+.course-header {
+    background-color: #D9D9D9;
+    padding: 2rem;
+    border-radius: 8px;
+    position: relative;
+}
 
+.header-content h1 {
+    color: #333;
+    font-weight: bold;
+}
+
+.edit-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.course-meta {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+    color: #666;
+}
 .side-content {
   flex: 1;
 }

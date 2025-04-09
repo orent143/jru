@@ -20,10 +20,6 @@
                             <div class="card-header">
                                 <h2>{{ getCourseName(quiz.course_id) }}</h2>
                                 <p>Section: {{ getCourseSection(quiz.course_id) }}</p>
-                                <div class="card-actions">
-                                    <button @click.stop="editQuiz(quiz.id)"><i class="pi pi-pencil"></i></button>
-                                    <button @click.stop="deleteQuiz(quiz.id)"><i class="pi pi-trash"></i></button>
-                                </div>
                             </div>
                             <div class="quiz-details">
                                 <p>Duration: {{ quiz.duration }} minutes</p>
@@ -143,23 +139,6 @@ export default {
             } catch (err) {
                 this.error = 'Failed to create quiz.';
             }
-        },
-        async deleteQuiz(quiz_id) {
-            try {
-                if (!this.user) return;
-                
-                await axios.delete(`http://127.0.0.1:8000/api/quizzes/${quiz_id}`, {
-                    params: { user_id: this.user.user_id }
-                });
-                
-                this.quizzes = this.quizzes.filter(quiz => quiz.id !== quiz_id);
-            } catch (err) {
-                this.error = 'Failed to delete quiz.';
-            }
-        },
-        async editQuiz(quiz_id) {
-            // Placeholder for edit function (modal or inline editing can be added)
-            console.log(`Edit quiz ${quiz_id}`);
         },
         startQuiz(quizId, courseId) {
             this.$router.push({ 

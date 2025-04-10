@@ -18,6 +18,9 @@
                 <span class="posted-date">
                   <i class="pi pi-calendar"></i> Posted: {{ formatDate(currentExam.exam_date) }}
                 </span>
+                <span class="status" :class="getExamStatus(currentExam)">
+                  {{ getExamStatus(currentExam) }}
+                </span>
               </div>
             </div>
 
@@ -48,9 +51,35 @@
           <div class="side-content">
             <div class="content-section submission">
               <h2>Your Work</h2>
+              
+              <!-- Display existing submission if available -->
+              <div v-if="existingSubmission" class="submission-area">
+                <div class="existing-submission">
+                  <h3>Your Submission</h3>
+                  <div v-if="existingSubmission.file_path" class="attachment-item">
+                    <i class="pi pi-file"></i>
+                    <span>{{ getFileName(existingSubmission.file_path) }}</span>
+                    <button @click="downloadFile(existingSubmission.file_path)" class="download-btn">
+                      <i class="pi pi-download"></i>
+                    </button>
+                  </div>
+                  <div v-if="existingSubmission.external_link" class="attachment-item">
+                    <i class="pi pi-link"></i>
+                    <a :href="existingSubmission.external_link" target="_blank">{{ existingSubmission.external_link }}</a>
+                  </div>
+                  <div v-if="existingSubmission.submission_text" class="submission-text">
+                    <p>{{ existingSubmission.submission_text }}</p>
+                  </div>
+                  <div class="submission-actions">
+                    <button @click="confirmDeleteSubmission" class="delete-btn">
+                      <i class="pi pi-trash"></i> Delete Submission
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <!-- Submission Form -->
-              <form @submit.prevent="confirmSubmitExam" enctype="multipart/form-data">
+              <form v-else @submit.prevent="confirmSubmitExam" enctype="multipart/form-data">
                 <div class="submission-area">
                   <div class="submission-type-selector">
                     <label for="submissionType">Choose Submission Type:</label>
@@ -98,7 +127,7 @@
                     </div>
 
                     <button type="submit" class="submit-btn">
-                      <i class="pi pi-upload"></i> Submit Assignment
+                      <i class="pi pi-upload"></i> Submit Exam
                     </button>
                   </div>
                 </div>
@@ -157,6 +186,16 @@
       @confirm="handleCommentSubmission"
       @cancel="showCommentConfirmation = false"
     />
+
+    <ConfirmationModal
+      :show="showDeleteConfirmation"
+      title="Delete Submission"
+      message="Are you sure you want to delete this submission? This action cannot be undone."
+      confirmText="Delete"
+      type="danger"
+      @confirm="handleDeleteSubmission"
+      @cancel="showDeleteConfirmation = false"
+    />
   </div>
 </template>
 
@@ -193,7 +232,9 @@ export default {
       newComment: '',
       showSubmitConfirmation: false,
       showCommentConfirmation: false,
-      pendingComment: ''
+      showDeleteConfirmation: false,
+      pendingComment: '',
+      existingSubmission: null
     };
   },
   methods: {
@@ -217,15 +258,36 @@ export default {
         if (res.status === 200) {
           const exams = res.data.exams;
           this.currentExam = exams.find(exam => exam.exam_id === examId) || null;
+          
+          if (this.currentExam) {
+            await this.fetchExistingSubmission();
+          }
         }
       } catch (error) {
         console.error('Error fetching exam data:', error);
       }
     },
 
+    async fetchExistingSubmission() {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/exam-submission/${this.currentExam.exam_id}/${this.student.id}`
+        );
+        this.existingSubmission = response.data;
+      } catch (error) {
+        if (error.response?.status !== 404) {
+          console.error("Error fetching existing submission:", error);
+          this.toast.error("Error fetching submission details");
+        } else {
+          // If 404, it means no submission exists yet
+          this.existingSubmission = null;
+        }
+      }
+    },
+
     // Helper function to extract the file name from the URL
     getFileName(fileUrl) {
-      return fileUrl.split('/').pop();
+      return fileUrl ? fileUrl.split('/').pop() : '';
     },
 
     downloadFile(fileUrl) {
@@ -237,7 +299,7 @@ export default {
       } else {
         // Extract the file name and open the download link in a new tab
         const fileName = this.getFileName(formattedUrl);
-        window.open(`http://127.0.0.1:8000/api/assignments/download/${fileName}`, '_blank');
+        window.open(`http://127.0.0.1:8000/api/download/${fileName}`, '_blank');
       }
     },
 
@@ -249,19 +311,72 @@ export default {
       }) : 'N/A';
     },
 
+    handleFileChange(event) {
+      this.selectedFile = event.target.files[0];
+    },
+
     // Add confirmation methods for exam submission
     confirmSubmitExam() {
+      if (!this.submissionType) {
+        this.toast.error("Please select a submission type");
+        return;
+      }
+
+      if (this.submissionType === 'file' && !this.selectedFile) {
+        this.toast.error("Please select a file to upload");
+        return;
+      }
+
+      if (this.submissionType === 'link' && !this.externalLink) {
+        this.toast.error("Please provide an external link");
+        return;
+      }
+
+      if (!this.submissionText.trim()) {
+        this.toast.error("Please provide submission text");
+        return;
+      }
+
       this.showSubmitConfirmation = true;
     },
 
     async handleExamSubmission() {
       this.showSubmitConfirmation = false;
       try {
-        // Add your exam submission logic here
-        this.toast.success('Exam submitted successfully!');
+        const formData = new FormData();
+        formData.append('student_id', this.student.id);
+        formData.append('exam_id', this.currentExam.exam_id);
+        formData.append('submission_text', this.submissionText);
+
+        if (this.submissionType === 'file' && this.selectedFile) {
+          formData.append('file', this.selectedFile);
+        } else if (this.submissionType === 'link' && this.externalLink) {
+          formData.append('external_link', this.externalLink);
+        }
+
+        const response = await axios.post('http://127.0.0.1:8000/api/submit-exam/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        if (response.status === 200) {
+          this.toast.success('Exam submitted successfully!');
+          // Reset form fields
+          this.submissionType = '';
+          this.selectedFile = null;
+          this.externalLink = '';
+          this.submissionText = '';
+          // Fetch the updated submission
+          await this.fetchExistingSubmission();
+        }
       } catch (error) {
         console.error('Error submitting exam:', error);
-        this.toast.error('Failed to submit exam. Please try again.');
+        if (error.response?.status === 400 && error.response?.data?.detail === "You have already submitted for this exam") {
+          this.toast.error("You have already submitted for this exam. Please delete your existing submission if you want to submit again.");
+        } else {
+          this.toast.error(error.response?.data?.detail || 'Failed to submit exam. Please try again.');
+        }
       }
     },
 
@@ -295,6 +410,40 @@ export default {
         console.error('Error adding comment:', error);
         this.toast.error('Failed to add comment. Please try again.');
       }
+    },
+
+    confirmDeleteSubmission() {
+      this.showDeleteConfirmation = true;
+    },
+
+    async handleDeleteSubmission() {
+      this.showDeleteConfirmation = false;
+      try {
+        const token = this.student.access_token;
+        await axios.delete(
+          `http://127.0.0.1:8000/api/exam-submission/${this.existingSubmission.submission_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+        this.toast.success("Submission deleted successfully!");
+        this.existingSubmission = null;
+        // Reset form fields after deletion
+        this.submissionType = '';
+        this.selectedFile = null;
+        this.externalLink = '';
+        this.submissionText = '';
+      } catch (error) {
+        console.error("Error deleting submission:", error);
+        this.toast.error(error.response?.data?.detail || "Failed to delete submission. Please try again.");
+      }
+    },
+
+    getExamStatus(exam) {
+      return this.existingSubmission ? 'Submitted' : 'Not Submitted';
     },
 
     goBack() {
@@ -483,22 +632,48 @@ export default {
     background-color: #f39c12;
 }
 
-.submission-actions button {
-  width: 100%;
-    padding: 1rem;
-    border: none;
-    border-radius: 20px;
-    font-size: 100%;
-    font-weight: 800;
-    background-color: #F5F5F5;
-    color: rgba(0, 0, 0, 0.781);
-    cursor: pointer;
-    display: flex
-;
-    font-family: 'Inter', sans-serif;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+.submission-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.download-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.download-btn:hover {
+  background-color: #e9ecef;
+}
+
+.submission-text {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
 }
 
 .submission-type-selector {
@@ -618,5 +793,12 @@ export default {
 
 .attachment-item i {
   font-size: 1.25rem;
+}
+
+.existing-submission {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
 }
 </style>

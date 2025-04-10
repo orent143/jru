@@ -21,8 +21,8 @@
                   <i class="pi pi-clock"></i> 
                   Due: {{ formatDate(currentAssignment.due_date) }}
                 </span>
-                <span v-if="currentAssignment.status" class="status" :class="currentAssignment.status.toLowerCase()">
-                  {{ currentAssignment.status }}
+                <span class="status" :class="getAssignmentStatus(currentAssignment)">
+                  {{ getAssignmentStatus(currentAssignment) }}
                 </span>
               </div>
             </div>
@@ -37,10 +37,10 @@
 
                 <!-- Local File Attachment -->
                 <div v-if="currentAssignment.file_path" class="attachment-item" @click="downloadFile(currentAssignment.file_path)">
-  <i class="pi pi-file"></i>
-  <span>{{ getFileName(currentAssignment.file_path) }}</span>
-  <i class="pi pi-download"></i>
-</div>
+                  <i class="pi pi-file"></i>
+                  <span>{{ getFileName(currentAssignment.file_path) }}</span>
+                  <i class="pi pi-download"></i>
+                </div>
                 <!-- External Link -->
                 <div v-if="currentAssignment.external_link" class="attachment-item">
                   <i class="pi pi-link"></i>
@@ -54,8 +54,32 @@
             <div class="content-section submission">
               <h2>Your Work</h2>
 
+              <!-- Display existing submission if available -->
+              <div v-if="existingSubmission" class="submission-area">
+                <div class="existing-submission">
+                  <h3>Your Submission</h3>
+                  <div v-if="existingSubmission.file_path" class="attachment-item">
+                    <i class="pi pi-file"></i>
+                    <span>{{ getFileName(existingSubmission.file_path) }}</span>
+                    <button @click="downloadFile(existingSubmission.file_path)" class="download-btn">
+                      <i class="pi pi-download"></i>
+                    </button>
+                  </div>
+                  <div v-if="existingSubmission.external_link" class="attachment-item">
+                    <i class="pi pi-link"></i>
+                    <a :href="existingSubmission.external_link" target="_blank">{{ existingSubmission.external_link }}</a>
+                  </div>
+                  <div v-if="existingSubmission.submission_text" class="submission-text">
+                    <p>{{ existingSubmission.submission_text }}</p>
+                  </div>
+                  <button @click="confirmDeleteSubmission" class="delete-btn">
+                    <i class="pi pi-trash"></i> Delete Submission
+                  </button>
+                </div>
+              </div>
+
               <!-- Submission Form -->
-              <form @submit.prevent="confirmSubmitAssignment" enctype="multipart/form-data">
+              <form v-else @submit.prevent="confirmSubmitAssignment" enctype="multipart/form-data">
                 <div class="submission-area">
                   <div class="submission-type-selector">
                     <label for="submissionType">Choose Submission Type:</label>
@@ -161,6 +185,16 @@
     @confirm="handleCommentSubmission"
     @cancel="showCommentConfirmation = false"
   />
+
+  <ConfirmationModal
+    :show="showDeleteConfirmation"
+    title="Delete Submission"
+    message="Are you sure you want to delete this submission? This action cannot be undone."
+    confirmText="Delete"
+    type="danger"
+    @confirm="handleDeleteSubmission"
+    @cancel="showDeleteConfirmation = false"
+  />
 </template>
 
 <script>
@@ -187,6 +221,7 @@ export default {
       student: JSON.parse(localStorage.getItem("user")),
       courses: [],
       currentAssignment: null,
+      existingSubmission: null,
       newComment: "",
       submissionText: "",
       externalLink: "",
@@ -194,6 +229,7 @@ export default {
       submissionType: "",
       showSubmitConfirmation: false,
       showCommentConfirmation: false,
+      showDeleteConfirmation: false,
       pendingComment: ''
     };
   },
@@ -202,6 +238,7 @@ export default {
     if (storedUser && storedUser.role === 'student') {
       this.studentId = storedUser.user_id;
       await this.fetchAssignmentDetail();
+      await this.fetchExistingSubmission();
     }
   },
   methods: {
@@ -218,6 +255,18 @@ export default {
       }
     },
 
+    async fetchExistingSubmission() {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/assignment_submissions/${this.assignmentId}`);
+        this.existingSubmission = response.data.submissions.find(submission => submission.student_id === this.studentId) || null;
+      } catch (error) {
+        if (error.response?.status !== 404) {
+          console.error("Error fetching existing submission:", error);
+          this.toast.error("Error fetching submission details");
+        }
+      }
+    },
+
     formatDate(date) {
       return date ? new Date(date).toLocaleDateString() : 'N/A';
     },
@@ -227,23 +276,25 @@ export default {
     },
 
     getFileName(fileUrl) {
-        return fileUrl.split('/').pop();
-      },
-      downloadFile(fileUrl) {
-  if (!fileUrl) return;
-  
-  const formattedUrl = fileUrl.replace(/\\/g, '/'); // Ensure correct path format
+      return fileUrl ? fileUrl.split('/').pop() : '';
+    },
+    
+    downloadFile(fileUrl) {
+      if (!fileUrl) return;
+      
+      const formattedUrl = fileUrl.replace(/\\/g, '/'); // Ensure correct path format
 
-  if (formattedUrl.startsWith('http')) {
-    // Open external links directly
-    window.open(formattedUrl, '_blank');
-  } else {
-    // Extract file name and initiate download from the API
-    const fileName = this.getFileName(formattedUrl);
-    const downloadUrl = `http://127.0.0.1:8000/api/assignments/download/${fileName}`;
-    window.open(downloadUrl, '_blank');
-  }
-},
+      if (formattedUrl.startsWith('http')) {
+        // Open external links directly
+        window.open(formattedUrl, '_blank');
+      } else {
+        // Extract file name and initiate download from the API
+        const fileName = this.getFileName(formattedUrl);
+        const downloadUrl = `http://127.0.0.1:8000/api/download/${fileName}`;
+        window.open(downloadUrl, '_blank');
+      }
+    },
+    
     confirmSubmitAssignment(event) {
       event.preventDefault();
       if (!this.submissionType) {
@@ -290,10 +341,35 @@ export default {
         this.externalLink = "";
         this.selectedFile = null;
         this.submissionType = "";
-
+        await this.fetchExistingSubmission();
       } catch (error) {
         console.error("Error submitting assignment:", error);
-        this.toast.error("Failed to submit assignment. Please try again.");
+        this.toast.error(error.response?.data?.detail || "Failed to submit assignment. Please try again.");
+      }
+    },
+
+    confirmDeleteSubmission() {
+      this.showDeleteConfirmation = true;
+    },
+
+    async handleDeleteSubmission() {
+      this.showDeleteConfirmation = false;
+      try {
+        const token = this.student.access_token;
+        await axios.delete(
+          `http://127.0.0.1:8000/api/assignment-submission/${this.existingSubmission.submission_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+        this.toast.success("Submission deleted successfully!");
+        this.existingSubmission = null;
+      } catch (error) {
+        console.error("Error deleting submission:", error);
+        this.toast.error(error.response?.data?.detail || "Failed to delete submission. Please try again.");
       }
     },
 
@@ -321,6 +397,10 @@ export default {
         console.error("Error adding comment:", error);
         this.toast.error("Failed to add comment. Please try again.");
       }
+    },
+
+    getAssignmentStatus(assignment) {
+      return this.existingSubmission ? 'Submitted' : 'Not Submitted';
     },
 
     goBack() {
@@ -604,5 +684,49 @@ export default {
 
 .status.indicator {
   background-color: #f39c12;
+}
+
+.existing-submission {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.download-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.download-btn:hover {
+  background-color: #e9ecef;
+}
+
+.submission-text {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
 }
 </style>

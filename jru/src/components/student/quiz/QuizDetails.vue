@@ -44,18 +44,78 @@
           <div class="side-content">
             <div class="content-section submission">
               <h2>Your Work</h2>
-              <div class="submission-area">
-                <div class="submission-status">
-                  <div class="status-indicator" :class="getQuizStatus(currentQuiz)">
-                    {{ getQuizStatus(currentQuiz) }}
+              <div v-if="existingSubmission" class="submission-area">
+                <div class="existing-submission">
+                  <h3>Your Submission</h3>
+                  <div v-if="existingSubmission.file_path" class="attachment-item">
+                    <i class="pi pi-file"></i>
+                    <span>{{ getFileName(existingSubmission.file_path) }}</span>
+                    <button @click="downloadFile(existingSubmission.file_path)" class="download-btn">
+                      <i class="pi pi-download"></i>
+                    </button>
                   </div>
-                </div>
-                <div class="submission-actions">
-                  <button class="upload-btn primary" @click="confirmSubmitQuiz">
-                    <i class="pi pi-upload"></i> Submit Quiz
+                  <div v-if="existingSubmission.external_link" class="attachment-item">
+                    <i class="pi pi-link"></i>
+                    <a :href="existingSubmission.external_link" target="_blank">{{ existingSubmission.external_link }}</a>
+                  </div>
+                  <div v-if="existingSubmission.submission_text" class="submission-text">
+                    <p>{{ existingSubmission.submission_text }}</p>
+                  </div>
+                  <button @click="confirmDeleteSubmission" class="delete-btn">
+                    <i class="pi pi-trash"></i> Delete Submission
                   </button>
                 </div>
               </div>
+              <form v-else @submit.prevent="confirmSubmitQuiz" enctype="multipart/form-data">
+                <div class="submission-area">
+                  <div class="submission-type-selector">
+                    <label for="submissionType">Choose Submission Type:</label>
+                    <select v-model="submissionType" id="submissionType" class="submission-dropdown">
+                      <option value="">Select submission type</option>
+                      <option value="file">Upload File</option>
+                      <option value="link">External Link</option>
+                    </select>
+                  </div>
+
+                  <div class="submission-inputs" v-if="submissionType">
+                    <div v-if="submissionType === 'file'" class="file-upload-container">
+                      <label class="file-upload-label">
+                        <input 
+                          type="file" 
+                          @change="handleFileChange" 
+                          class="file-input"
+                        />
+                        <span class="file-upload-text">
+                          <i class="pi pi-upload"></i>
+                          {{ selectedFile ? selectedFile.name : 'Choose file to upload' }}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div v-if="submissionType === 'link'" class="link-input-container">
+                      <input 
+                        type="text" 
+                        v-model="externalLink" 
+                        placeholder="Enter external link here" 
+                        class="link-input"
+                      />
+                    </div>
+
+                    <div class="text-area-container">
+                      <textarea 
+                        v-model="submissionText" 
+                        placeholder="Add submission text..." 
+                        required
+                        class="submission-textarea"
+                      ></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                      <i class="pi pi-upload"></i> Submit Quiz
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
 
             <div class="content-section comments">
@@ -111,6 +171,16 @@
     @confirm="handleCommentSubmission"
     @cancel="showCommentConfirmation = false"
   />
+
+  <ConfirmationModal
+    :show="showDeleteConfirmation"
+    title="Delete Submission"
+    message="Are you sure you want to delete this submission? This action cannot be undone."
+    confirmText="Delete"
+    type="danger"
+    @confirm="handleDeleteSubmission"
+    @cancel="showDeleteConfirmation = false"
+  />
 </template>
 
 <script>
@@ -139,11 +209,18 @@ export default {
       toast: useToast(),
       showSubmitConfirmation: false,
       showCommentConfirmation: false,
-      pendingComment: ''
+      showDeleteConfirmation: false,
+      pendingComment: '',
+      submissionType: '',
+      selectedFile: null,
+      externalLink: '',
+      submissionText: '',
+      existingSubmission: null
     };
   },
   async created() {
     await this.fetchQuizDetails();
+    await this.fetchExistingSubmission();
   },
   methods: {
     async fetchQuizDetails() {
@@ -199,27 +276,94 @@ export default {
       }
     },
 
+    async fetchExistingSubmission() {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/quiz-submission/${this.currentQuiz.quiz_id}/${this.student.user_id}`
+        );
+        if (response.data.submission_id) {
+          const submissionDetails = await axios.get(
+            `http://127.0.0.1:8000/api/quiz-submission/${response.data.submission_id}`
+          );
+          this.existingSubmission = submissionDetails.data;
+        }
+      } catch (error) {
+        if (error.response?.status !== 404) {
+          console.error("Error fetching existing submission:", error);
+          this.toast.error("Error fetching submission details");
+        }
+      }
+    },
+
+    handleFileChange(event) {
+      this.selectedFile = event.target.files[0];
+    },
+
+    getFileName(path) {
+      return path ? path.split('/').pop() : '';
+    },
+
+    async downloadFile(fileUrl) {
+      const formattedUrl = fileUrl.replace(/\\/g, '/');
+      if (formattedUrl.startsWith('http')) {
+        window.open(formattedUrl, '_blank');
+      } else {
+        const fileName = this.getFileName(formattedUrl);
+        window.open(`http://127.0.0.1:8000/api/download/${fileName}`, '_blank');
+      }
+    },
+
     async confirmSubmitQuiz() {
+      if (!this.submissionType) {
+        this.toast.error("Please select a submission type");
+        return;
+      }
+
+      if (this.submissionType === 'file' && !this.selectedFile) {
+        this.toast.error("Please select a file to upload");
+        return;
+      }
+
+      if (this.submissionType === 'link' && !this.externalLink) {
+        this.toast.error("Please provide an external link");
+        return;
+      }
+
+      if (!this.submissionText.trim()) {
+        this.toast.error("Please provide submission text");
+        return;
+      }
+
       this.showSubmitConfirmation = true;
     },
 
     async handleQuizSubmission() {
       this.showSubmitConfirmation = false;
       try {
-        const submission = {
-          student_id: this.student.id,
-          quiz_id: this.currentQuiz.quiz_id,
-          answers: {}
-        };
+        const formData = new FormData();
+        formData.append('student_id', this.student.user_id);
+        formData.append('quiz_id', this.currentQuiz.quiz_id);
+        formData.append('submission_text', this.submissionText);
 
-        const response = await axios.post('http://127.0.0.1:8000/api/quiz_submissions/', submission);
+        if (this.submissionType === 'file' && this.selectedFile) {
+          formData.append('file', this.selectedFile);
+        } else if (this.submissionType === 'link' && this.externalLink) {
+          formData.append('external_link', this.externalLink);
+        }
+
+        const response = await axios.post('http://127.0.0.1:8000/api/submit-quiz/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
 
         if (response.status === 200) {
           this.toast.success('Quiz submitted successfully!');
+          await this.fetchExistingSubmission();
         }
       } catch (error) {
         console.error('Error submitting quiz:', error);
-        this.toast.error('Failed to submit quiz. Please try again.');
+        this.toast.error(error.response?.data?.detail || 'Failed to submit quiz. Please try again.');
       }
     },
 
@@ -269,8 +413,33 @@ export default {
       });
     },
 
+    confirmDeleteSubmission() {
+      this.showDeleteConfirmation = true;
+    },
+
+    async handleDeleteSubmission() {
+      this.showDeleteConfirmation = false;
+      try {
+        const token = this.student.access_token;
+        await axios.delete(
+          `http://127.0.0.1:8000/api/quiz-submission/${this.existingSubmission.submission_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+        this.toast.success("Submission deleted successfully!");
+        this.existingSubmission = null;
+      } catch (error) {
+        console.error("Error deleting submission:", error);
+        this.toast.error(error.response?.data?.detail || "Failed to delete submission. Please try again.");
+      }
+    },
+
     getQuizStatus(quiz) {
-      return quiz ? 'Not Submitted' : 'Submitted';  // Example logic for status
+      return this.existingSubmission ? 'Submitted' : 'Not Submitted';
     }
   }
 };
@@ -468,5 +637,132 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+}
+
+.existing-submission {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.download-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.download-btn:hover {
+  background-color: #e9ecef;
+}
+
+.submission-text {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.submission-type-selector {
+  margin-bottom: 1.5rem;
+}
+
+.submission-dropdown {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.submission-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.file-upload-container {
+  width: 100%;
+}
+
+.file-upload-label {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.file-upload-label:hover {
+  border-color: #007bff;
+  background-color: #f1f8ff;
+}
+
+.file-input {
+  display: none;
+}
+
+.link-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.submission-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
 }
 </style>

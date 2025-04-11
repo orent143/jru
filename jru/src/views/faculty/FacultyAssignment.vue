@@ -216,7 +216,7 @@ export default {
 }
 
 .header h1 {
-    color: #000;
+    color: #2c3e50;
 }
 
 .assignment-cards {

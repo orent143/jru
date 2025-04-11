@@ -1,12 +1,12 @@
 <template>
   <div class="calendar-container">
-    <Header :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
+    <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
     <div class="main-content">
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
 
       <div class="calendar-content-wrapper">
         <div class="calendar-header">
-          <h1>Academic Calendar</h1>
+          <h1>{{ pageTitle }}</h1>
           <div class="current-date">
             <i class="pi pi-calendar"></i>
             <span>{{ formattedCurrentDate }}</span>
@@ -26,14 +26,21 @@
               </div>
             </div>
 
-            <div class="quick-actions">
-              <h3>Quick Actions</h3>
-              <button class="action-btn" @click="addEvent">
-                <i class="pi pi-plus"></i> Add Event
-              </button>
-              <button class="action-btn" @click="viewSchedule">
-                <i class="pi pi-list"></i> View Schedule
-              </button>
+            <div class="event-list">
+              <h3>Upcoming Events</h3>
+              <div v-if="upcomingEvents.length === 0" class="no-events">
+                No upcoming events
+              </div>
+              <div v-else class="event-items">
+                <div v-for="event in upcomingEvents" :key="event.event_id" class="event-item" :class="event.type">
+                  <div class="event-date">{{ formatEventDate(event.date) }}</div>
+                  <div class="event-title">{{ event.title }}</div>
+                  <div v-if="event.course_name" class="event-course">
+                    <i class="pi pi-book"></i> {{ event.course_name }}
+                  </div>
+                  <div class="event-type">{{ formatEventType(event.type) }}</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -62,7 +69,7 @@
                     'today': day.isToday,
                     'has-event': day.hasEvent
                   }"
-                  @click="selectDate(day)"
+                  @click="showDayEvents(day)"
                 >
                   <span class="day-number">{{ day.date }}</span>
                   <div v-if="day.hasEvent" class="event-indicator"></div>
@@ -73,82 +80,35 @@
         </div>
       </div>
 
-      <!-- Event Modal -->
-      <div v-if="showEventModal" class="modal">
+      <!-- Event Details Modal -->
+      <div v-if="showEventDetailsModal" class="modal">
         <div class="modal-content">
-          <span class="close" @click="closeEventModal">&times;</span>
-          <h2>{{ isEditingEvent ? 'Edit Event' : 'Add Event' }}</h2>
+          <span class="close" @click="closeEventDetailsModal">&times;</span>
+          <h2>Events on {{ selectedDateFormatted }}</h2>
           
-          <div class="form-group">
-            <label for="event-title">Event Title</label>
-            <input 
-              v-model="eventForm.title" 
-              type="text" 
-              id="event-title" 
-              placeholder="Enter event title"
-              class="form-control"
-            />
+          <div v-if="selectedDateEvents.length === 0" class="no-events">
+            No events on this date
           </div>
-
-          <div class="form-group">
-            <label for="event-date">Event Date</label>
-            <input 
-              v-model="eventForm.date" 
-              type="date" 
-              id="event-date" 
-              class="form-control"
-            />
+          <div v-else class="selected-date-events">
+            <div v-for="event in selectedDateEvents" :key="event.event_id" class="event-detail-item" :class="event.type">
+              <div class="event-detail-header">
+                <h3>{{ event.title }}</h3>
+                <span class="event-type-badge">{{ formatEventType(event.type) }}</span>
+              </div>
+              <div v-if="event.course_name" class="event-detail-course">
+                <i class="pi pi-book"></i> {{ event.course_name }}
+              </div>
+              <div class="event-detail-time" v-if="event.time">
+                <i class="pi pi-clock"></i> {{ formatEventTime(event.time) }}
+              </div>
+              <div class="event-detail-description" v-if="event.description">
+                {{ event.description }}
+              </div>
+              <div class="event-detail-created-by">
+                Posted by: {{ event.user_name }}
+              </div>
+            </div>
           </div>
-
-          <div class="form-group">
-            <label for="event-time">Event Time</label>
-            <input 
-              v-model="eventForm.time" 
-              type="time" 
-              id="event-time" 
-              class="form-control"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="event-description">Description</label>
-            <textarea 
-              v-model="eventForm.description" 
-              id="event-description" 
-              placeholder="Enter event description"
-              class="form-control"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="event-type">Event Type</label>
-            <select v-model="eventForm.type" id="event-type" class="form-control">
-              <option value="class">Class</option>
-              <option value="exam">Exam</option>
-              <option value="quiz">Quiz</option>
-              <option value="assignment">Assignment</option>
-              <option value="meeting">Meeting</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="event-course">Course</label>
-            <select v-model="eventForm.course_id" id="event-course" class="form-control">
-              <option :value="null">General Event (No Course)</option>
-              <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
-                {{ course.course_name }}
-              </option>
-            </select>
-          </div>
-
-          <button 
-            class="submit-btn" 
-            @click="saveEvent" 
-            :disabled="isSubmitting"
-          >
-            {{ isEditingEvent ? 'Update Event' : 'Add Event' }}
-          </button>
         </div>
       </div>
     </div>
@@ -157,19 +117,26 @@
 
 <script>
 import Header from '@/components/header.vue';
-import Sidebar from '@/components/faculty/SideBar.vue';
+import Sidebar from '@/components/student/Sidebar.vue';
 import axios from "axios";
 import { useToast } from 'vue-toastification';
 
 export default {
-  name: 'CalendarView',
+  name: 'StudentCalendar',
   components: { 
     Header, 
     Sidebar 
   },
+  props: {
+    courseId: {
+      type: String,
+      required: false,
+      default: null
+    }
+  },
   data() {
     return {
-      faculty: null,
+      student: null,
       searchQuery: '',
       isSidebarCollapsed: false,
       courses: [],
@@ -177,21 +144,16 @@ export default {
       displayDate: new Date(),
       weekDays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
       events: [],
-      showEventModal: false,
-      isSubmitting: false,
-      isEditingEvent: false,
-      eventForm: {
-        id: null,
-        title: '',
-        date: '',
-        time: '',
-        description: '',
-        type: 'class',
-        course_id: null
-      }
+      showEventDetailsModal: false,
+      selectedDate: null,
+      selectedDateEvents: [],
+      course: null
     };
   },
   computed: {
+    pageTitle() {
+      return this.courseId && this.course ? `${this.course.course_name} Calendar` : 'Academic Calendar';
+    },
     formattedCurrentDate() {
       return this.currentDate.toLocaleDateString('en-US', {
         weekday: 'long',
@@ -240,7 +202,8 @@ export default {
           date,
           otherMonth: true,
           isToday: false,
-          hasEvent: this.hasEventOnDate(new Date(year, month - 1, date))
+          hasEvent: this.hasEventOnDate(new Date(year, month - 1, date)),
+          fullDate: new Date(year, month - 1, date)
         });
       }
       
@@ -251,7 +214,8 @@ export default {
           date: i,
           otherMonth: false,
           isToday,
-          hasEvent: this.hasEventOnDate(new Date(year, month, i))
+          hasEvent: this.hasEventOnDate(new Date(year, month, i)),
+          fullDate: new Date(year, month, i)
         });
       }
       
@@ -262,17 +226,47 @@ export default {
           date: i,
           otherMonth: true,
           isToday: false,
-          hasEvent: this.hasEventOnDate(new Date(year, month + 1, i))
+          hasEvent: this.hasEventOnDate(new Date(year, month + 1, i)),
+          fullDate: new Date(year, month + 1, i)
         });
       }
       
       return days;
+    },
+    upcomingEvents() {
+      const now = new Date();
+      // Filter events that are today or in the future, sorted by date
+      return this.events
+        .filter(event => {
+          const eventDate = new Date(event.date);
+          return eventDate >= new Date(now.setHours(0, 0, 0, 0));
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, 5); // Limit to 5 upcoming events
+    },
+    selectedDateFormatted() {
+      if (!this.selectedDate) return '';
+      
+      return this.selectedDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     }
   },
   mounted() {
     this.loadUserData();
     this.fetchCourses();
-    this.fetchEvents();
+    
+    // If courseId is provided, fetch course details and its events
+    // Otherwise fetch all events
+    if (this.courseId) {
+      this.fetchCourseDetails();
+      this.fetchCourseEvents();
+    } else {
+      this.fetchAllEvents();
+    }
   },
   methods: {
     toggleSidebar() {
@@ -306,139 +300,105 @@ export default {
         1
       );
     },
-    selectDate(day) {
+    showDayEvents(day) {
       if (day.otherMonth) return;
       
-      const selectedDate = new Date(
-        this.displayDate.getFullYear(),
-        this.displayDate.getMonth(),
-        day.date
-      );
+      this.selectedDate = day.fullDate;
       
-      this.eventForm.date = this.formatDateForInput(selectedDate);
-      this.showEventModal = true;
+      // Get events for the selected date
+      this.selectedDateEvents = this.events.filter(event => {
+        const eventDate = new Date(event.date);
+        return eventDate.getDate() === day.fullDate.getDate() &&
+               eventDate.getMonth() === day.fullDate.getMonth() &&
+               eventDate.getFullYear() === day.fullDate.getFullYear();
+      });
+      
+      this.showEventDetailsModal = true;
     },
-    formatDateForInput(date) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+    closeEventDetailsModal() {
+      this.showEventDetailsModal = false;
+      this.selectedDateEvents = [];
     },
-    addEvent() {
-      this.isEditingEvent = false;
-      this.eventForm = {
-        id: null,
-        title: '',
-        date: this.formatDateForInput(new Date()),
-        time: '',
-        description: '',
-        type: 'class',
-        course_id: null
+    formatEventDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+    },
+    formatEventTime(timeString) {
+      if (!timeString) return '';
+      
+      // Parse the time (e.g., "14:30:00" to "2:30 PM")
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours, 10);
+      const minute = parseInt(minutes, 10);
+      
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const formattedHour = hour % 12 || 12;
+      
+      return `${formattedHour}:${minute.toString().padStart(2, '0')} ${period}`;
+    },
+    formatEventType(type) {
+      const typeMap = {
+        'class': 'Class',
+        'exam': 'Exam',
+        'quiz': 'Quiz',
+        'assignment': 'Assignment',
+        'meeting': 'Meeting',
+        'other': 'Other'
       };
-      this.showEventModal = true;
-    },
-    editEvent(event) {
-      this.isEditingEvent = true;
-      this.eventForm = { ...event };
-      this.showEventModal = true;
-    },
-    closeEventModal() {
-      this.showEventModal = false;
-      this.eventForm = {
-        id: null,
-        title: '',
-        date: '',
-        time: '',
-        description: '',
-        type: 'class',
-        course_id: null
-      };
-    },
-    async saveEvent() {
-      const toast = useToast();
       
-      if (!this.eventForm.title || !this.eventForm.date) {
-        toast.error('Please fill in all required fields');
-        return;
-      }
-      
-      this.isSubmitting = true;
-      
-      try {
-        if (this.isEditingEvent) {
-          // Update existing event
-          await axios.put(`http://127.0.0.1:8000/api/events/${this.eventForm.id}`, {
-            ...this.eventForm,
-            user_id: this.faculty.user_id
-          });
-          toast.success('Event updated successfully');
-        } else {
-          // Create new event
-          await axios.post('http://127.0.0.1:8000/api/events/', {
-            ...this.eventForm,
-            user_id: this.faculty.user_id
-          });
-          toast.success('Event added successfully');
-        }
-        
-        await this.fetchEvents();
-        this.closeEventModal();
-      } catch (error) {
-        console.error('Error saving event:', error);
-        toast.error('Failed to save event');
-      } finally {
-        this.isSubmitting = false;
-      }
-    },
-    async fetchEvents() {
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/api/events/');
-        
-        if (response.data && Array.isArray(response.data)) {
-          console.log(`Fetched ${response.data.length} events for calendar view`);
-          this.events = response.data;
-        } else {
-          console.error('Unexpected response format:', response.data);
-          this.events = [];
-        }
-        
-        // Refresh the calendar display to show event indicators
-        this.refreshCalendarView();
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        const toast = useToast();
-        toast.error('Failed to load events. Please try refreshing the page.');
-        this.events = [];
-      }
-    },
-    refreshCalendarView() {
-      // Force computed property re-evaluation
-      this.displayDate = new Date(this.displayDate);
-    },
-    viewSchedule() {
-      // Navigate to schedule view
-      this.$router.push('/faculty/schedule');
+      return typeMap[type] || type;
     },
     loadUserData() {
       const userData = localStorage.getItem('user');
       if (userData) {
-        this.faculty = JSON.parse(userData);
+        this.student = JSON.parse(userData);
       }
     },
     async fetchCourses() {
+      const toast = useToast();
       try {
-        if (!this.faculty || !this.faculty.user_id) {
-          console.log('Faculty data not available yet');
-          return;
-        }
-        
-        // Use the courses endpoint with user_id query parameter
-        const response = await axios.get(`http://127.0.0.1:8000/api/courses?user_id=${this.faculty.user_id}`);
+        const response = await axios.get(`http://127.0.0.1:8000/api/students/${this.student.user_id}/courses`);
         this.courses = response.data;
       } catch (error) {
         console.error('Error fetching courses:', error);
-        const toast = useToast();
         toast.error('Failed to load courses');
+      }
+    },
+    async fetchCourseEvents() {
+      const toast = useToast();
+      try {
+        // Fetch events for this specific course
+        const response = await axios.get(`http://127.0.0.1:8000/api/events/course/${this.courseId}`);
+        this.events = response.data;
+      } catch (error) {
+        console.error('Error fetching course events:', error);
+        toast.error('Failed to load course events');
+      }
+    },
+    async fetchAllEvents() {
+      const toast = useToast();
+      try {
+        // Fetch all events
+        const response = await axios.get('http://127.0.0.1:8000/api/events/');
+        this.events = response.data;
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        toast.error('Failed to load events');
+      }
+    },
+    async fetchCourseDetails() {
+      if (!this.courseId) return;
+      
+      const toast = useToast();
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/courses/${this.courseId}`);
+        this.course = response.data;
+      } catch (error) {
+        console.error('Error fetching course details:', error);
+        toast.error('Failed to load course details');
       }
     }
   }
@@ -512,7 +472,7 @@ export default {
   margin-bottom: 30px;
 }
 
-.date-info h3 {
+.date-info h3, .event-list h3 {
   font-size: 18px;
   color: #2c3e50;
   margin-bottom: 15px;
@@ -546,39 +506,96 @@ export default {
   color: #6c757d;
 }
 
-.quick-actions {
+.event-list {
   margin-top: 30px;
 }
 
-.quick-actions h3 {
-  font-size: 18px;
-  color: #2c3e50;
-  margin-bottom: 15px;
+.no-events {
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
 }
 
-.action-btn {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 12px 15px;
+.event-items {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.event-item {
+  padding: 10px 15px;
+  border-radius: 8px;
   margin-bottom: 10px;
   background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  color: #2c3e50;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  border-left: 5px solid #007BF6;
 }
 
-.action-btn i {
-  margin-right: 10px;
+.event-item.class {
+  border-left-color: #007BF6;
+}
+
+.event-item.exam {
+  border-left-color: #dc3545;
+}
+
+.event-item.quiz {
+  border-left-color: #fd7e14;
+}
+
+.event-item.assignment {
+  border-left-color: #28a745;
+}
+
+.event-item.meeting {
+  border-left-color: #6610f2;
+}
+
+.event-date {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+
+.event-title {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.event-course {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 5px;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+}
+
+.event-course i {
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+.event-type {
+  font-size: 12px;
+  font-weight: 600;
   color: #007BF6;
 }
 
-.action-btn:hover {
-  background-color: #e9ecef;
-  transform: translateY(-2px);
+.event-item.exam .event-type {
+  color: #dc3545;
+}
+
+.event-item.quiz .event-type {
+  color: #fd7e14;
+}
+
+.event-item.assignment .event-type {
+  color: #28a745;
+}
+
+.event-item.meeting .event-type {
+  color: #6610f2;
 }
 
 .calendar-main {
@@ -715,15 +732,18 @@ export default {
   background: white;
   padding: 2rem;
   border-radius: 8px;
-  width: 400px;
+  width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
   position: relative;
 }
 
 .modal-content h2 {
-  font-size: 25px;
+  font-size: 22px;
   font-weight: bold;
   color: #000;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .close {
@@ -735,54 +755,112 @@ export default {
   font-size: 25px;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
+.selected-date-events {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.form-group label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+.event-detail-item {
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  border-left: 5px solid #007BF6;
+}
+
+.event-detail-item.class {
+  border-left-color: #007BF6;
+}
+
+.event-detail-item.exam {
+  border-left-color: #dc3545;
+}
+
+.event-detail-item.quiz {
+  border-left-color: #fd7e14;
+}
+
+.event-detail-item.assignment {
+  border-left-color: #28a745;
+}
+
+.event-detail-item.meeting {
+  border-left-color: #6610f2;
+}
+
+.event-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.event-detail-header h3 {
+  font-size: 18px;
+  font-weight: 600;
   color: #2c3e50;
+  margin: 0;
 }
 
-.form-control {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  transition: border-color 0.3s ease;
+.event-detail-course {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
 }
 
-.form-control:focus {
-  outline: none;
-  border-color: #007BF6;
-  box-shadow: 0 0 0 2px rgba(0, 123, 246, 0.2);
+.event-detail-course i {
+  margin-right: 5px;
 }
 
-.submit-btn {
-  padding: 10px 20px;
+.event-type-badge {
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
   background-color: #007BF6;
   color: white;
-  border: none;
-  border-radius: 10px;
+}
+
+.event-detail-item.exam .event-type-badge {
+  background-color: #dc3545;
+}
+
+.event-detail-item.quiz .event-type-badge {
+  background-color: #fd7e14;
+}
+
+.event-detail-item.assignment .event-type-badge {
+  background-color: #28a745;
+}
+
+.event-detail-item.meeting .event-type-badge {
+  background-color: #6610f2;
+}
+
+.event-detail-time {
   font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  width: 100%;
+  color: #6c757d;
+  margin-bottom: 10px;
   display: flex;
-  justify-content: center;
+  align-items: center;
 }
 
-.submit-btn:hover:not(:disabled) {
-  background-color: #004285;
+.event-detail-time i {
+  margin-right: 5px;
 }
 
-.submit-btn:disabled {
-  background-color: #a8d5ae;
-  cursor: not-allowed;
+.event-detail-description {
+  margin-bottom: 10px;
+  color: #2c3e50;
+  line-height: 1.5;
+}
+
+.event-detail-created-by {
+  font-size: 12px;
+  color: #6c757d;
+  font-style: italic;
 }
 
 @media (max-width: 768px) {

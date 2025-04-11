@@ -99,7 +99,7 @@ export default {
 }
 
 .header h1 {
-    color: #000;
+    color: #2c3e50;
     font-weight: 900;
 }
 .course-cards {

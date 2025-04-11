@@ -128,7 +128,35 @@ export default {
         console.log("Fetched Quizzes:", response.data);
         
         if (response.data) {
-          this.quizzes = response.data.quizzes || [];
+          // Initialize quizzes with completed property set to false
+          this.quizzes = (response.data.quizzes || []).map(quiz => ({
+            ...quiz,
+            completed: false
+          }));
+          
+          // Check for submission status on each quiz
+          if (this.quizzes.length > 0) {
+            for (let i = 0; i < this.quizzes.length; i++) {
+              try {
+                const submissionResponse = await axios.get(
+                  `http://127.0.0.1:8000/api/quiz-submission/${this.quizzes[i].quiz_id}/${this.studentId}`
+                );
+                
+                // If we get a successful response, mark the quiz as completed
+                if (submissionResponse.data && submissionResponse.data.submission_id) {
+                  this.quizzes[i].completed = true;
+                }
+              } catch (error) {
+                // If error is 404, it means no submission exists
+                if (error.response && error.response.status === 404) {
+                  // Keep it as false (already set above)
+                } else {
+                  console.error(`Error fetching submission for quiz ${this.quizzes[i].quiz_id}:`, error);
+                }
+              }
+            }
+          }
+          
           this.course = { 
             course_id: response.data.course_id,
             course_name: response.data.course_name || "Course Name Not Available" 

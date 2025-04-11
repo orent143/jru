@@ -45,13 +45,39 @@
                   <i class="pi pi-send"></i>
                 </button>
               </div>
-              <div class="comments-list">
-                <div v-for="comment in currentMaterial.comments" :key="comment.id" class="comment">
-                  <img :src="comment.authorAvatar" :alt="comment.author" />
+              
+              <!-- Loading state -->
+              <div v-if="isLoadingComments" class="comments-loading">
+                <div class="loading-spinner"></div>
+                <p>Loading comments...</p>
+              </div>
+              
+              <!-- No comments state -->
+              <div v-else-if="comments.length === 0" class="no-comments">
+                <p>No comments yet. Be the first to comment!</p>
+              </div>
+              
+              <!-- Comments list -->
+              <div v-else class="comments-list">
+                <div v-for="comment in comments" :key="comment.comment_id" class="comment">
+                  <div class="comment-avatar">
+                    <i class="pi pi-user"></i>
+                  </div>
                   <div class="comment-content">
-                    <h4>{{ comment.author }}</h4>
-                    <span class="comment-date">{{ formatDate(comment.date) }}</span>
-                    <p>{{ comment.text }}</p>
+                    <div class="comment-header">
+                      <h4>{{ comment.user_name }}</h4>
+                      <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
+                      
+                      <!-- Delete button for own comments -->
+                      <button 
+                        v-if="comment.user_id === studentId" 
+                        class="delete-comment-btn"
+                        @click="deleteComment(comment.comment_id)"
+                      >
+                        <i class="pi pi-trash"></i>
+                      </button>
+                    </div>
+                    <p class="comment-text">{{ comment.content }}</p>
                   </div>
                 </div>
               </div>
@@ -67,6 +93,7 @@
 import Header from '@/components/header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: 'CourseMaterialDetail',
@@ -75,12 +102,18 @@ export default {
     Sidebar
   },
   props: ['courseId', 'materialId'],
+  setup() {
+    const toast = useToast();
+    return { toast };
+  },
   data() {
     return {
       student: JSON.parse(localStorage.getItem("user")),
       courses: [],
       currentMaterial: null,
       newComment: "",
+      comments: [],
+      isLoadingComments: false
     };
   },
   async created() {
@@ -88,6 +121,7 @@ export default {
     if (storedUser && storedUser.role === 'student') {
       this.studentId = storedUser.user_id;
       await this.fetchCourseMaterial();
+      await this.fetchComments();
     }
   },
   methods: {
@@ -101,6 +135,62 @@ export default {
         }
       } catch (error) {
         console.error("Error fetching course material:", error);
+        this.toast.error("Failed to load course material");
+      }
+    },
+    async fetchComments() {
+      try {
+        this.isLoadingComments = true;
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/comments/material/${this.materialId}`
+        );
+        this.comments = response.data;
+        this.isLoadingComments = false;
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+        this.toast.error("Failed to load comments");
+        this.isLoadingComments = false;
+      }
+    },
+    async addComment() {
+      if (!this.newComment.trim()) return;
+      
+      try {
+        const commentData = {
+          user_id: this.studentId,
+          entity_type: "material",
+          entity_id: parseInt(this.materialId),
+          content: this.newComment
+        };
+        
+        const response = await axios.post(
+          "http://127.0.0.1:8000/api/comments/",
+          commentData
+        );
+        
+        if (response.status === 200) {
+          this.toast.success("Comment added successfully!");
+          this.newComment = "";
+          await this.fetchComments(); // Refresh comments
+        }
+      } catch (error) {
+        console.error("Error adding comment:", error);
+        this.toast.error("Failed to add comment");
+      }
+    },
+    async deleteComment(commentId) {
+      try {
+        const response = await axios.delete(
+          `http://127.0.0.1:8000/api/comments/${commentId}?user_id=${this.studentId}`
+        );
+        
+        if (response.status === 200) {
+          this.toast.success("Comment deleted successfully!");
+          await this.fetchComments(); // Refresh comments
+        }
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+        this.toast.error("Failed to delete comment");
       }
     },
     formatDate(date) {
@@ -112,18 +202,6 @@ export default {
     },
     getFileName(filePath) {
       return filePath.split(/[\\/]/).pop(); // Handle both forward and backslashes
-    },
-    addComment() {
-      if (!this.newComment.trim()) return;
-      this.currentMaterial.comments = this.currentMaterial.comments || [];
-      this.currentMaterial.comments.push({
-        id: Date.now(),
-        author: "You",
-        authorAvatar: "/default-avatar.png",
-        text: this.newComment,
-        date: new Date().toISOString(),
-      });
-      this.newComment = "";
     },
     goBack() {
       this.$router.go(-1);
@@ -277,6 +355,17 @@ export default {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+.send-btn {
+  background-color: #2c3e50;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+}
+
+.send-btn:hover {
+  background-color: #1a252f;
+}
 
 .comment {
   display: flex;
@@ -316,5 +405,75 @@ export default {
 .status.upcoming {
   background-color: #4C9A2A;
   color: white;
+}
+
+.comments-loading, .no-comments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.loading-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #007BF6;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #e9ecef;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-avatar i {
+  font-size: 20px;
+  color: #6c757d;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+}
+
+.comment-date {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.delete-comment-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.delete-comment-btn:hover {
+  opacity: 1;
+}
+
+.comment-text {
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 </style>

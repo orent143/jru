@@ -107,6 +107,29 @@ export default {
             completed: false,
           }));
           
+          // Check for submission status on each exam
+          if (this.exams.length > 0) {
+            for (let i = 0; i < this.exams.length; i++) {
+              try {
+                const submissionResponse = await axios.get(
+                  `http://127.0.0.1:8000/api/exam-submission/${this.exams[i].exam_id}/${this.student.user_id}`
+                );
+                
+                // If we get a successful response, mark the exam as completed
+                if (submissionResponse.data && submissionResponse.data.submission_id) {
+                  this.exams[i].completed = true;
+                }
+              } catch (error) {
+                // If error is 404, it means no submission exists
+                if (error.response && error.response.status === 404) {
+                  // Keep it as false (already set above)
+                } else {
+                  console.error(`Error fetching submission for exam ${this.exams[i].exam_id}:`, error);
+                }
+              }
+            }
+          }
+          
           this.courses = [{
             id: this.courseId,
             name: response.data.course_name || "Course Name Not Available",

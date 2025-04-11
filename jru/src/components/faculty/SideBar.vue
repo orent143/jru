@@ -16,7 +16,7 @@
             <!-- View Calendar Section -->
             <li>
                 <i class="pi pi-calendar"></i>
-                <router-link to="/view-calendar"><strong>View Calendar</strong></router-link>
+                <router-link to="/faculty/calendar"><strong>View Calendar</strong></router-link>
             </li>
 
             <!-- Assessments for the Faculty Section -->

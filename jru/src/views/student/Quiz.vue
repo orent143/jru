@@ -129,7 +129,7 @@ export default {
 .course-header h2 {
     font-size: 24px;
     font-weight: bold;
-    color: #000000;
+    color: #2c3e50;
 }
 
 .course-sections ul {

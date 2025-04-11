@@ -47,6 +47,15 @@
                     </select>
                 </div>
 
+                <div class="form-group" v-if="formData.role === 'student'">
+  <label for="degree">Degree</label>
+  <input 
+    type="text" 
+    id="degree" 
+    v-model="formData.degree"
+    required
+  >
+</div>
                 <div class="modal-actions">
                     <button type="button" class="cancel-btn" @click="closeModal">Cancel</button>
                     <button type="submit" class="save-btn">Add User</button>
@@ -74,7 +83,8 @@ export default {
                 name: '',
                 email: '',
                 password: '',
-                role: ''
+                role: '',
+                degree: ''  // ✅ Added here
             }
         };
     },
@@ -92,6 +102,10 @@ export default {
                     password: this.formData.password,
                     role: this.formData.role
                 };
+
+                if (this.formData.role === 'student') {
+  payload.degree = this.formData.degree?.trim();
+}
 
                 const response = await axios.post('http://127.0.0.1:8000/api/users/', payload);
 
@@ -122,7 +136,9 @@ export default {
                 name: '',
                 email: '',
                 password: '',
-                role: ''
+                role: '',
+                degree: ''  // ✅ Reset degree too
+
             };
         }
     }

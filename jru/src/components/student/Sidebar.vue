@@ -49,6 +49,12 @@
         <router-link to="/student/grade-dashboard"><strong>Grades</strong></router-link>
       </li>
 
+      <!-- Calendar Section -->
+      <li>
+        <i class="pi pi-calendar"></i>
+        <router-link to="/student/calendar"><strong>Calendar</strong></router-link>
+      </li>
+
       <!-- Profile Section -->
     </ul>
   </aside>

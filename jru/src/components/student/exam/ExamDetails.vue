@@ -580,7 +580,7 @@ export default {
 }
 
 .send-btn {
-    background-color: #4CAF50;
+    background-color: #2c3e50;
     color: white;
     padding: 0.5rem 1rem;
     border: none;
@@ -588,7 +588,7 @@ export default {
 }
 
 .send-btn:hover {
-    background-color: #45a049;
+    background-color: #1a252f;
 }
 
 .comments-list {

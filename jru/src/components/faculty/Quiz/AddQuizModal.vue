@@ -16,32 +16,37 @@
       <label for="duration">Duration (minutes):</label>
       <input v-model="duration" type="number" placeholder="Enter duration" required />
 
-      <!-- URL Input for external link -->
-      <label for="external-link">External Link (Optional):</label>
-      <input v-model="link" type="url" placeholder="Enter a URL" />
+      <label for="file-upload">Upload File (Optional):</label>
+      <input type="file" @change="handleFileUpload" />
+      <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
 
-      <!-- Display the file URL after successful upload -->
-      <div v-if="fileUrl">
-        <p>Uploaded File:</p>
-        <a :href="fileUrl" target="_blank">Download File</a>
-      </div>
+      <label for="external_link">External Link (Optional):</label>
+      <input v-model="link" type="text" placeholder="Enter external link (if any)" />
 
-      <!-- Display the entered URL after successful submission -->
-      <div v-if="link">
-        <p>External Link:</p>
-        <a :href="link" target="_blank">{{ link }}</a>
-      </div>
-
-      <button @click="addQuiz" :disabled="isSubmitting">Add Quiz</button>
+      <button @click="confirmAddQuiz" :disabled="isSubmitting">Add Quiz</button>
     </div>
   </div>
+
+  <ConfirmationModal
+    :show="showConfirmation"
+    title="Add Quiz"
+    message="Are you sure you want to add this quiz?"
+    confirmText="Add"
+    type="primary"
+    @confirm="handleQuizSubmission"
+    @cancel="showConfirmation = false"
+  />
 </template>
 
 <script>
 import axios from "axios";
-import { useToast } from 'vue-toastification'; // Importing toast for notifications
+import { useToast } from 'vue-toastification'; 
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
+  components: {
+    ConfirmationModal
+  },
   props: {
     courseId: Number,
   },
@@ -53,25 +58,43 @@ export default {
       duration: null,
       file: null,
       fileName: "",
-      fileUrl: "", // Store the file URL once uploaded
-      link: "", // Store the entered external link
+      link: "",
       isSubmitting: false,
+      showConfirmation: false,
+      pendingQuiz: null
     };
   },
   methods: {
-    // Handle file selection
     handleFileUpload(event) {
       this.file = event.target.files[0];
       this.fileName = this.file ? this.file.name : "";
     },
 
-    // Add quiz and handle the file upload and external link
-    async addQuiz() {
-      const toast = useToast(); // Initialize toast notifications
+    confirmAddQuiz() {
+      const toast = useToast();
 
-      // Validation check
       if (!this.courseId || !this.title || !this.description || !this.quiz_date || !this.duration) {
-        toast.error('Please fill in all required fields.'); // Error toast for missing fields
+        toast.error('Please fill in all required fields.');
+        return;
+      }
+
+      this.pendingQuiz = {
+        title: this.title,
+        description: this.description,
+        quiz_date: this.quiz_date,
+        duration: this.duration,
+        file: this.file,
+        link: this.link
+      };
+
+      this.showConfirmation = true;
+    },
+
+    async handleQuizSubmission() {
+      this.showConfirmation = false;
+      const toast = useToast();
+
+      if (!this.validateForm()) {
         return;
       }
 
@@ -79,15 +102,19 @@ export default {
 
       const formData = new FormData();
       formData.append("course_id", this.courseId);
-      formData.append("title", this.title);
-      formData.append("description", this.description);
-      formData.append("quiz_date", this.quiz_date);
-      formData.append("duration_minutes", this.duration);
-      if (this.file) {
-        formData.append("file", this.file);
-      }
-      if (this.link) {
-        formData.append("external_link", this.link); // Add the external link if provided
+      formData.append("title", this.pendingQuiz.title);
+      formData.append("description", this.pendingQuiz.description);
+      formData.append("quiz_date", this.pendingQuiz.quiz_date);
+      formData.append("duration_minutes", this.pendingQuiz.duration);
+
+      // Only one of file or external link should be provided
+      let filePath = null;
+      if (this.pendingQuiz.link) {
+        formData.append("external_link", this.pendingQuiz.link);
+        filePath = this.pendingQuiz.link;
+      } else if (this.pendingQuiz.file) {
+        formData.append("file", this.pendingQuiz.file);
+        filePath = "File uploaded"; // Placeholder, will be replaced on refetch
       }
 
       try {
@@ -95,29 +122,42 @@ export default {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        toast.success('Quiz added successfully!'); // Success toast
-        this.$emit("add-quiz", response.data);
-
-        // If a file was uploaded, get the file URL from the response
-        if (response.data.file_url) {
-          this.fileUrl = response.data.file_url;
+        toast.success('Quiz added successfully!');
+        
+        // Add file_path to the response data if needed
+        const quizData = response.data;
+        if (!quizData.file_path && filePath) {
+          quizData.file_path = filePath;
         }
-
-        // If an external link was provided, display it
-        if (response.data.external_link) {
-          this.link = response.data.external_link;
-        }
-
+        
+        this.$emit("add-quiz", quizData);
         this.resetForm();
       } catch (error) {
         console.error("Error adding quiz:", error);
-        toast.error('Failed to add quiz.'); // Error toast for failure
+        toast.error('Failed to add quiz.');
       } finally {
         this.isSubmitting = false;
       }
     },
+    
+    validateForm() {
+      const toast = useToast();
+      
+      if (!this.courseId || !this.pendingQuiz.title || !this.pendingQuiz.description || 
+          !this.pendingQuiz.quiz_date || !this.pendingQuiz.duration) {
+        toast.error('Please fill in all required fields.');
+        return false;
+      }
+      
+      // Check if both file and external link are provided
+      if (this.pendingQuiz.file && this.pendingQuiz.link) {
+        toast.error('Please provide either a file OR an external link, not both.');
+        return false;
+      }
+      
+      return true;
+    },
 
-    // Reset the form fields
     resetForm() {
       this.title = "";
       this.description = "";
@@ -125,12 +165,10 @@ export default {
       this.duration = null;
       this.file = null;
       this.fileName = "";
-      this.fileUrl = ""; // Reset the file URL
-      this.link = ""; // Reset the link
+      this.link = "";
       this.$emit("close");
     },
 
-    // Close the modal
     closeModal() {
       this.resetForm();
     },
@@ -215,5 +253,32 @@ export default {
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.file-selector {
+  margin-bottom: 10px;
+}
+
+.option-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.option-btn {
+  flex: 1;
+  padding: 8px;
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.option-btn.active {
+  background-color: #007BF6;
+  color: white;
+  border-color: #007BF6;
 }
 </style>

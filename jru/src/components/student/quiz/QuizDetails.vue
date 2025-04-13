@@ -29,12 +29,16 @@
               <h2>Instructions</h2>
               <div class="instruction-content">
                 <p>{{ currentQuiz.description }}</p>
-                <div class="attachments" v-if="currentQuiz.external_link">
-                  <h3>External Link</h3>
-                  <div class="attachment-item" @click="openExternalLink(currentQuiz.external_link)">
+                <div class="attachments" v-if="currentQuiz.file_path">
+                  <h3>Attachments:</h3>
+                  <div v-if="isExternalLink(currentQuiz.file_path)" class="attachment-item" @click="openExternalLink(currentQuiz.file_path)">
                     <i class="pi pi-link"></i>
-                    <span>{{ currentQuiz.external_link }}</span>
-                    <i class="pi pi-external-link"></i>
+                    <a :href="currentQuiz.file_path" target="_blank">{{ currentQuiz.file_path }}</a>
+                  </div>
+                  <div v-else class="attachment-item" @click="downloadQuizFile(currentQuiz.file_path)">
+                    <i class="pi pi-file"></i>
+                    <span>{{ getFileName(currentQuiz.file_path) }}</span>
+                    <i class="pi pi-download"></i>
                   </div>
                 </div>
               </div>
@@ -46,17 +50,24 @@
               <h2>Your Work</h2>
               <div v-if="existingSubmission" class="submission-area">
                 <div class="existing-submission">
-                  <h3>Your Submission</h3>
-                  <div v-if="existingSubmission.file_path" class="attachment-item">
-                    <i class="pi pi-file"></i>
-                    <span>{{ getFileName(existingSubmission.file_path) }}</span>
-                    <button @click="downloadFile(existingSubmission.file_path)" class="download-btn">
-                      <i class="pi pi-download"></i>
-                    </button>
+                  <div class="submission-header">
+                    <h3>Your Submission</h3>
+                    <div v-if="existingSubmission.grade !== null" class="grade-display">
+                      <span class="grade-label">Grade:</span>
+                      <span class="grade-value">{{ existingSubmission.grade }}/</span>
+                    </div>
                   </div>
-                  <div v-if="existingSubmission.external_link" class="attachment-item">
-                    <i class="pi pi-link"></i>
-                    <a :href="existingSubmission.external_link" target="_blank">{{ existingSubmission.external_link }}</a>
+                  <div v-if="existingSubmission.feedback" class="feedback-container">
+                    <h4>Feedback:</h4>
+                    <p>{{ existingSubmission.feedback }}</p>
+                  </div>
+
+                  <div v-if="existingSubmission.file_path" class="attachment-item">
+                    <i class="pi" :class="isExternalLink(existingSubmission.file_path) ? 'pi-link' : 'pi-file'"></i>
+                    <span>{{ isExternalLink(existingSubmission.file_path) ? existingSubmission.file_path : getFileName(existingSubmission.file_path) }}</span>
+                    <button @click="downloadFile(existingSubmission.file_path)" class="download-btn">
+                      <i class="pi" :class="isExternalLink(existingSubmission.file_path) ? 'pi-external-link' : 'pi-download'"></i>
+                    </button>
                   </div>
                   <div v-if="existingSubmission.submission_text" class="submission-text">
                     <p>{{ existingSubmission.submission_text }}</p>
@@ -120,54 +131,52 @@
 
             <div class="content-section comments">
               <h2>Class Comments</h2>
-              <div class="comments-section">
-                <div class="comment-input">
-                  <input 
-                    type="text" 
-                    v-model="newComment" 
-                    placeholder="Add class comment..." 
-                    @keyup.enter="confirmAddComment" 
-                  />
-                  <button class="send-btn" @click="confirmAddComment">
-                    <i class="pi pi-send"></i>
-                  </button>
-                </div>
-
-                <!-- Loading state -->
-                <div v-if="isLoadingComments" class="comments-loading">
-                  <div class="loading-spinner"></div>
-                  <p>Loading comments...</p>
-                </div>
               
-                <!-- No comments state -->
-                <div v-else-if="comments.length === 0" class="no-comments">
-                  <p>No comments yet. Be the first to comment!</p>
-                </div>
+              <div v-if="isLoadingComments" class="comments-loading">
+                <div class="loading-spinner"></div>
+                <p>Loading comments...</p>
+              </div>
               
-                <!-- Comments list -->
-                <div v-else class="comments-list">
-                  <div v-for="comment in comments" :key="comment.comment_id" class="comment">
-                    <div class="comment-avatar">
-                      <i class="pi pi-user"></i>
+              <div v-else-if="comments.length === 0" class="no-comments">
+                <p>No comments yet. Be the first to comment!</p>
+              </div>
+              
+              <div v-else class="comments-list">
+                <div v-for="comment in comments" :key="comment.comment_id" class="comment">
+                  <div class="comment-avatar">
+                    <i class="pi pi-user"></i>
+                  </div>
+                  <div class="comment-content">
+                    <div class="comment-header">
+                      <h4>{{ comment.user_name }}</h4>
+                      <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
+                      
+                      <button 
+                        v-if="comment.user_id === student.user_id" 
+                        class="delete-comment-btn"
+                        @click="deleteComment(comment.comment_id)"
+                      >
+                        <i class="pi pi-trash"></i>
+                      </button>
                     </div>
-                    <div class="comment-content">
-                      <div class="comment-header">
-                        <h4>{{ comment.user_name }}</h4>
-                        <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
-                        
-                        <!-- Delete button for own comments -->
-                        <button 
-                          v-if="comment.user_id === student.user_id" 
-                          class="delete-comment-btn"
-                          @click="deleteComment(comment.comment_id)"
-                        >
-                          <i class="pi pi-trash"></i>
-                        </button>
-                      </div>
-                      <p class="comment-text">{{ comment.content }}</p>
-                    </div>
+                    <p class="comment-text">{{ comment.content }}</p>
                   </div>
                 </div>
+              </div>
+              
+              <div class="comment-input">
+                <textarea
+                  v-model="newComment"
+                  placeholder="Add a comment..."
+                  rows="3"
+                ></textarea>
+                <button
+                  class="post-comment-btn"
+                  @click="confirmAddComment"
+                  :disabled="!newComment.trim()"
+                >
+                  <i class="pi pi-send"></i> Post Comment
+                </button>
               </div>
             </div>
           </div>
@@ -211,7 +220,7 @@
 import Header from '@/components/header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
-import { useToast } from "vue-toastification";  // Importing toast
+import { useToast } from "vue-toastification";
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
@@ -326,17 +335,20 @@ export default {
     },
 
     getFileName(path) {
-      return path ? path.split('/').pop() : '';
+      if (!path) return '';
+      if (this.isExternalLink(path)) return path;
+      return path.split('/').pop();
     },
 
-    async downloadFile(fileUrl) {
-      const formattedUrl = fileUrl.replace(/\\/g, '/');
-      if (formattedUrl.startsWith('http')) {
-        window.open(formattedUrl, '_blank');
-      } else {
-        const fileName = this.getFileName(formattedUrl);
-        window.open(`http://127.0.0.1:8000/api/download/${fileName}`, '_blank');
+    async downloadFile(filePath) {
+      if (this.isExternalLink(filePath)) {
+        window.open(filePath, '_blank');
+        return;
       }
+      
+      const formattedUrl = filePath.replace(/\\/g, '/');
+      const fileName = this.getFileName(formattedUrl);
+      window.open(`http://127.0.0.1:8000/api/quizzes/download/${fileName}`, '_blank');
     },
 
     async confirmSubmitQuiz() {
@@ -420,7 +432,7 @@ export default {
           this.toast.success("Comment added successfully!");
           this.newComment = "";
           this.pendingComment = "";
-          await this.fetchComments(); // Refresh comments
+          await this.fetchComments();
         }
       } catch (error) {
         console.error("Error adding comment:", error);
@@ -503,12 +515,23 @@ export default {
         
         if (response.status === 200) {
           this.toast.success("Comment deleted successfully!");
-          await this.fetchComments(); // Refresh comments
+          await this.fetchComments();
         }
       } catch (error) {
         console.error("Error deleting comment:", error);
         this.toast.error("Failed to delete comment");
       }
+    },
+
+    async downloadQuizFile(filePath) {
+      const fileName = this.getFileName(filePath);
+      if (fileName) {
+        window.open(`http://127.0.0.1:8000/api/quizzes/download/${fileName}`, '_blank');
+      }
+    },
+
+    isExternalLink(path) {
+      return path && (path.startsWith('http://') || path.startsWith('https://'));
     }
   }
 };
@@ -519,11 +542,13 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
 }
 
 .quiz-detail {
   display: flex;
   flex: 1;
+  overflow: hidden;
 }
 
 .quiz-detail-container {
@@ -531,10 +556,10 @@ export default {
   padding: 1rem;
   max-width: 100%;
   margin: 0 auto;
-  overflow-y: auto; /* This will enable vertical scrolling */
-  max-height: 100%;
+  overflow-y: auto;
+  max-height: calc(100vh - 64px);
   background-color: #fff;
-  /* Set a maximum height for the container */
+  position: relative;
 }
 
 .back-btn {
@@ -547,6 +572,10 @@ export default {
   margin-bottom: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .back-btn:hover {
@@ -557,8 +586,7 @@ export default {
   display: grid;
   grid-template-columns: 3fr 1fr;
   gap: 2rem;
-  height: 100%; /* Ensure content takes up full height */
-  margin-bottom: 5rem; /* Add bottom margin here */
+  padding-bottom: 2rem;
 }
 
 .main-content {
@@ -571,13 +599,15 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  margin-bottom: 2rem; /* Add bottom margin here */
+  margin-bottom: 2rem;
 }
 
 .quiz-header {
   background-color: #D9D9D9;
   padding: 2rem;
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+
 }
 
 .quiz-header h1 {
@@ -597,6 +627,8 @@ export default {
   border-radius: 8px;
   min-height: 300px;
   color: #212121;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+
 }
 
 .content-section h2 {
@@ -605,6 +637,11 @@ export default {
   color: #333;
 }
 
+.attachments h3 {
+    font-weight: bold;
+    color: #212121;
+    margin-bottom: 0.75rem;
+}
 .attachment-item {
   display: flex;
   align-items: center;
@@ -614,10 +651,27 @@ export default {
   border-radius: 4px;
   margin-bottom: 0.5rem;
   cursor: pointer;
+  color: #212121;
+}
+
+.attachment-item a {
+    color: #007BF6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.attachment-item a:hover {
+    text-decoration: underline;
+}
+
+.attachment-item span {
+    color: #212121;
+    font-weight: 500;
 }
 
 .attachment-item i {
   font-size: 1.25rem;
+  color: #444;
 }
 
 .comments-section {
@@ -627,38 +681,64 @@ export default {
 
 .comment-input {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
-.comment-input input {
-  flex: 1;
-  padding: 0.5rem;
+.comment-input textarea {
+  padding: 0.75rem;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  background-color: white;
 }
 
-.send-btn {
-  background-color: #2c3e50;
+.comment-input textarea:focus {
+  outline: none;
+  border-color: #007BF6;
+  box-shadow: 0 0 0 2px rgba(0, 123, 246, 0.1);
+}
+
+.post-comment-btn {
+  align-self: flex-end;
+  background-color: #007BF6;
   color: white;
-  padding: 0.5rem 1rem;
   border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
 }
 
-.send-btn:hover {
-  background-color: #1a252f;
+.post-comment-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.post-comment-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .comments-list {
-  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  border-radius: 8px;
 }
 
 .comment {
   display: flex;
   gap: 1rem;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
+  background-color: white;
+  border-radius: 8px;
 }
 
 .comment-content {
@@ -666,10 +746,18 @@ export default {
   flex-direction: column;
 }
 
+.comment-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
 .comment-header h4 {
-  font-size: 1rem;
-  margin-bottom: 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #333;
+  margin: 0;
+  margin-right: 0.5rem;
 }
 
 .comment-date {
@@ -700,8 +788,7 @@ export default {
   background-color: #F5F5F5;
   color: rgba(0, 0, 0, 0.781);
   cursor: pointer;
-  display: flex
-;
+  display: flex;
   font-family: 'Inter', sans-serif;
   align-items: center;
   justify-content: center;
@@ -713,6 +800,43 @@ export default {
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.grade-display {
+  background-color: #007BF6;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.grade-label {
+  margin-right: 0.5rem;
+}
+
+.grade-value {
+  font-size: 1.1rem;
+}
+
+.feedback-container {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #007BF6;
+}
+
+.feedback-container h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #333;
 }
 
 .delete-btn {
@@ -859,44 +983,68 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
+.comment {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 0.5rem;
+    background-color: white;
+    border-radius: 8px;
+}
+
 .comment-avatar {
-  width: 40px;
-  height: 40px;
-  background-color: #e9ecef;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .comment-avatar i {
-  font-size: 20px;
-  color: #6c757d;
+    font-size: 20px;
+    color: #6c757d;
+}
+
+.comment-content {
+    flex: 1;
 }
 
 .comment-header {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.comment-header h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    margin-right: 0.5rem;
 }
 
 .comment-date {
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
-  color: #6c757d;
+    font-size: 0.8rem;
+    color: #6c757d;
 }
 
 .delete-comment-btn {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: #dc3545;
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 0.2s;
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    opacity: 0.5;
+    padding: 0.25rem;
+    font-size: 0.8rem;
 }
 
 .delete-comment-btn:hover {
-  opacity: 1;
+    opacity: 1;
 }
 
 .comment-text {

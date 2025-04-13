@@ -75,20 +75,20 @@ export default {
 .dashboard-container {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Full height of the viewport */
-  overflow: hidden; /* Prevents overflow in the container itself */
+  height: 100vh;
+  overflow: hidden;
 }
 
 .dashboard-content {
   display: flex;
-  flex: 1; /* Take up the remaining space */
-  overflow: hidden; /* Prevents overflow in the content area */
+  flex: 1;
+  overflow: hidden;
 }
 
 .dashboard-main {
-  flex: 1; /* Main area should take the remaining space */
+  flex: 1;
   padding: 2rem;
-  overflow-y: auto; /* Allow scrolling if content overflows */
+  overflow-y: auto;
   background-color: #fff;
 }
 .header {
@@ -104,8 +104,8 @@ export default {
 }
 .course-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 items per row */
-  gap: 4rem; /* Adds space between cards */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4rem;
 }
 
 .course-card {
@@ -116,17 +116,17 @@ export default {
   flex-direction: column;
   width: 95%;
   height: auto;
-  cursor: pointer; /* Change the cursor to a pointer to indicate the card is clickable */
-  transition: transform 0.2s, box-shadow 0.2s; /* Add a transition effect for hover */
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .course-card:hover {
-  transform: scale(1.05); /* Slightly increase the size of the card on hover */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Add a shadow to the card on hover */
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .course-info, .announcements-container {
-  flex-grow: 1; /* Allows both containers to grow and take available space */
+  flex-grow: 1;
 }
 
 .course-info {
@@ -137,8 +137,8 @@ export default {
     flex-direction: column;
     width: 95%;
     height: auto;
-    cursor: pointer; /* Change the cursor to a pointer to indicate the card is clickable */
-    transition: transform 0.2s, box-shadow 0.2s; /* Add a transition effect for hover */
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .course-name {
@@ -147,7 +147,7 @@ export default {
   color: #000;
 }
 .card-header {
-  position: relative; /* Needed for absolute positioning of card actions */
+  position: relative;
     justify-content: space-between;
     align-items: center;
     padding: 1rem;

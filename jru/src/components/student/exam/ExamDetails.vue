@@ -28,21 +28,17 @@
               <h2>Instructions</h2>
               <p>{{ currentExam.description }}</p>
 
-              <!-- Attachments Section -->
-              <div v-if="currentExam.file_url || currentExam.external_link" class="attachments">
-                <h3>Attachments</h3>
+              <div v-if="currentExam.file_path" class="attachments">
+                <h3>Attachments:</h3>
 
-                <!-- Local File Attachment -->
-                <div v-if="currentExam.file_url" class="attachment-item" @click="downloadFile(currentExam.file_url)">
-                  <i class="pi pi-file"></i>
-                  <span>{{ getFileName(currentExam.file_url) }}</span>
-                  <i class="pi pi-download"></i>
-                </div>
-
-                <!-- External Link -->
-                <div v-if="currentExam.external_link" class="attachment-item">
+                <div v-if="isExternalLink(currentExam.file_path)" class="attachment-item">
                   <i class="pi pi-link"></i>
-                  <a :href="currentExam.external_link" target="_blank">{{ getFileName(currentExam.external_link) }}</a>
+                  <a :href="currentExam.file_path" target="_blank">{{ getFileName(currentExam.file_path) }}</a>
+                </div>
+                <div v-else class="attachment-item" @click="downloadFile(currentExam.file_path)">
+                  <i class="pi pi-file"></i>
+                  <span>{{ getFileName(currentExam.file_path) }}</span>
+                  <i class="pi pi-download"></i>
                 </div>
               </div>
             </div>
@@ -52,20 +48,33 @@
             <div class="content-section submission">
               <h2>Your Work</h2>
               
-              <!-- Display existing submission if available -->
               <div v-if="existingSubmission" class="submission-area">
                 <div class="existing-submission">
-                  <h3>Your Submission</h3>
-                  <div v-if="existingSubmission.file_path" class="attachment-item">
-                    <i class="pi pi-file"></i>
-                    <span>{{ getFileName(existingSubmission.file_path) }}</span>
-                    <button @click="downloadFile(existingSubmission.file_path)" class="download-btn">
-                      <i class="pi pi-download"></i>
-                    </button>
+                  <div class="submission-header">
+                    <h3>Your Submission</h3>
+                    <div v-if="existingSubmission.grade !== null" class="grade-display">
+                      <span class="grade-label">Grade:</span>
+                      <span class="grade-value">{{ existingSubmission.grade }}/</span>
+                    </div>
                   </div>
-                  <div v-if="existingSubmission.external_link" class="attachment-item">
-                    <i class="pi pi-link"></i>
-                    <a :href="existingSubmission.external_link" target="_blank">{{ existingSubmission.external_link }}</a>
+                  
+                  <div v-if="existingSubmission.feedback" class="feedback-container">
+                    <h4>Feedback:</h4>
+                    <p>{{ existingSubmission.feedback }}</p>
+                  </div>
+                  
+                  <div v-if="existingSubmission.file_path" class="attachment-item">
+                    <div v-if="isExternalLink(existingSubmission.file_path)">
+                      <i class="pi pi-link"></i>
+                      <a :href="existingSubmission.file_path" target="_blank">{{ getFileName(existingSubmission.file_path) }}</a>
+                    </div>
+                    <div v-else>
+                      <i class="pi pi-file"></i>
+                      <span>{{ getFileName(existingSubmission.file_path) }}</span>
+                      <button @click="downloadFile(existingSubmission.file_path)" class="download-btn">
+                        <i class="pi pi-download"></i>
+                      </button>
+                    </div>
                   </div>
                   <div v-if="existingSubmission.submission_text" class="submission-text">
                     <p>{{ existingSubmission.submission_text }}</p>
@@ -78,7 +87,6 @@
                 </div>
               </div>
 
-              <!-- Submission Form -->
               <form v-else @submit.prevent="confirmSubmitExam" enctype="multipart/form-data">
                 <div class="submission-area">
                   <div class="submission-type-selector">
@@ -91,7 +99,6 @@
                   </div>
 
                   <div class="submission-inputs" v-if="submissionType">
-                    <!-- File Upload Input -->
                     <div v-if="submissionType === 'file'" class="file-upload-container">
                       <label class="file-upload-label">
                         <input 
@@ -106,7 +113,6 @@
                       </label>
                     </div>
 
-                    <!-- External Link Input -->
                     <div v-if="submissionType === 'link'" class="link-input-container">
                       <input 
                         type="text" 
@@ -116,7 +122,6 @@
                       />
                     </div>
 
-                    <!-- Submission Text Area -->
                     <div class="text-area-container">
                       <textarea 
                         v-model="submissionText" 
@@ -136,27 +141,52 @@
 
             <div class="content-section comments">
               <h2>Class Comments</h2>
-              <div class="comments-section">
-                <div class="comment-input">
-                  <input type="text" v-model="newComment" placeholder="Add class comment..."
-                         @keyup.enter="confirmAddComment" />
-                  <button class="send-btn" @click="confirmAddComment">
-                    <i class="pi pi-send"></i>
-                  </button>
-                </div>
-                <div class="comments-list" v-if="currentExam.comments?.length">
-                  <div v-for="comment in currentExam.comments" :key="comment.id" class="comment">
-                    <img :src="comment.authorAvatar || '/default-avatar.png'" :alt="comment.author" />
-                    <div class="comment-content">
-                      <div class="comment-header">
-                        <h4>{{ comment.author }}</h4>
-                        <span class="comment-date">{{ formatDate(comment.date) }}</span>
-                      </div>
-                      <p>{{ comment.text }}</p>
+              
+              <div v-if="isLoadingComments" class="comments-loading">
+                <div class="loading-spinner"></div>
+                <p>Loading comments...</p>
+              </div>
+              
+              <div v-else-if="!currentExam.comments || currentExam.comments.length === 0" class="no-comments">
+                <p>No comments yet. Be the first to comment!</p>
+              </div>
+              
+              <div v-else class="comments-list">
+                <div v-for="comment in currentExam.comments" :key="comment.id" class="comment">
+                  <div class="comment-avatar">
+                    <i class="pi pi-user"></i>
+                  </div>
+                  <div class="comment-content">
+                    <div class="comment-header">
+                      <h4>{{ comment.author }}</h4>
+                      <span class="comment-date">{{ formatDate(comment.date) }}</span>
+                      
+                      <button 
+                        v-if="comment.user_id === student.id" 
+                        class="delete-comment-btn"
+                        @click="deleteComment(comment.id)"
+                      >
+                        <i class="pi pi-trash"></i>
+                      </button>
                     </div>
+                    <p class="comment-text">{{ comment.text }}</p>
                   </div>
                 </div>
-                <p v-else>No comments yet.</p>
+              </div>
+              
+              <div class="comment-input">
+                <textarea
+                  v-model="newComment"
+                  placeholder="Add a comment..."
+                  rows="3"
+                ></textarea>
+                <button
+                  class="post-comment-btn"
+                  @click="confirmAddComment"
+                  :disabled="!newComment.trim()"
+                >
+                  <i class="pi pi-send"></i> Post Comment
+                </button>
               </div>
             </div>
           </div>
@@ -166,7 +196,6 @@
       <div v-else class="loading">Loading exam details...</div>
     </div>
 
-    <!-- Add confirmation modals -->
     <ConfirmationModal
       :show="showSubmitConfirmation"
       title="Submit Exam"
@@ -203,7 +232,7 @@
 import Header from '@/components/header.vue';
 import Sidebar from '../Sidebar.vue';
 import axios from 'axios';
-import { useToast } from "vue-toastification";  // Import toast
+import { useToast } from "vue-toastification";
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
@@ -234,7 +263,8 @@ export default {
       showCommentConfirmation: false,
       showDeleteConfirmation: false,
       pendingComment: '',
-      existingSubmission: null
+      existingSubmission: null,
+      isLoadingComments: false
     };
   },
   methods: {
@@ -261,6 +291,7 @@ export default {
           
           if (this.currentExam) {
             await this.fetchExistingSubmission();
+            await this.fetchComments();
           }
         }
       } catch (error) {
@@ -279,27 +310,63 @@ export default {
           console.error("Error fetching existing submission:", error);
           this.toast.error("Error fetching submission details");
         } else {
-          // If 404, it means no submission exists yet
           this.existingSubmission = null;
         }
       }
     },
 
-    // Helper function to extract the file name from the URL
+    async fetchComments() {
+      try {
+        this.isLoadingComments = true;
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/comments/exam/${this.currentExam.exam_id}`
+        );
+        
+        if (response.status === 200) {
+          const comments = response.data.map(comment => ({
+            id: comment.comment_id,
+            text: comment.content,
+            author: comment.user_name,
+            user_id: comment.user_id,
+            date: comment.created_at
+          }));
+          
+          this.currentExam.comments = comments;
+        }
+        this.isLoadingComments = false;
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        this.toast.error('Failed to load comments');
+        this.isLoadingComments = false;
+      }
+    },
+
+    async deleteComment(commentId) {
+      try {
+        const response = await axios.delete(
+          `http://127.0.0.1:8000/api/comments/${commentId}?user_id=${this.student.id}`
+        );
+        
+        if (response.status === 200) {
+          this.toast.success("Comment deleted successfully!");
+          await this.fetchComments();
+        }
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+        this.toast.error("Failed to delete comment");
+      }
+    },
+
     getFileName(fileUrl) {
       return fileUrl ? fileUrl.split('/').pop() : '';
     },
 
     downloadFile(fileUrl) {
-      const formattedUrl = fileUrl.replace(/\\/g, '/'); // In case the file path uses backslashes
-
-      if (formattedUrl.startsWith('http')) {
-        // Open the URL in a new tab
-        window.open(formattedUrl, '_blank');
+      if (this.isExternalLink(fileUrl)) {
+        window.open(fileUrl, '_blank');
       } else {
-        // Extract the file name and open the download link in a new tab
-        const fileName = this.getFileName(formattedUrl);
-        window.open(`http://127.0.0.1:8000/api/download/${fileName}`, '_blank');
+        const fileName = this.getFileName(fileUrl);
+        window.open(`http://127.0.0.1:8000/api/exams/download/${encodeURIComponent(fileName)}`, '_blank');
       }
     },
 
@@ -315,7 +382,6 @@ export default {
       this.selectedFile = event.target.files[0];
     },
 
-    // Add confirmation methods for exam submission
     confirmSubmitExam() {
       if (!this.submissionType) {
         this.toast.error("Please select a submission type");
@@ -362,25 +428,20 @@ export default {
 
         if (response.status === 200) {
           this.toast.success('Exam submitted successfully!');
-          // Reset form fields
           this.submissionType = '';
           this.selectedFile = null;
           this.externalLink = '';
           this.submissionText = '';
-          // Fetch the updated submission
+          
           await this.fetchExistingSubmission();
+          await this.fetchData();
         }
       } catch (error) {
         console.error('Error submitting exam:', error);
-        if (error.response?.status === 400 && error.response?.data?.detail === "You have already submitted for this exam") {
-          this.toast.error("You have already submitted for this exam. Please delete your existing submission if you want to submit again.");
-        } else {
-          this.toast.error(error.response?.data?.detail || 'Failed to submit exam. Please try again.');
-        }
+        this.toast.error(error.response?.data?.detail || 'Failed to submit exam. Please try again.');
       }
     },
 
-    // Add confirmation methods for comments
     confirmAddComment() {
       if (!this.newComment.trim()) return;
       this.pendingComment = this.newComment;
@@ -390,14 +451,19 @@ export default {
     async handleCommentSubmission() {
       this.showCommentConfirmation = false;
       try {
-        const res = await axios.post(`http://127.0.0.1:8000/api/exam/${this.currentExam.exam_id}/comments`, {
-          text: this.pendingComment,
-          author: this.student.name
+        const res = await axios.post(`http://127.0.0.1:8000/api/comments/`, {
+          content: this.pendingComment,
+          entity_type: 'exam',
+          entity_id: this.currentExam.exam_id,
+          user_id: this.student.id
         });
 
-        if (res.status === 201) {
+        if (res.status === 200) {
+          if (!this.currentExam.comments) {
+            this.currentExam.comments = [];
+          }
           this.currentExam.comments.push({
-            id: res.data.id,
+            id: res.data.comment_id,
             text: this.pendingComment,
             author: this.student.name,
             date: new Date().toISOString()
@@ -431,11 +497,14 @@ export default {
         );
         this.toast.success("Submission deleted successfully!");
         this.existingSubmission = null;
-        // Reset form fields after deletion
         this.submissionType = '';
         this.selectedFile = null;
         this.externalLink = '';
         this.submissionText = '';
+        
+        setTimeout(() => {
+          this.fetchData();
+        }, 500);
       } catch (error) {
         console.error("Error deleting submission:", error);
         this.toast.error(error.response?.data?.detail || "Failed to delete submission. Please try again.");
@@ -448,6 +517,10 @@ export default {
 
     goBack() {
       this.$router.go(-1);
+    },
+
+    isExternalLink(filePath) {
+      return filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'));
     }
   },
   async mounted() {
@@ -461,11 +534,13 @@ export default {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
 .exam-detail {
     display: flex;
     flex: 1;
+    overflow: hidden;
 }
 
 .exam-detail-container {
@@ -473,10 +548,10 @@ export default {
     padding: 1rem;
     max-width: 100%;
     margin: 0 auto;
-    overflow-y: auto; /* This will enable vertical scrolling */
-    max-height: 100%; /* Set a maximum height for the container */
+    overflow-y: auto;
+    max-height: calc(100vh - 64px);
     background-color: #fff;
-
+    position: relative;
 }
 
 .back-btn {
@@ -489,6 +564,10 @@ export default {
     margin-bottom: 1rem;
     padding: 0.5rem 1rem;
     border-radius: 4px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .back-btn:hover {
@@ -499,8 +578,7 @@ export default {
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 2rem;
-    height: 100%; /* Ensure content takes up full height */
-    margin-bottom: 5rem; /* Add bottom margin here */
+    padding-bottom: 2rem;
 }
 
 .main-content {
@@ -513,13 +591,14 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    margin-bottom: 2rem; /* Add bottom margin here */
+    margin-bottom: 2rem;
 }
 
 .exam-header {
     background-color: #D9D9D9;
     padding: 2rem;
     border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .exam-header h1 {
@@ -539,6 +618,7 @@ export default {
     border-radius: 8px;
     min-height: 300px;
     color: #212121;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .content-section h2 {
@@ -556,10 +636,33 @@ export default {
     border-radius: 4px;
     margin-bottom: 0.5rem;
     cursor: pointer;
+    color: #212121;
+}
+
+.attachment-item a {
+    color: #007BF6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.attachment-item a:hover {
+    text-decoration: underline;
+}
+
+.attachment-item span {
+    color: #212121;
+    font-weight: 500;
 }
 
 .attachment-item i {
+    color: #444;
     font-size: 1.25rem;
+}
+
+.attachments h3 {
+    font-weight: bold;
+    color: #212121;
+    margin-bottom: 0.75rem;
 }
 
 .comments-section {
@@ -569,54 +672,144 @@ export default {
 
 .comment-input {
     display: flex;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
 }
 
-.comment-input input {
-    flex: 1;
-    padding: 0.5rem;
+.comment-input textarea {
+    padding: 0.75rem;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 8px;
+    font-size: 1rem;
+    resize: vertical;
+    background-color: white;
 }
 
-.send-btn {
-    background-color: #2c3e50;
+.comment-input textarea:focus {
+    outline: none;
+    border-color: #007BF6;
+    box-shadow: 0 0 0 2px rgba(0, 123, 246, 0.1);
+}
+
+.post-comment-btn {
+    align-self: flex-end;
+    background-color: #007BF6;
     color: white;
-    padding: 0.5rem 1rem;
     border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
 }
 
-.send-btn:hover {
-    background-color: #1a252f;
+.post-comment-btn:hover:not(:disabled) {
+    background-color: #0056b3;
 }
 
-.comments-list {
-    margin-top: 1rem;
+.post-comment-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.comments-loading, .no-comments {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.loading-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007BF6;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 0.5rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .comment {
     display: flex;
     gap: 1rem;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 0.5rem;
+    background-color: white;
+    border-radius: 8px;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.comment-avatar i {
+    font-size: 20px;
+    color: #6c757d;
 }
 
 .comment-content {
+    flex: 1;
+}
+
+.comment-header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0.5rem;
 }
 
 .comment-header h4 {
-    font-size: 1rem;
-    margin-bottom: 0.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
     color: #333;
+    margin: 0;
+    margin-right: 0.5rem;
 }
 
 .comment-date {
-    font-size: 0.875rem;
-    color: #888;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.delete-comment-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    opacity: 0.5;
+    padding: 0.25rem;
+    font-size: 0.8rem;
+}
+
+.delete-comment-btn:hover {
+    opacity: 1;
+}
+
+.comment-text {
+    font-size: 0.9rem;
+    color: #333;
+    line-height: 1.5;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .status {
@@ -780,25 +973,54 @@ export default {
   color: #155724;
 }
 
-.attachment-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background-color: #fff;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-  cursor: pointer;
-}
-
-.attachment-item i {
-  font-size: 1.25rem;
-}
-
 .existing-submission {
   background-color: white;
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.grade-display {
+  background-color: #007BF6;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.grade-label {
+  margin-right: 0.5rem;
+}
+
+.grade-value {
+  font-size: 1.1rem;
+}
+
+.feedback-container {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #007BF6;
+}
+
+.feedback-container h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.comments-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    border-radius: 8px;
 }
 </style>

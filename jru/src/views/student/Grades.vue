@@ -140,7 +140,6 @@ export default {
                 
                 this.studentName = studentData.name || 'Student';
                 
-                // Fetch student details to get degree
                 try {
                     const studentDetailsResponse = await axios.get(`http://127.0.0.1:8000/api/students/${studentId}`);
                     if (studentDetailsResponse.data) {
@@ -151,17 +150,14 @@ export default {
                     this.studentDegree = studentData.degree || 'Not specified';
                 }
                 
-                // Fetch student courses
                 const coursesResponse = await axios.get(`http://127.0.0.1:8000/api/student_courses/${studentId}`);
                 this.courses = coursesResponse.data.courses || [];
                 
-                // Create a mapping of course IDs to course titles
                 this.courseMap = {};
                 this.courses.forEach(course => {
                     this.courseMap[course.course_id] = course.course_name || `Course ${course.course_id}`;
                 });
                 
-                // Fetch student grades (from all courses)
                 await this.fetchGrades();
             } catch (error) {
                 console.error("Error fetching student data:", error);
@@ -171,7 +167,6 @@ export default {
         async fetchGrades() {
             this.loading = true;
             try {
-                // Fetch grades from all courses
                 const studentId = this.student.user_id;
                 if (!studentId) {
                     this.toast.error("Student ID not found");
@@ -182,18 +177,15 @@ export default {
                 const gradesResponse = await axios.get(`http://127.0.0.1:8000/api/student/${studentId}/grades`);
                 const responseData = gradesResponse.data;
                 
-                // Update grades and degree
                 this.grades = responseData.grades || [];
                 if (responseData.student_degree && !this.studentDegree) {
                     this.studentDegree = responseData.student_degree;
                 }
                 
-                // Extract unique school years for the filter
                 this.schoolYears = [...new Set(this.grades.map(grade => grade.school_year))].sort().reverse();
                 
-                // Set default filters if available
                 if (this.schoolYears.length > 0 && !this.selectedSchoolYear) {
-                    this.selectedSchoolYear = this.schoolYears[0]; // Most recent school year
+                    this.selectedSchoolYear = this.schoolYears[0]; 
                 }
             } catch (error) {
                 console.error("Error fetching grades:", error);
@@ -207,7 +199,6 @@ export default {
                 return this.courseMap[courseId];
             }
             
-            // If the course is not in the map, get it from the grade's course_title if available
             const grade = this.grades.find(g => g.course_id === courseId);
             return grade?.course_title || `Course ID: ${courseId}`;
         },
@@ -227,11 +218,17 @@ export default {
 </script>
 
 <style scoped>
+.grades {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
 .container {
     display: flex;
-    margin: 0 auto;
-    overflow-x: auto;
-    height: 100vh;
+    flex: 1;
+    overflow: hidden;
 }
 
 .content {
@@ -239,7 +236,6 @@ export default {
     padding: 20px;
     background-color: #fff;
     overflow-y: auto;
-    height: calc(100vh - 50px);
 }
 
 .academic-records-container {
@@ -247,8 +243,9 @@ export default {
     background-color: #f5f5f5;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-    max-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .student-info {
@@ -292,6 +289,8 @@ export default {
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    overflow-y: auto;
 }
 
 .grade-details table {

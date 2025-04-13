@@ -31,20 +31,22 @@
               <h2>Instructions</h2>
               <p>{{ currentAssignment.description }}</p>
 
-              <!-- Attachments Section -->
               <div v-if="currentAssignment.file_path || currentAssignment.external_link" class="attachments">
-                <h3>Attachments</h3>
+                <h3>Attachments:</h3>
 
-                <!-- Local File Attachment -->
-                <div v-if="currentAssignment.file_path" class="attachment-item" @click="downloadFile(currentAssignment.file_path)">
+                <div v-if="isExternalLink(currentAssignment.file_path)" class="attachment-item">
+                  <i class="pi pi-link"></i>
+                  <a :href="currentAssignment.file_path" target="_blank">{{ getFileName(currentAssignment.file_path) }}</a>
+                </div>
+                <div v-else-if="currentAssignment.file_path" class="attachment-item" @click="downloadFile(currentAssignment.file_path)">
                   <i class="pi pi-file"></i>
                   <span>{{ getFileName(currentAssignment.file_path) }}</span>
                   <i class="pi pi-download"></i>
                 </div>
-                <!-- External Link -->
                 <div v-if="currentAssignment.external_link" class="attachment-item">
                   <i class="pi pi-link"></i>
-                  <a :href="currentAssignment.external_link" target="_blank">{{ getFileName(currentAssignment.external_link) }}</a>
+                  <a :href="currentAssignment.external_link" target="_blank">{{ currentAssignment.external_link }}</a>
+                  <i class="pi pi-external-link"></i>
                 </div>
               </div>
             </div>
@@ -54,10 +56,21 @@
             <div class="content-section submission">
               <h2>Your Work</h2>
 
-              <!-- Display existing submission if available -->
               <div v-if="existingSubmission" class="submission-area">
                 <div class="existing-submission">
-                  <h3>Your Submission</h3>
+                  <div class="submission-header">
+                    <h3>Your Submission</h3>
+                    <div v-if="existingSubmission.grade !== null" class="grade-display">
+                      <span class="grade-label">Grade:</span>
+                      <span class="grade-value">{{ existingSubmission.grade }}/</span>
+                    </div>
+                  </div>
+                  
+                  <div v-if="existingSubmission.feedback" class="feedback-container">
+                    <h4>Feedback:</h4>
+                    <p>{{ existingSubmission.feedback }}</p>
+                  </div>
+                  
                   <div v-if="existingSubmission.file_path" class="attachment-item">
                     <i class="pi pi-file"></i>
                     <span>{{ getFileName(existingSubmission.file_path) }}</span>
@@ -78,7 +91,6 @@
                 </div>
               </div>
 
-              <!-- Submission Form -->
               <form v-else @submit.prevent="confirmSubmitAssignment" enctype="multipart/form-data">
                 <div class="submission-area">
                   <div class="submission-type-selector">
@@ -91,7 +103,6 @@
                   </div>
 
                   <div class="submission-inputs" v-if="submissionType">
-                    <!-- File Upload Input -->
                     <div v-if="submissionType === 'file'" class="file-upload-container">
                       <label class="file-upload-label">
                         <input 
@@ -106,7 +117,6 @@
                       </label>
                     </div>
 
-                    <!-- External Link Input -->
                     <div v-if="submissionType === 'link'" class="link-input-container">
                       <input 
                         type="text" 
@@ -116,7 +126,6 @@
                       />
                     </div>
 
-                    <!-- Submission Text Area -->
                     <div class="text-area-container">
                       <textarea 
                         v-model="submissionText" 
@@ -136,30 +145,16 @@
 
             <div class="content-section comments">
               <h2>Class Comments</h2>
-              <div class="comment-input">
-                <input 
-                  type="text" 
-                  v-model="newComment" 
-                  placeholder="Add class comment..." 
-                  @keyup.enter="confirmAddComment" 
-                />
-                <button class="send-btn" @click="confirmAddComment">
-                  <i class="pi pi-send"></i>
-                </button>
-              </div>
               
-              <!-- Loading state -->
               <div v-if="isLoadingComments" class="comments-loading">
                 <div class="loading-spinner"></div>
                 <p>Loading comments...</p>
               </div>
               
-              <!-- No comments state -->
               <div v-else-if="comments.length === 0" class="no-comments">
                 <p>No comments yet. Be the first to comment!</p>
               </div>
               
-              <!-- Comments list -->
               <div v-else class="comments-list">
                 <div v-for="comment in comments" :key="comment.comment_id" class="comment">
                   <div class="comment-avatar">
@@ -170,7 +165,6 @@
                       <h4>{{ comment.user_name }}</h4>
                       <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
                       
-                      <!-- Delete button for own comments -->
                       <button 
                         v-if="comment.user_id === studentId" 
                         class="delete-comment-btn"
@@ -183,6 +177,21 @@
                   </div>
                 </div>
               </div>
+              
+              <div class="comment-input">
+                <textarea
+                  v-model="newComment"
+                  placeholder="Add a comment..."
+                  rows="3"
+                ></textarea>
+                <button
+                  class="post-comment-btn"
+                  @click="confirmAddComment"
+                  :disabled="!newComment.trim()"
+                >
+                  <i class="pi pi-send"></i> Post Comment
+                </button>
+              </div>
             </div>
           </div>
 
@@ -191,7 +200,6 @@
     </div>
   </div>
 
-  <!-- Add confirmation modals at the end of the template -->
   <ConfirmationModal
     :show="showSubmitConfirmation"
     title="Submit Assignment"
@@ -311,13 +319,11 @@ export default {
     downloadFile(fileUrl) {
       if (!fileUrl) return;
       
-      const formattedUrl = fileUrl.replace(/\\/g, '/'); // Ensure correct path format
+      const formattedUrl = fileUrl.replace(/\\/g, '/');
 
       if (formattedUrl.startsWith('http')) {
-        // Open external links directly
         window.open(formattedUrl, '_blank');
       } else {
-        // Extract file name and initiate download from the API
         const fileName = this.getFileName(formattedUrl);
         const downloadUrl = `http://127.0.0.1:8000/api/download/${fileName}`;
         window.open(downloadUrl, '_blank');
@@ -474,21 +480,27 @@ export default {
 
     goBack() {
       this.$router.go(-1);
+    },
+
+    isExternalLink(fileUrl) {
+      return fileUrl && (fileUrl.startsWith('http://') || fileUrl.startsWith('https://'));
     }
   }
 };
 </script>
 
 <style scoped>
-.assignment-detail-container {
+.assignmentdetail-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
 }
 
 .assignment-detail {
   display: flex;
   flex: 1;
+  overflow: hidden;
 }
 
 .assignment-detail-container {
@@ -497,8 +509,9 @@ export default {
   max-width: 100%;
   margin: 0 auto;
   overflow-y: auto;
-  max-height: 100%;
+  max-height: calc(100vh - 64px);
   background-color: #fff;
+  position: relative;
 }
 
 .back-btn {
@@ -511,6 +524,10 @@ export default {
   margin-bottom: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .back-btn:hover {
@@ -521,8 +538,7 @@ export default {
   display: grid;
   grid-template-columns: 3fr 1fr;
   gap: 2rem;
-  height: 100%;
-  margin-bottom: 5rem;
+  padding-bottom: 2rem;
 }
 
 .main-content {
@@ -542,6 +558,7 @@ export default {
   background-color: #D9D9D9;
   padding: 2rem;
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .assignment-header h1 {
@@ -560,6 +577,7 @@ export default {
   padding: 1.5rem;
   border-radius: 8px;
   min-height: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
   color: #212121;
 }
 
@@ -674,6 +692,12 @@ export default {
   color: #155724;
 }
 
+.attachments h3 {
+    font-weight: bold;
+    color: #212121;
+    margin-bottom: 0.75rem;
+}
+
 .attachment-item {
   display: flex;
   align-items: center;
@@ -683,10 +707,27 @@ export default {
   border-radius: 4px;
   margin-bottom: 0.5rem;
   cursor: pointer;
+  color: #212121;
+}
+
+.attachment-item a {
+  color: #007BF6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.attachment-item a:hover {
+  text-decoration: underline;
+}
+
+.attachment-item span {
+  color: #212121;
+  font-weight: 500;
 }
 
 .attachment-item i {
   font-size: 1.25rem;
+  color: #444;
 }
 
 .comments-section {
@@ -696,49 +737,71 @@ export default {
 
 .comment-input {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
-.comment-input input {
-  flex: 1;
-  padding: 0.5rem;
+.comment-input textarea {
+  padding: 0.75rem;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  background-color: white;
 }
 
-.send-btn {
-  background-color: #2c3e50;
+.comment-input textarea:focus {
+  outline: none;
+  border-color: #007BF6;
+  box-shadow: 0 0 0 2px rgba(0, 123, 246, 0.1);
+}
+
+.post-comment-btn {
+  align-self: flex-end;
+  background-color: #007BF6;
   color: white;
-  padding: 0.5rem 1rem;
   border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
 }
 
-.send-btn:hover {
-  background-color: #1a252f;
+.post-comment-btn:hover:not(:disabled) {
+  background-color: #0056b3;
 }
 
-.comments-list {
-  margin-top: 1rem;
+.post-comment-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .comment {
   display: flex;
   gap: 1rem;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
+  background-color: white;
+  border-radius: 8px;
 }
 
-.comment-content {
+.comment-header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
 .comment-header h4 {
-  font-size: 1rem;
-  margin-bottom: 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #333;
+  margin: 0;
+  margin-right: 0.5rem;
 }
 
 .comment-date {
@@ -760,6 +823,43 @@ export default {
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.grade-display {
+  background-color: #007BF6;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.grade-label {
+  margin-right: 0.5rem;
+}
+
+.grade-value {
+  font-size: 1.1rem;
+}
+
+.feedback-container {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #007BF6;
+}
+
+.feedback-container h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #333;
 }
 
 .delete-btn {
@@ -824,48 +924,69 @@ export default {
 }
 
 .comment-avatar {
-  width: 40px;
-  height: 40px;
-  background-color: #e9ecef;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .comment-avatar i {
-  font-size: 20px;
-  color: #6c757d;
+    font-size: 20px;
+    color: #6c757d;
+}
+
+.comment-content {
+    flex: 1;
 }
 
 .comment-header {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.comment-header h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    margin-right: 0.5rem;
 }
 
 .comment-date {
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
-  color: #6c757d;
+    font-size: 0.8rem;
+    color: #6c757d;
 }
 
 .delete-comment-btn {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: #dc3545;
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 0.2s;
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    opacity: 0.5;
+    padding: 0.25rem;
+    font-size: 0.8rem;
 }
 
 .delete-comment-btn:hover {
-  opacity: 1;
+    opacity: 1;
 }
 
 .comment-text {
   margin-top: 0.5rem;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.comments-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  border-radius: 8px;
 }
 </style>

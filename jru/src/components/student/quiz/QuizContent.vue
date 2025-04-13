@@ -10,7 +10,6 @@
         </div>
 
         <div class="quizzes-hero">
-          <!-- Left Side: Quiz Summary Cards -->
           <div class="content-left">
             <section class="quizzes-cards">
               <div class="quizzes-card">
@@ -25,7 +24,6 @@
             </section>
           </div>
 
-          <!-- Right Side: Quiz List -->
           <div class="content-right">
             <h3>Quizzes:</h3>
             <div class="quiz-cards">
@@ -39,6 +37,7 @@
                   <h4>Teacher posted a quiz:</h4>
                   {{ quiz.title }}
                 </div>
+                
               </div>
             </div>
             <p v-if="!quizzes.length">No quizzes available.</p>
@@ -128,13 +127,11 @@ export default {
         console.log("Fetched Quizzes:", response.data);
         
         if (response.data) {
-          // Initialize quizzes with completed property set to false
           this.quizzes = (response.data.quizzes || []).map(quiz => ({
             ...quiz,
             completed: false
           }));
           
-          // Check for submission status on each quiz
           if (this.quizzes.length > 0) {
             for (let i = 0; i < this.quizzes.length; i++) {
               try {
@@ -142,14 +139,11 @@ export default {
                   `http://127.0.0.1:8000/api/quiz-submission/${this.quizzes[i].quiz_id}/${this.studentId}`
                 );
                 
-                // If we get a successful response, mark the quiz as completed
                 if (submissionResponse.data && submissionResponse.data.submission_id) {
                   this.quizzes[i].completed = true;
                 }
               } catch (error) {
-                // If error is 404, it means no submission exists
                 if (error.response && error.response.status === 404) {
-                  // Keep it as false (already set above)
                 } else {
                   console.error(`Error fetching submission for quiz ${this.quizzes[i].quiz_id}:`, error);
                 }
@@ -177,6 +171,9 @@ export default {
     },
     toggleSidebar() {
       this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    },
+    isExternalLink(path) {
+      return path && (path.startsWith('http://') || path.startsWith('https://'));
     },
   },
 };
@@ -207,6 +204,7 @@ export default {
   padding: 20px;
   border-radius: 10px;
   background-color: #d9d9d9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .quizzes-header h2 {
@@ -242,6 +240,7 @@ export default {
   background: #d9d9d9;
   cursor: pointer;
   color: black;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-weight: bold;
   transition: transform 0.3s ease;
 }
@@ -311,6 +310,28 @@ h3 {
   font-size: 1.2rem;
   font-weight: 500;
   color: #333;
+}
+
+.card-icons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.icon-container.completed {
+  background-color: #4caf50;
+  color: white;
 }
 
 @media (max-width: 768px) {

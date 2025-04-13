@@ -13,7 +13,6 @@
             <i class="pi pi-bell notification-icon" @click="toggleNotifications"></i>
             <span v-if="unreadNotifications.length > 0" class="notification-badge">{{ unreadNotifications.length }}</span>
             
-            <!-- Notification Dropdown -->
             <div v-if="showNotifications" class="notification-dropdown">
               <div class="notification-header">
                 <h3>Notifications</h3>
@@ -55,7 +54,6 @@
       </div>
     </div>
 
-    <!-- Profile Modal -->
     <ProfileModal 
       v-if="isProfileModalOpen" 
       :user="user" 
@@ -110,7 +108,6 @@ export default {
     toggleNotifications() {
       this.showNotifications = !this.showNotifications;
       if (!this.showNotifications) {
-        // When closing, update the last checked time
         this.lastChecked = new Date();
         localStorage.setItem('lastNotificationCheck', this.lastChecked.toISOString());
       }
@@ -144,25 +141,20 @@ export default {
       try {
         if (!this.user) return;
         
-        // Get stored notifications or initialize empty array
         const storedNotifications = localStorage.getItem('notifications');
         if (storedNotifications) {
           this.notifications = JSON.parse(storedNotifications);
         }
         
-        // If user is a student, fetch upcoming events for all enrolled courses
         if (this.user.role === 'student') {
           await this.fetchStudentEventNotifications();
         }
-        // If user is a faculty, fetch their relevant notifications
         else if (this.user.role === 'faculty') {
           await this.fetchFacultyNotifications();
         }
         
-        // Sort notifications by time (newest first)
         this.notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
         
-        // Save to local storage
         localStorage.setItem('notifications', JSON.stringify(this.notifications));
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -170,18 +162,15 @@ export default {
     },
     async fetchStudentEventNotifications() {
       try {
-        // Get student enrolled courses
         const courseResponse = await axios.get(`http://127.0.0.1:8000/api/student_courses/${this.user.user_id}`);
         
         if (courseResponse.data && courseResponse.data.courses) {
           const courses = courseResponse.data.courses;
           
-          // Fetch events for each course
           for (const course of courses) {
             const eventsResponse = await axios.get(`http://127.0.0.1:8000/api/events/course/${course.course_id}`);
             
             if (eventsResponse.data && eventsResponse.data.length > 0) {
-              // Filter upcoming events (next 7 days)
               const now = new Date();
               const nextWeek = new Date();
               nextWeek.setDate(nextWeek.getDate() + 7);
@@ -191,15 +180,12 @@ export default {
                 return eventDate >= now && eventDate <= nextWeek;
               });
               
-              // Create notifications for upcoming events
               for (const event of upcomingEvents) {
-                // Check if we already have this notification
                 const existingNotif = this.notifications.find(n => 
                   n.eventId === event.event_id && n.type === event.type
                 );
                 
                 if (!existingNotif) {
-                  // Create a new notification
                   this.notifications.push({
                     id: `event-${event.event_id}`,
                     title: `Upcoming ${event.type}: ${event.title}`,
@@ -222,11 +208,6 @@ export default {
     },
     async fetchFacultyNotifications() {
       try {
-        // Similar implementation for faculty notifications
-        // This could include upcoming classes, submission deadlines, etc.
-        // For now, we'll add a placeholder
-        
-        // Check if we already have this notification
         const existingNotif = this.notifications.find(n => n.id === 'faculty-welcome');
         
         if (!existingNotif) {
@@ -249,23 +230,18 @@ export default {
         read: true
       }));
       
-      // Update local storage
       localStorage.setItem('notifications', JSON.stringify(this.notifications));
     },
     handleNotificationClick(notification) {
-      // Mark this notification as read
       notification.read = true;
       
-      // Update local storage
       localStorage.setItem('notifications', JSON.stringify(this.notifications));
       
-      // Handle routing based on notification type
       if (notification.type === 'event' || notification.type === 'class' || 
           notification.type === 'quiz' || notification.type === 'exam' ||
           notification.type === 'assignment') {
         
         if (this.user.role === 'student') {
-          // If it has a courseId, navigate to that course's calendar
           if (notification.courseId) {
             this.$router.push(`/student/course/${notification.courseId}/calendar`);
           } else {
@@ -276,26 +252,21 @@ export default {
         }
       }
       
-      // Close the notification panel
       this.showNotifications = false;
     }
   },
   mounted() {
-    // Get user data
     const userData = localStorage.getItem("user");
     if (userData) {
       this.user = JSON.parse(userData);
       
-      // Fetch notifications after getting user data
       this.fetchNotifications();
       
-      // Set up a timer to periodically check for new notifications
       setInterval(() => {
         this.fetchNotifications();
-      }, 60000); // Check every minute
+      }, 60000);
     }
     
-    // Close notifications dropdown when clicking outside
     document.addEventListener('click', (e) => {
       const notificationElement = this.$el.querySelector('.notification-wrapper');
       if (notificationElement && !notificationElement.contains(e.target)) {
@@ -320,32 +291,32 @@ export default {
 .header-content {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Ensure space between left and right sections */
+  justify-content: space-between;
 }
 
 .header-left {
   display: flex;
-  align-items: center; /* Align toggle and logo vertically */
+  align-items: center;
 }
 
 .sidebar-toggle {
-  color: rgba(0, 0, 0, 0.932); /* Text color */
-  background-color: transparent; /* Transparent background */
-  border: none; /* Remove border */
-  padding: 0px; /* Padding for the button */
-  cursor: pointer; /* Pointer cursor on hover */
-  font-size: 25px; /* Font size for the toggle icon */
+  color: rgba(0, 0, 0, 0.932);
+  background-color: transparent;
+  border: none;
+  padding: 0px;
+  cursor: pointer;
+  font-size: 25px;
   font-weight: 900;
-  transition: background-color 0.3s; /* Smooth transition */
+  transition: background-color 0.3s;
 }
 
 .sidebar-toggle:hover {
-  background-color: rgba(0, 0, 0, 0.1); /* Light background on hover */
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .logo {
   display: flex;
-  margin-left: 10px; /* Add some spacing from the toggle button */
+  margin-left: 10px;
 }
 
 .header-right {
@@ -578,7 +549,7 @@ export default {
 
 .logo-text {
   font-family: 'Inknut Antiqua', serif;
-  font-size: 30px; /* Increase the font size to make the logo text bigger */
+  font-size: 30px;
   font-weight: bolder;
   color: white;
   text-shadow: 
@@ -590,7 +561,7 @@ export default {
     0px -1px 0 #034694,
     1px 0px 0 #034694,
     -1px 0px 0 #034694;
-  line-height: 1.2; /* Adjust line-height for better spacing */
+  line-height: 1.2;
 }
 
 .notification-icon {

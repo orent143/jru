@@ -64,12 +64,11 @@ export default {
                     password: this.password
                 });
 
-                console.log("🔹 Backend Response:", response.data); // Debugging log
+                console.log("🔹 Backend Response:", response.data);
 
                 if (response.data.access_token) {
-                    console.log("✅ Login successful, storing user data...");
+                    console.log("Login successful, storing user data...");
 
-                    // Store complete user data before verification
                     localStorage.setItem('tempUserData', JSON.stringify({
                         user_id: response.data.user_id,
                         name: response.data.name,
@@ -79,17 +78,16 @@ export default {
                         courses: response.data.courses
                     }));
 
-                    // Redirect to verification page
                     this.$router.push({
                         name: 'VerifyCode',
                         query: { email: this.email }
-                    }).catch(err => console.error("❌ Navigation Error:", err));
+                    }).catch(err => console.error("Navigation Error:", err));
                 } else {
-                    console.log("⚠️ Unexpected response:", response.data);
+                    console.log("Unexpected response:", response.data);
                     this.errorMessage = "Unexpected response. Please try again.";
                 }
             } catch (error) {
-                console.error("❌ Login error:", error.response ? error.response.data : error);
+                console.error(" Login error:", error.response ? error.response.data : error);
                 this.errorMessage = error.response?.data?.detail || "Invalid email or password";
             } finally {
                 this.loading = false;

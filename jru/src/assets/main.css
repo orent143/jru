@@ -25,10 +25,8 @@ a,
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden; /* 👈 prevents sidewards scroll */
-
+  height: 100%; /* 👈 prevents sidewards scroll */
+  overflow-x: hidden;
 }
 /* #app takes up full viewport */
 #app {

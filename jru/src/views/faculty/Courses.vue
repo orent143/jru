@@ -59,7 +59,6 @@
         </div>
     </div>
 
-    <!-- Add confirmation modals -->
     <ConfirmationModal
         :show="showCreateConfirmation"
         title="Create Course"
@@ -90,7 +89,7 @@
 
 <script>
 import axios from 'axios';
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification';
 import Header from '@/components/header.vue';
 import SideBar from '@/components/faculty/SideBar.vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -241,7 +240,7 @@ export default {
     mounted() {
         setTimeout(() => {
             this.fetchCourses();
-        }, 500); // Adjust delay if needed
+        }, 500);
     }
 };
 </script>
@@ -262,8 +261,8 @@ export default {
     flex-grow: 1;
     padding: 20px;
     background-color: #fff;
-    overflow-y: auto; /* Allow vertical scrolling if the content is too long */
-    max-height: 100vh; /* Make sure it doesn't overflow out of the screen */
+    overflow-y: auto;
+    max-height: 100vh;
 }
 .courses {
     margin-bottom: 5rem;
@@ -281,8 +280,8 @@ export default {
 
 .course-cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 items per row */
-    gap: 4rem; /* Adds space between cards */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4rem;
 }
 
 .course-card {
@@ -293,17 +292,17 @@ export default {
     flex-direction: column;
     width: 95%;
     height: auto;
-    cursor: pointer; /* Change the cursor to a pointer to indicate the card is clickable */
-    transition: transform 0.2s, box-shadow 0.2s; /* Add a transition effect for hover */
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .course-card:hover {
-    transform: scale(1.05); /* Slightly increase the size of the card on hover */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Add a shadow to the card on hover */
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .card-header {
-    position: relative; /* Needed for absolute positioning of card actions */
+    position: relative;
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
@@ -321,7 +320,7 @@ export default {
 }
 
 .card-actions {
-    position: absolute; /* Position the actions at the top-right corner */
+    position: absolute;
     top: 10px;
     right: 10px;
     display: flex;
@@ -384,8 +383,8 @@ export default {
     width: 400px;
     max-width: 100%;
     z-index: 1000; 
-    max-height: 80vh; /* Limit the height of the modal */
-    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .modal-content h2 {

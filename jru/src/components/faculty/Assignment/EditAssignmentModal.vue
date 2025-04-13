@@ -4,23 +4,24 @@
       <div class="modal-content">
         <span class="close" @click="closeModal">&times;</span>
         <h2>Edit Assignment</h2>
-        
+
         <label for="title">Assignment Title:</label>
         <input v-model="title" type="text" placeholder="Enter Title" required />
-  
+
         <label for="description">Assignment Description:</label>
         <textarea v-model="description" placeholder="Enter Description"></textarea>
-  
+
         <label for="due_date">Due Date:</label>
         <input v-model="due_date" type="date" required />
-  
+
         <label for="file-upload">Upload New File (Optional):</label>
         <input type="file" @change="handleFileUpload" />
         <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
 
         <label for="external-link">External Link (Optional):</label>
         <input v-model="externalLink" type="url" placeholder="Enter external link (if any)" />
-  
+
+
         <button @click="confirmEditAssignment" :disabled="isSubmitting">Update Assignment</button>
       </div>
     </div>
@@ -73,7 +74,7 @@ export default {
           this.title = newVal.title;
           this.description = newVal.description;
           this.due_date = newVal.due_date;
-          this.externalLink = newVal.external_link || "";
+          this.externalLink = newVal.file_path?.startsWith('http') ? newVal.file_path : "";
         }
       }
     }
@@ -81,14 +82,15 @@ export default {
   methods: {
     handleFileUpload(event) {
       this.file = event.target.files[0];
-      this.fileName = this.file ? this.file.name : "";
+      this.fileName = this.file?.name || "";
     },
+
 
     confirmEditAssignment() {
       const toast = useToast();
 
       if (!this.title || !this.description || !this.due_date) {
-        toast.error('Please fill in all required fields.');
+        toast.error("Please fill in all required fields.");
         return;
       }
 
@@ -104,9 +106,8 @@ export default {
     },
 
     async handleAssignmentUpdate() {
-      this.showConfirmation = false;
       const toast = useToast();
-
+      this.showConfirmation = false;
       this.isSubmitting = true;
 
       const formData = new FormData();
@@ -114,31 +115,34 @@ export default {
       formData.append("description", this.pendingAssignment.description);
       formData.append("due_date", this.pendingAssignment.due_date);
 
-      if (this.pendingAssignment.file) {
-        formData.append("file", this.pendingAssignment.file);
-      }
+      let newFilePath = this.assignment.file_path;
 
       if (this.pendingAssignment.externalLink) {
         formData.append("external_link", this.pendingAssignment.externalLink);
+        newFilePath = this.pendingAssignment.externalLink;
+      } else if (this.pendingAssignment.file) {
+        formData.append("file", this.pendingAssignment.file);
+        newFilePath = "updated"; // placeholder
       }
 
       try {
         await axios.put(`http://127.0.0.1:8000/api/assignments/${this.assignment.assignment_id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { "Content-Type": "multipart/form-data" }
         });
 
-        toast.success('Assignment updated successfully!');
+        toast.success("Assignment updated successfully!");
         this.$emit("update-assignment", {
           ...this.assignment,
           title: this.pendingAssignment.title,
           description: this.pendingAssignment.description,
           due_date: this.pendingAssignment.due_date,
-          external_link: this.pendingAssignment.externalLink
+          file_path: newFilePath
         });
+
         this.closeModal();
       } catch (error) {
         console.error("Error updating assignment:", error);
-        toast.error('Failed to update assignment.');
+        toast.error("Failed to update assignment.");
       } finally {
         this.isSubmitting = false;
       }

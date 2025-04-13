@@ -2,7 +2,7 @@
   <div v-if="show" class="modal">
       <div class="modal-content">
           <h2>Edit User</h2>
-          <form @submit.prevent="handleSubmit">
+          <form @submit.prevent="confirmSubmit">
               <div class="form-group">
                   <label for="name">Name</label>
                   <input type="text" id="name" v-model="formData.name" required />
@@ -22,6 +22,11 @@
                   </select>
               </div>
 
+              <div class="form-group" v-if="formData.role === 'student'">
+                  <label for="degree">Degree</label>
+                  <input type="text" id="degree" v-model="formData.degree" required />
+              </div>
+
               <div class="modal-actions">
                   <button type="button" class="cancel-btn" @click="close">Cancel</button>
                   <button type="submit" class="save-btn">Save Changes</button>
@@ -29,21 +34,43 @@
           </form>
       </div>
   </div>
+
+  <!-- Confirmation Modal -->
+  <ConfirmationModal
+      :show="showConfirmModal"
+      title="Confirm Update"
+      :message="`Are you sure you want to update ${formData.name}'s information?`"
+      confirm-text="Update User"
+      type="primary"
+      @confirm="handleSubmit"
+      @cancel="showConfirmModal = false"
+  />
 </template>
 
 <script>
 import axios from 'axios';
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
 name: 'EditUser',
+components: {
+  ConfirmationModal
+},
 props: {
   show: { type: Boolean, required: true },
   user: { type: Object, required: true }
 },
 data() {
   return {
-    formData: { name: '', email: '', role: '' }
+    formData: { 
+      name: '', 
+      email: '', 
+      role: '',
+      degree: '' 
+    },
+    showConfirmModal: false,
+    isSubmitting: false
   };
 },
 watch: {
@@ -57,33 +84,82 @@ watch: {
   }
 },
 setup() {
-  const toast = useToast(); // Initialize toast
-
+  const toast = useToast();
   return { toast };
 },
 methods: {
+  confirmSubmit() {
+    if (!this.validateForm()) return;
+    this.showConfirmModal = true;
+  },
+  validateForm() {
+    if (!this.formData.name.trim()) {
+      this.toast.error('Name is required');
+      return false;
+    }
+    if (!this.formData.email.trim()) {
+      this.toast.error('Email is required');
+      return false;
+    }
+    if (!this.formData.role) {
+      this.toast.error('Role is required');
+      return false;
+    }
+    if (this.formData.role === 'student' && !this.formData.degree?.trim()) {
+      this.toast.error('Degree is required for students');
+      return false;
+    }
+    return true;
+  },
   async handleSubmit() {
-    if (!this.user || !this.user.user_id) {
-      this.toast.error('User ID is missing or invalid.'); // Error toast
+    if (!this.user || !this.user.user_id || this.isSubmitting) {
+      this.toast.error('User ID is missing or invalid.');
       return;
     }
 
+    this.isSubmitting = true;
+
     try {
+      const payload = {
+        name: this.formData.name.trim(),
+        email: this.formData.email.trim(),
+        role: this.formData.role
+      };
+
+      if (this.formData.role === 'student') {
+        payload.degree = this.formData.degree?.trim();
+      }
+
       await axios.put(
         `http://127.0.0.1:8000/api/users/${this.user.user_id}`,
-        this.formData,
+        payload,
         { headers: { "Content-Type": "application/json" } }
       );
 
-      this.toast.success('User updated successfully!'); // Success toast
+      this.toast.success(`${this.formData.name}'s information has been updated successfully!`);
       this.$emit('update');
       this.close();
     } catch (error) {
       console.error("Error updating user:", error);
-      this.toast.error(error.response?.data?.detail || "Error updating user."); // Error toast
+      if (error.response) {
+        if (error.response.status === 422) {
+          const validationErrors = error.response.data.detail;
+          this.toast.error(`Validation Error: ${validationErrors.map(err => err.msg).join(', ')}`);
+        } else if (error.response.status === 409) {
+          this.toast.error(`A user with this email already exists.`);
+        } else {
+          this.toast.error(`Error: ${error.response.data.detail || 'An unexpected error occurred.'}`);
+        }
+      } else {
+        this.toast.error("Failed to connect to the server. Please try again.");
+      }
+    } finally {
+      this.isSubmitting = false;
+      this.showConfirmModal = false;
     }
   },
   close() {
+    this.showConfirmModal = false;
     this.$emit('close');
   }
 }

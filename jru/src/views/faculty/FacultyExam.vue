@@ -9,10 +9,8 @@
                         <h1>Exams</h1>
                     </div>
 
-                    <!-- Show loading message -->
                     <p v-if="loading">Loading exams...</p>
 
-                    <!-- Show error message if request fails -->
                     <p v-if="error" class="error">{{ error }}</p>
 
                     <div v-if="!loading && exams.length" class="exam-cards">
@@ -72,7 +70,7 @@ export default {
                 courseSection: '',
                 duration: ''
             },
-            user: null // Store logged-in user data
+            user: null
         };
     },
     methods: {
@@ -155,7 +153,6 @@ export default {
             }
         },
         async editExam(exam_id) {
-            // Placeholder for edit function (modal or inline editing can be added)
             console.log(`Edit exam ${exam_id}`);
         },
         startExam(examId, courseId) {
@@ -191,8 +188,8 @@ export default {
     flex-grow: 1;
     padding: 20px;
     background-color: #fff;
-    overflow-y: auto; /* Allow vertical scrolling if the content is too long */
-    max-height: 100vh; /* Make sure it doesn't overflow out of the screen */
+    overflow-y: auto;
+    max-height: 100vh;
 }
 .exams {
 margin-bottom: 5rem;

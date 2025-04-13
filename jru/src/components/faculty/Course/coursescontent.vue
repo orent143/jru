@@ -1,13 +1,10 @@
 <template>
   <div class="course-content-container">
-    <!-- Header Section -->
     <Header :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
 
     <div class="course-content">
-      <!-- Sidebar Section -->
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
 
-      <!-- Main Course Content Section -->
       <main class="course-main">
         <div class="course-header">
           <h2>{{ courseName || "Loading..." }} - Course Content</h2>
@@ -60,7 +57,6 @@
       </main>
     </div>
 
-    <!-- Add Material Modal -->
     <AddMaterialModal
       :courseId="courseId"
       v-if="showAddMaterialModal"
@@ -68,7 +64,6 @@
       @add-material="addMaterial"
     />
 
-    <!-- Reusable Confirmation Modal -->
     <ConfirmationModal
       :show="showDeleteConfirmation"
       title="Delete Material"

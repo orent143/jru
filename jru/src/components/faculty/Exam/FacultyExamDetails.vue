@@ -1,119 +1,114 @@
 <template>
-    <div class="course-content-container">
-      <Header
-        :teacher="teacher"
-        :searchQuery="searchQuery"
-        :student="student"
-        @toggleSidebar="toggleSidebar"
-      />
-  
-      <div class="course-content">
-        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-  
-        <div class="exam-detail-container" v-if="currentExam">
-          <button class="back-btn" @click="goBack">
-            <i class="pi pi-arrow-left"></i> Back to Exams
-          </button>
-  
-          <div class="exam-content">
-            <!-- Left/Main Content -->
-            <div class="main-content">
-              <div class="exam-header">
-                <div class="header-content">
-                  <h1>{{ currentExam.title }}</h1>
-                  <button class="edit-btn" @click="editExam">
-                    <i class="pi pi-pencil"></i> Edit
-                  </button>
-                </div>
-  
-                <div class="exam-meta">
-                  <span class="posted-date">
-                    <i class="pi pi-calendar"></i>
-                    Posted: {{ formatDate(currentExam.exam_date) }}
-                  </span>
-                </div>
+  <div class="course-content-container">
+    <Header
+      :teacher="teacher"
+      :searchQuery="searchQuery"
+      :student="student"
+      @toggleSidebar="toggleSidebar"
+    />
+
+    <div class="course-content">
+      <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+
+      <div class="exam-detail-container" v-if="currentExam">
+        <button class="back-btn" @click="goBack">
+          <i class="pi pi-arrow-left"></i> Back to Exams
+        </button>
+
+        <div class="exam-content">
+          <div class="main-content">
+            <div class="exam-header">
+              <div class="header-content">
+                <h1>{{ currentExam.title }}</h1>
+                <button class="edit-btn" @click="editExam">
+                  <i class="pi pi-pencil"></i> Edit
+                </button>
               </div>
-  
-              <div class="content-section-instructions">
-                <h2>Instructions:</h2>
-                <p>{{ currentExam.description }}</p>
+
+              <div class="exam-meta">
+                <span class="posted-date">
+                  <i class="pi pi-calendar"></i>
+                  When: {{ formatDate(currentExam.exam_date) }}
+                </span>
               </div>
-  
-              <!-- Exam Materials Section -->
-              <div
-                class="content-section uploaded-materials"
-                v-if="currentExam.file_path || currentExam.external_link"
-              >
-                <h2>Exam Materials:</h2>
-                <div class="materials-list">
-                  <div
-                    v-if="currentExam.file_path"
-                    class="material-item"
-                    @click="downloadAttachment(currentExam.file_path)"
-                  >
-                    <i class="pi pi-file"></i>
-                    <span>{{ getFileName(currentExam.file_path) }}</span>
-                    <i class="pi pi-download"></i>
-                  </div>
-  
-                  <div v-if="currentExam.external_link" class="material-item">
-                    <i class="pi pi-link"></i>
-                    <a :href="currentExam.external_link" target="_blank">
-                      {{ getFileName(currentExam.external_link) }}
-                    </a>
-                  </div>
+            </div>
+
+            <div class="content-section-instructions">
+              <h2>Instructions:</h2>
+              <p>{{ currentExam.description }}</p>
+            </div>
+
+            <div
+              class="content-section uploaded-materials"
+              v-if="currentExam.file_path"
+            >
+              <h2>Exam Materials:</h2>
+              <div class="materials-list">
+                <div
+                  v-if="isExternalLink(currentExam.file_path)"
+                  class="material-item"
+                >
+                  <i class="pi pi-link"></i>
+                  <a :href="currentExam.file_path" target="_blank">
+                    {{ getFileName(currentExam.file_path) }}
+                  </a>
+                </div>
+                <div
+                  v-else
+                  class="material-item"
+                  @click="downloadAttachment(currentExam.file_path)"
+                >
+                  <i class="pi pi-file"></i>
+                  <span>{{ getFileName(currentExam.file_path) }}</span>
+                  <i class="pi pi-download"></i>
                 </div>
               </div>
             </div>
-  
-            <!-- Right Side: Submissions & Comments -->
-            <div class="side-content">
-              <!-- Submissions Section -->
-              <div class="submission-container" v-if="submissions.length">
-                <div class="submission-header">
-                  <h2>Submissions</h2>
-                  <button class="view-all-btn" @click="viewAllSubmissions">
-                    <i class="pi pi-list"></i> View All Submissions
+          </div>
+
+          <div class="side-content">
+            <div class="submission-container" v-if="submissions.length">
+              <div class="submission-header">
+                <h2>Submissions</h2>
+                <button class="view-all-btn" @click="viewAllSubmissions">
+                  <i class="pi pi-list"></i> View All Submissions
+                </button>
+              </div>
+
+              <div class="submission-list">
+                <div
+                  class="submission-item"
+                  v-for="(submission, index) in submissions.slice(0, 3)"
+                  :key="submission.submissionId"
+                >
+                  <div class="student-info">
+                    <span>{{ submission.studentName }}</span>
+                    <span>{{ formatDate(submission.submissionDate) }}</span>
+                    <span :class="['status', submission.status.toLowerCase()]">
+                      {{ submission.status }}
+                    </span>
+                  </div>
+                </div>
+
+                <div v-if="submissions.length > 3" class="view-more">
+                  <button @click="viewAllSubmissions">
+                    View {{ submissions.length - 3 }} more submissions...
                   </button>
                 </div>
-  
-                <div class="submission-list">
-                  <div
-                    class="submission-item"
-                    v-for="(submission, index) in submissions.slice(0, 3)"
-                    :key="index"
-                  >
-                    <div class="student-info">
-                      <span>{{ submission.studentName }}</span>
-                      <span>{{ formatDate(submission.submissionDate) }}</span>
-                      <span :class="['status', submission.status.toLowerCase()]">
-                        {{ submission.status }}
-                      </span>
-                    </div>
-                  </div>
-  
-                  <div v-if="submissions.length > 3" class="view-more">
-                    <button @click="viewAllSubmissions">
-                      View {{ submissions.length - 3 }} more submissions...
-                    </button>
-                  </div>
-                </div>
               </div>
-  
-              <div class="comments-section">
+            </div>
+
+            <div class="comments-section">
               <h2>Comments</h2>
-<!-- Loading -->
-<div v-if="isLoadingComments" class="comments-loading">
+              <div v-if="isLoadingComments" class="comments-loading">
                 <div class="loading-spinner"></div>
                 <p>Loading comments...</p>
               </div>
 
-              <!-- No comments -->
               <div v-else-if="comments.length === 0" class="no-comments">
                 <p>No comments yet.</p>
               </div>
 
-              <!-- Comment List -->
               <div v-else class="comments-list">
                 <div
                   v-for="comment in comments"
@@ -143,7 +138,6 @@
                 </div>
               </div>
               
-              <!-- Input -->
               <div class="comment-input">
                 <textarea
                   v-model="newComment"
@@ -158,28 +152,24 @@
                   <i class="pi pi-send"></i> Post Comment
                 </button>
               </div>
-
-             
             </div>
-            </div> <!-- end of side-content -->
-          </div> <!-- end of exam-content -->
-        </div>
-  
-        <div v-else>
-          <p>No exam found.</p>
+          </div>
         </div>
       </div>
-  
-      <!-- Edit Modal -->
-      <EditExamModal
-        v-if="showEditModal"
-        :exam="currentExam"
-        @update-exam="handleExamUpdate"
-        @close="showEditModal = false"
-      />
+
+      <div v-else>
+        <p>No exam found.</p>
+      </div>
     </div>
-  </template>
-  
+
+    <EditExamModal
+      v-if="showEditModal"
+      :exam="currentExam"
+      @update-exam="handleExamUpdate"
+      @close="showEditModal = false"
+    />
+  </div>
+</template>
 
 <script>
 import axios from 'axios';
@@ -205,20 +195,7 @@ export default {
             examId: this.$route.params.examId,
             currentExam: null,
             showEditModal: false,
-            submissions: [
-                {
-                    studentName: 'John Doe',
-                    submissionDate: '2025-03-25',
-                    status: 'Submitted'
-                },
-                {
-                    studentName: 'Jane Smith',
-                    submissionDate: '2025-03-26',
-                    status: 'Pending'
-                }
-                // Add more dummy submissions as needed
-            ],
-            // Add comments-related data
+            submissions: [],
             comments: [],
             isLoadingComments: false,
             newComment: '',
@@ -235,7 +212,6 @@ export default {
                     return;
                 }
 
-                // Fetch exam data using the new API endpoint
                 const response = await axios.get(`http://127.0.0.1:8000/api/exams/item/${examId}`);
                 console.log("Fetched exam:", response.data);
 
@@ -245,15 +221,14 @@ export default {
                     console.error("Exam not found for given examId:", examId);
                 }
                 
-                // Fetch comments
                 await this.fetchComments();
+                await this.fetchSubmissions();
             } catch (error) {
                 console.error('Error fetching exam:', error);
                 this.toast.error('Failed to load exam details');
             }
         },
         
-        // Add comment-related methods
         async fetchComments() {
             try {
                 if (!this.currentExam?.exam_id) return;
@@ -268,6 +243,29 @@ export default {
                 console.error("Error fetching comments:", error);
                 this.toast.error("Failed to load comments");
                 this.isLoadingComments = false;
+            }
+        },
+        
+        async fetchSubmissions() {
+            try {
+                if (!this.currentExam?.exam_id) return;
+                
+                const response = await axios.get(
+                    `http://127.0.0.1:8000/api/exam-submissions/${this.currentExam.exam_id}`
+                );
+                
+                this.submissions = response.data.submissions.map(sub => ({
+                    submissionId: sub.submission_id,
+                    studentId: sub.student_id,
+                    studentName: sub.student_name,
+                    submissionDate: sub.submitted_at,
+                    status: sub.grade !== null ? 'Graded' : 'Submitted',
+                    grade: sub.grade,
+                    feedback: sub.feedback
+                }));
+            } catch (error) {
+                console.error("Error fetching submissions:", error);
+                this.toast.error("Failed to load exam submissions");
             }
         },
         
@@ -327,12 +325,9 @@ export default {
             return filePath ? filePath.split('/').pop() : 'Unknown File';
         },
         downloadAttachment(filePath) {
-            // Check if the file path is an external link
             if (filePath && filePath.startsWith("http")) {
-                // If it's an external link, open it in a new tab
                 window.open(filePath, "_blank");
             } else {
-                // For local file download
                 const downloadUrl = `http://127.0.0.1:8000/api/exams/download/${encodeURIComponent(filePath.split('/').pop())}`;
                 window.open(downloadUrl, '_blank');
             }
@@ -349,10 +344,17 @@ export default {
         handleExamUpdate(updatedExam) {
             this.currentExam = updatedExam;
             this.showEditModal = false;
+            
+            // Refetch exam details to ensure we have the latest data
+            setTimeout(() => {
+                this.fetchExam();
+            }, 500); // Add a small delay to ensure the backend has processed the update
+        },
+        isExternalLink(filePath) {
+            return filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'));
         }
     },
     mounted() {
-        // Get user data for comments
         const userData = localStorage.getItem("user");
         if (userData) {
             try {
@@ -368,17 +370,18 @@ export default {
 };
 </script>
 
-
 <style scoped>
 .course-content-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
 .course-content {
     display: flex;
     flex: 1;
+    overflow: hidden;
 }
 
 .exam-detail-container {
@@ -386,8 +389,10 @@ export default {
     padding: 1rem;
     max-width: 100%;
     margin: 0 auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 64px);
     background-color: #fff;
-    max-height: 100%;
+    position: relative;
 }
 
 .back-btn {
@@ -400,6 +405,10 @@ export default {
     margin-bottom: 1rem;
     padding: 0.5rem 1rem;
     border-radius: 4px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .back-btn:hover {
@@ -410,8 +419,7 @@ export default {
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 2rem;
-    height: auto;
-    margin-bottom: 5rem;
+    padding-bottom: 2rem;
 }
 
 .main-content {
@@ -428,7 +436,7 @@ export default {
 }
 
 .content-section-instructions h2{
-  font-weight: bold;
+    font-weight: bold;
     color: #212121;
 }
 .side-content {
@@ -475,7 +483,6 @@ export default {
     color: #212121;
 }
 
-
 .content-section h2 {
     margin-bottom: 1.5rem;
     font-size: 1.25rem;
@@ -492,17 +499,46 @@ export default {
     border-radius: 4px;
     margin-bottom: 0.5rem;
     cursor: pointer;
+    color: #212121;
 }
+
+.material-item a {
+    color: #007BF6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.material-item a:hover {
+    text-decoration: underline;
+}
+
+.material-item span {
+    color: #212121;
+    font-weight: 500;
+}
+
+.material-item i {
+    color: #444;
+    font-size: 1.25rem;
+}
+
+.content-section.uploaded-materials h2 {
+    font-weight: bold;
+    color: #212121;
+}
+
 .submission-container{
     padding: 1.5rem;
     border-radius: 8px;
-    min-height: 300px;
+    min-height: 200px;
+    max-height: 400px;
     background-color: #D9D9D9;
     color: #212121;
+    overflow-y: auto;
 }
 .submission-container h2{
-  font-weight: bold;
-  margin-bottom:10px;
+    font-weight: bold;
+    margin-bottom:10px;
 }
 .submission-stats {
     background-color: #D9D9D9;
@@ -558,6 +594,11 @@ export default {
     color: black;
 }
 
+.status.graded {
+    background-color: #007BF6;
+    color: white;
+}
+
 .submission-header {
     display: flex;
     justify-content: space-between;
@@ -599,7 +640,6 @@ export default {
     text-decoration: underline;
 }
 
-/* Add comments section styles */
 .comments-section {
     background-color: #D9D9D9;
     border-radius: 8px;
@@ -754,5 +794,12 @@ export default {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+.comments-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    border-radius: 8px;
 }
 </style>

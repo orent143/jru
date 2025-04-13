@@ -39,7 +39,6 @@
           </div>
         </div>
 
-        <!-- Enrollment Modal -->
         <div v-if="showEnrollModal" class="modal">
           <div class="modal-content">
             <span class="close" @click="showEnrollModal = false">&times;</span>
@@ -92,17 +91,16 @@ export default {
         const response = await axios.get(`http://127.0.0.1:8000/api/course_students/${courseId}`);
         console.log("Course students response:", response.data);
         
-        // Check if the response has the expected structure
         if (response.data && response.data.students) {
           this.students = response.data.students;
           console.log("Processed students:", this.students);
         } else {
           console.error("Unexpected response format:", response.data);
-          this.students = []; // Reset to empty array if format is unexpected
+          this.students = []; 
         }
       } catch (error) {
         console.error("Error fetching students:", error);
-        this.students = []; // Reset to empty array on error
+        this.students = []; 
       }
     },
 
@@ -110,13 +108,12 @@ export default {
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/students/`);
         this.allUsers = response.data;
-        console.log("Fetched users:", this.allUsers); // Add logging to debug
+        console.log("Fetched users:", this.allUsers); 
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     },
 
-    // Method to enroll student
     async enrollStudent() {
       if (!this.selectedUserId) return;
       const courseId = this.$route.params.courseId;
@@ -126,25 +123,24 @@ export default {
         course_id: courseId
       };
       
-      console.log("Enrolling student with payload:", payload); // Add logging
+      console.log("Enrolling student with payload:", payload); 
 
       try {
         const response = await axios.post("http://127.0.0.1:8000/api/student_courses/", payload);
-        console.log("Enrollment response:", response.data); // Add logging
+        console.log("Enrollment response:", response.data);
         if (response.status === 200) {
           alert(response.data.message);
-          this.fetchStudents(); // Refresh student list after enrollment
-          this.showEnrollModal = false; // Close the modal
+          this.fetchStudents(); 
+          this.showEnrollModal = false; 
         }
       } catch (error) {
         console.error("Error enrolling student:", error);
         if (error.response && error.response.data.detail) {
-          alert(error.response.data.detail); // Show error message if any
+          alert(error.response.data.detail);
         }
       }
     },
 
-    // Method to delete student
     async deleteStudent(studentId) {
       if (!studentId) {
         console.error("No student ID provided for deletion");
@@ -158,12 +154,10 @@ export default {
         const response = await axios.delete(`http://127.0.0.1:8000/api/student_courses/${studentId}/${courseId}`);
         console.log("Remove response:", response.data);
         
-        // Show success message
         if (response.data && response.data.message) {
           alert(response.data.message);
         }
         
-        // Refresh the student list after successful removal
         await this.fetchStudents();
       } catch (error) {
         console.error("Error removing student from course:", error);

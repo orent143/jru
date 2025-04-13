@@ -16,7 +16,6 @@
         </button>
 
         <div class="assignment-content">
-          <!-- Left/Main Content -->
           <div class="main-content">
             <div class="assignment-header">
               <div class="header-content">
@@ -43,13 +42,21 @@
 
             <div
               class="content-section uploaded-materials"
-              v-if="currentAssignment.file_path || currentAssignment.external_link"
+              v-if="currentAssignment.file_path"
             >
-              <h2>Assignment Materials</h2>
+              <h2>Assignment Materials:</h2>
               <div class="materials-list">
-                <!-- File download -->
                 <div
-                  v-if="currentAssignment.file_path"
+                  v-if="isExternalLink(currentAssignment.file_path)"
+                  class="material-item"
+                >
+                  <i class="pi pi-link"></i>
+                  <a :href="currentAssignment.file_path" target="_blank">
+                    {{ currentAssignment.file_path }}
+                  </a>
+                </div>
+                <div
+                  v-else
                   class="material-item"
                   @click="downloadAttachment(currentAssignment.file_path)"
                 >
@@ -57,21 +64,11 @@
                   <span>{{ getFileName(currentAssignment.file_path) }}</span>
                   <i class="pi pi-download"></i>
                 </div>
-
-                <!-- External link -->
-                <div v-if="currentAssignment.external_link" class="material-item">
-                  <i class="pi pi-link"></i>
-                  <a :href="currentAssignment.external_link" target="_blank">
-                    {{ getFileName(currentAssignment.external_link) }}
-                  </a>
-                </div>
               </div>
             </div>
           </div>
 
-          <!-- Right Side Content -->
           <div class="side-content">
-            <!-- Submissions -->
             <div class="submission-container" v-if="submissions.length">
               <div class="submission-header">
                 <h2>Submissions:</h2>
@@ -84,7 +81,7 @@
                 <div
                   class="submission-item"
                   v-for="(submission, index) in submissions"
-                  :key="index"
+                  :key="submission.submissionId"
                 >
                   <div class="student-info">
                     <span>{{ submission.studentName }}</span>
@@ -97,21 +94,17 @@
               </div>
             </div>
 
-            <!-- Comments -->
             <div class="comments-section">
               <h2>Comments</h2>
-<!-- Loading -->
 <div v-if="isLoadingComments" class="comments-loading">
                 <div class="loading-spinner"></div>
                 <p>Loading comments...</p>
               </div>
 
-              <!-- No comments -->
               <div v-else-if="comments.length === 0" class="no-comments">
                 <p>No comments yet.</p>
               </div>
 
-              <!-- Comment List -->
               <div v-else class="comments-list">
                 <div
                   v-for="comment in comments"
@@ -141,7 +134,6 @@
                 </div>
               </div>
               
-              <!-- Input -->
               <div class="comment-input">
                 <textarea
                   v-model="newComment"
@@ -159,12 +151,11 @@
 
              
             </div>
-          </div> <!-- end of side-content -->
-        </div> <!-- end of assignment-content -->
-      </div> <!-- end of assignment-detail-container -->
-    </div> <!-- end of course-content -->
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Edit Modal -->
     <EditAssignmentModal
       v-if="showEditModal"
       :assignment="currentAssignment"
@@ -200,19 +191,7 @@ export default {
       courses: [],
       currentAssignment: null,
       showEditModal: false,
-      submissions: [
-        {
-          studentName: 'John Doe',
-          submissionDate: '2025-03-25',
-          status: 'Submitted'
-        },
-        {
-          studentName: 'Jane Smith',
-          submissionDate: '2025-03-26',
-          status: 'Pending'
-        }
-      ],
-      // Add comments-related data
+      submissions: [],
       comments: [],
       isLoadingComments: false,
       newComment: '',
@@ -224,21 +203,42 @@ export default {
       try {
         const assignmentId = this.$route.params.assignmentId;
         const response = await axios.get(`http://127.0.0.1:8000/api/assignments/item/${assignmentId}`);
-        // Ensure file path uses forward slashes
         this.currentAssignment = response.data;
         if (this.currentAssignment.file_path) {
-          this.currentAssignment.file_path = this.currentAssignment.file_path.replace(/\\+/g, '/'); // Normalize file URL path
+          this.currentAssignment.file_path = this.currentAssignment.file_path.replace(/\\+/g, '/');
         }
         
-        // Fetch comments
         await this.fetchComments();
+        await this.fetchSubmissions();
       } catch (error) {
         console.error('Error fetching assignment:', error);
         this.toast.error('Failed to load assignment details');
       }
     },
     
-    // Add comment-related methods
+    async fetchSubmissions() {
+      try {
+        if (!this.currentAssignment?.assignment_id) return;
+        
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/assignment_submissions/${this.currentAssignment.assignment_id}`
+        );
+        
+        this.submissions = response.data.submissions.map(sub => ({
+          submissionId: sub.submission_id,
+          studentId: sub.student_id,
+          studentName: sub.student_name,
+          submissionDate: sub.submitted_at,
+          status: sub.grade !== null ? 'Graded' : 'Submitted',
+          grade: sub.grade,
+          feedback: sub.feedback
+        }));
+      } catch (error) {
+        console.error("Error fetching submissions:", error);
+        this.toast.error("Failed to load assignment submissions");
+      }
+    },
+    
     async fetchComments() {
       try {
         if (!this.currentAssignment?.assignment_id) return;
@@ -305,8 +305,11 @@ export default {
     getFileName(fileUrl) {
       return fileUrl ? fileUrl.split('/').pop() : 'Unknown File';
     },
+    isExternalLink(filePath) {
+      return filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'));
+    },
     downloadAttachment(fileUrl) {
-      if (fileUrl && fileUrl.startsWith('http')) {
+      if (this.isExternalLink(fileUrl)) {
         window.open(fileUrl, '_blank');
       } else {
         const downloadUrl = `http://127.0.0.1:8000/api/assignments/download/${encodeURIComponent(fileUrl.split('/').pop())}`;
@@ -320,7 +323,6 @@ export default {
       this.$router.push(`/edit-assignment/${this.currentAssignment.assignment_id}`);
     },
     viewAllSubmissions() {
-      // Navigate to the FacultyAssignmentSubmissions route
       this.$router.push({
         name: 'FacultyAssignmentSubmissions',
         params: {
@@ -335,7 +337,6 @@ export default {
     }
   },
   mounted() {
-    // Get user data for comments
     const userData = localStorage.getItem("user");
     if (userData) {
       try {
@@ -356,11 +357,13 @@ export default {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
 .course-content {
     display: flex;
     flex: 1;
+    overflow: hidden;
 }
 
 .assignment-detail-container {
@@ -368,8 +371,10 @@ export default {
     padding: 1rem;
     max-width: 100%;
     margin: 0 auto;
-    max-height: 100%;
-    background-color:#fff;
+    overflow-y: auto;
+    max-height: calc(100vh - 64px);
+    background-color: #fff;
+    position: relative;
 }
 
 .back-btn {
@@ -382,6 +387,10 @@ export default {
     margin-bottom: 1rem;
     padding: 0.5rem 1rem;
     border-radius: 4px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .back-btn:hover {
@@ -392,8 +401,7 @@ export default {
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 2rem;
-    height: auto;
-    margin-bottom: 5rem;
+    padding-bottom: 2rem;
 }
 
 .main-content {
@@ -474,13 +482,42 @@ export default {
     border-radius: 4px;
     margin-bottom: 0.5rem;
     cursor: pointer;
+    color: #212121;
 }
+
+.material-item a {
+    color: #007BF6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.material-item a:hover {
+    text-decoration: underline;
+}
+
+.material-item span {
+    color: #212121;
+    font-weight: 500;
+}
+
+.material-item i {
+    color: #444;
+    font-size: 1.25rem;
+}
+
+.content-section.uploaded-materials h2 {
+    font-weight: bold;
+    color: #212121;
+}
+
 .submission-container{
     padding: 1.5rem;
     border-radius: 8px;
-    min-height: 300px;
+    min-height: 200px;
+    max-height: 400px;
     background-color: #D9D9D9;
     color: #212121;
+    overflow-y: auto;
 }
 
 .submission-header {
@@ -565,7 +602,11 @@ export default {
     color: black;
 }
 
-/* Add comments section styles */
+.status.graded {
+    background-color: #007BF6;
+    color: white;
+}
+
 .comments-section {
   background-color: #D9D9D9;
   border-radius: 8px;
@@ -720,5 +761,12 @@ export default {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.comments-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    border-radius: 8px;
 }
 </style>

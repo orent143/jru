@@ -60,11 +60,11 @@
                 </div>
 
                 <div v-if="submission.file_path" class="file-content">
-                  <h3>File Submission</h3>
+                  <h3>{{ isExternalLink(submission.file_path) ? 'External Link' : 'File Submission' }}</h3>
                   <div class="file-preview">
                     <div class="file-info">
-                      <i class="pi pi-file"></i>
-                      <span class="file-name">{{ getFileName(submission.file_path) }}</span>
+                      <i :class="isExternalLink(submission.file_path) ? 'pi pi-link' : 'pi pi-file'"></i>
+                      <span class="file-name">{{ isExternalLink(submission.file_path) ? submission.file_path : getFileName(submission.file_path) }}</span>
                     </div>
                     <div class="file-actions">
                       <a v-if="isExternalLink(submission.file_path)" 
@@ -90,20 +90,7 @@
                   </div>
                 </div>
 
-                <div v-if="submission.external_link" class="link-content">
-                  <h3>External Link</h3>
-                  <div class="link-preview">
-                    <div class="link-info">
-                      <i class="pi pi-external-link"></i>
-                      <span class="link-url">{{ submission.external_link }}</span>
-                    </div>
-                    <a :href="submission.external_link" target="_blank" class="external-link">
-                      <i class="pi pi-external-link"></i> Open Link
-                    </a>
-                  </div>
-                </div>
-
-                <div v-if="!submission.submission_text && !submission.file_path && !submission.external_link" class="no-content">
+                <div v-if="!submission.submission_text && !submission.file_path" class="no-content">
                   <p>No submission content available.</p>
                 </div>
               </div>

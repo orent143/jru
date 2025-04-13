@@ -52,14 +52,12 @@
         </div>
         </div>
 
-        <!-- Loading Indicator -->
         <div v-if="isLoading" class="loading-container">
           <div class="loading-spinner"></div>
           <p>Loading events...</p>
         </div>
 
         <div v-else class="schedule-grid">
-          <!-- Week Day Headers -->
           <div class="schedule-weekdays">
             <div class="time-column"></div>
             <div v-for="(day, index) in weekDays" :key="index" class="weekday-column">
@@ -70,7 +68,6 @@
             </div>
           </div>
 
-          <!-- Schedule Time Grid -->
           <div class="schedule-times">
             <div class="time-slots">
               <div v-for="hour in timeSlots" :key="hour" class="time-slot">
@@ -78,9 +75,7 @@
               </div>
             </div>
 
-            <!-- Day Columns -->
             <div v-for="(day, dayIndex) in weekDays" :key="dayIndex" class="day-column">
-              <!-- All day events for this day -->
               <div class="all-day-events">
                 <div 
                   v-for="event in getAllDayEventsForDate(day.date)" 
@@ -98,7 +93,6 @@
                 :key="`${dayIndex}-${hour}`" 
                 class="hour-cell"
               >
-                <!-- Events in this time slot -->
                 <div 
                   v-for="event in getEventsForTimeSlot(day.date, hour)" 
                   :key="event.event_id"
@@ -118,7 +112,6 @@
       </div>
     </div>
 
-    <!-- Event Details Modal -->
     <div v-if="showEventDetailsModal" class="modal">
       <div class="modal-content">
         <span class="close" @click="closeEventDetailsModal">&times;</span>
@@ -192,7 +185,7 @@ export default {
       events: [],
       currentDate: new Date(),
       weekStartDate: null,
-      timeSlots: Array.from({ length: 14 }, (_, i) => i + 7), // 7 AM to 8 PM
+      timeSlots: Array.from({ length: 14 }, (_, i) => i + 7), 
       selectedCourse: null,
       selectedType: 'all',
       weekDays: [],
@@ -249,10 +242,8 @@ export default {
   },
   watch: {
     selectedCourse() {
-      // Re-render schedule when filter changes
     },
     selectedType() {
-      // Re-render schedule when filter changes
     }
   },
   mounted() {
@@ -267,12 +258,10 @@ export default {
     },
     initializeWeek() {
       const today = new Date();
-      // Set to the beginning of the current week (Sunday)
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek;
       this.weekStartDate = new Date(today.setDate(diff));
       
-      // Generate the week days
       this.generateWeekDays();
     },
     generateWeekDays() {
@@ -289,7 +278,6 @@ export default {
         });
       }
       
-      // Log info about events in the current week for debugging
       const weekStart = new Date(this.weekStartDate);
       const weekEnd = new Date(this.weekStartDate);
       weekEnd.setDate(weekEnd.getDate() + 6);
@@ -338,12 +326,10 @@ export default {
       if (!timeString || typeof timeString !== 'string') return '';
       
       try {
-        // Parse the time (e.g., "14:30:00" to "2:30 PM")
         const [hours, minutes] = timeString.split(':');
         const hour = parseInt(hours, 10);
         const minute = parseInt(minutes, 10);
         
-        // Check if the parsing was successful
         if (isNaN(hour) || isNaN(minute)) return timeString;
         
         const period = hour >= 12 ? 'PM' : 'AM';
@@ -352,7 +338,7 @@ export default {
         return `${formattedHour}:${minute.toString().padStart(2, '0')} ${period}`;
       } catch (error) {
         console.error('Error formatting time:', error);
-        return timeString; // Return the original string if formatting fails
+        return timeString; 
       }
     },
     formatEventType(type) {
@@ -371,7 +357,6 @@ export default {
       return this.filteredEvents.filter(event => {
         const eventDate = new Date(event.date);
         
-        // Check if event is on this day
         if (
           eventDate.getDate() !== date.getDate() ||
           eventDate.getMonth() !== date.getMonth() ||
@@ -380,18 +365,14 @@ export default {
           return false;
         }
         
-        // If event has no time or time is not a string, return false
         if (!event.time || typeof event.time !== 'string') return false;
         
-        // Get event hour
         const [eventHour] = event.time.split(':').map(Number);
         
-        // Check if event is in this hour slot
         return eventHour === hour;
       });
     },
     getEventStyle(event, hour) {
-      // Calculate event duration - default to 1 hour if not specified
       const durationHours = 1;
       
       return {
@@ -408,7 +389,6 @@ export default {
       this.selectedEvent = null;
     },
     editEvent() {
-      // Navigate to calendar view with the event to edit
       this.$router.push({
         path: '/faculty/calendar',
         query: { editEvent: this.selectedEvent.event_id }
@@ -457,7 +437,6 @@ export default {
       this.isLoading = true;
       
       try {
-        // Fetch all events instead of user-specific ones
         const response = await axios.get('http://127.0.0.1:8000/api/events/');
         
         if (response.data && Array.isArray(response.data)) {
@@ -480,7 +459,6 @@ export default {
       return this.filteredEvents.filter(event => {
         const eventDate = new Date(event.date);
         
-        // Check if event is on this day
         if (
           eventDate.getDate() !== date.getDate() ||
           eventDate.getMonth() !== date.getMonth() ||
@@ -489,7 +467,6 @@ export default {
           return false;
         }
         
-        // Return events that don't have a time or time is not a string
         return !event.time || typeof event.time !== 'string';
       });
     }

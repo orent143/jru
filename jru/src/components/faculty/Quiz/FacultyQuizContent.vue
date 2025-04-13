@@ -55,7 +55,6 @@
       @add-quiz="fetchQuizzes"
     />
 
-    <!-- Reusable Confirmation Modal -->
     <ConfirmationModal
       :show="showDeleteConfirmation"
       title="Delete Quiz"
@@ -73,7 +72,7 @@ import axios from "axios";
 import Header from "../../header.vue";
 import Sidebar from "../SideBar.vue";
 import AddQuizModal from "@/components/faculty/Quiz/AddQuizModal.vue";
-import ConfirmationModal from "@/components/ConfirmationModal.vue"; // adjust path as needed
+import ConfirmationModal from "@/components/ConfirmationModal.vue"; 
 
 export default {
   components: { Header, Sidebar, AddQuizModal, ConfirmationModal },
@@ -164,7 +163,6 @@ export default {
   background-color: #fff;
 }
 
-/* Course Header */
 .course-header {
   justify-content: space-between;
   align-items: center;
@@ -173,7 +171,6 @@ export default {
   background-color: #D9D9D9;
   position: relative;
 }
-/* Add Material Button */
 .add-btn {
   position: absolute;
   top: 15px;

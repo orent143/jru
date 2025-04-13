@@ -34,7 +34,7 @@
 
 <script>
 import axios from 'axios';
-import { useToast } from "vue-toastification";  // Import vue-toastification
+import { useToast } from "vue-toastification";  
 
 export default {
     name: 'VerifyCode',
@@ -43,9 +43,9 @@ export default {
             verificationCode: '',
             loading: false,
             errorMessage: '',
-            countdown: 300, // 5 minutes in seconds
+            countdown: 300, 
             timer: null,
-            email: this.$route.query.email || '' // Ensure email is retrieved correctly
+            email: this.$route.query.email || ''
         };
     },
     created() {
@@ -68,7 +68,7 @@ export default {
                 } else {
                     clearInterval(this.timer);
                     this.errorMessage = 'Verification code has expired. Please login again.';
-                    this.verificationCode = ''; // Clear expired code
+                    this.verificationCode = '';
                 }
             }, 1000);
         },
@@ -104,7 +104,6 @@ export default {
                     localStorage.setItem('user', JSON.stringify(userData));
                     localStorage.removeItem('tempUserData');
 
-                    // Redirect based on role
                     switch (userData.role) {
                         case 'student': this.$router.push('/student-dashboard'); break;
                         case 'faculty': this.$router.push('/faculty-dashboard'); break;
@@ -112,20 +111,18 @@ export default {
                         default: this.$router.push('/');
                     }
 
-                    // Show success toast notification
                     this.toast.success("Verification successful!");
                 }
             } catch (error) {
                 this.errorMessage = error.response?.data?.detail || "Verification failed. Please try again.";
 
-                // Show error toast notification
                 this.toast.error("Verification failed. Please try again.");
             } finally {
                 this.loading = false;
             }
         },
         goBackToLogin() {
-            localStorage.removeItem('tempUserData'); // Clear temp user data
+            localStorage.removeItem('tempUserData'); 
             this.$router.push('/login');
         }
     },
@@ -133,8 +130,8 @@ export default {
         console.log("Email from query:", this.$route.query.email);
     },
     setup() {
-        const toast = useToast();  // Initialize the toast functionality
-        return { toast };  // Return the toast to use in methods
+        const toast = useToast();  
+        return { toast };  
     }
 };
 </script>

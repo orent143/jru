@@ -64,9 +64,8 @@ export default {
           const courses = response.data.courses;
 
           for (const course of courses) {
-            // Fetch quizzes for each course
             const quizResponse = await axios.get(`http://127.0.0.1:8000/api/student_quizzes/${this.student.user_id}/${course.course_id}`);
-            course.quizzes = quizResponse.data.quizzes || [];  // Ensure quizzes is an array
+            course.quizzes = quizResponse.data.quizzes || [];  
           }
 
           this.courses = courses;
@@ -81,7 +80,7 @@ export default {
     navigateToQuizzes(courseId) {
       this.$router.push({
         name: 'QuizContent',
-        params: { courseId: courseId.toString() },  // Ensure it's a string
+        params: { courseId: courseId.toString() }, 
       });
     },
 

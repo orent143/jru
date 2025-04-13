@@ -2,7 +2,7 @@
     <div class="modal" v-if="isVisible" @click.self="closeModal">
         <div class="modal-content">
             <h2>Add New User</h2>
-            <form @submit.prevent="handleSubmit">
+            <form @submit.prevent="confirmSubmit">
                 <div class="form-group">
                     <label for="name">Full Name</label>
                     <input 
@@ -48,14 +48,14 @@
                 </div>
 
                 <div class="form-group" v-if="formData.role === 'student'">
-  <label for="degree">Degree</label>
-  <input 
-    type="text" 
-    id="degree" 
-    v-model="formData.degree"
-    required
-  >
-</div>
+                    <label for="degree">Degree</label>
+                    <input 
+                        type="text" 
+                        id="degree" 
+                        v-model="formData.degree"
+                        required
+                    >
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="cancel-btn" @click="closeModal">Cancel</button>
                     <button type="submit" class="save-btn">Add User</button>
@@ -63,14 +63,29 @@
             </form>
         </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+        :show="showConfirmModal"
+        title="Confirm User Addition"
+        :message="`Are you sure you want to add ${formData.name} as a ${formData.role}?`"
+        confirm-text="Add User"
+        type="primary"
+        @confirm="handleSubmit"
+        @cancel="showConfirmModal = false"
+    />
 </template>
 
 <script>
 import axios from 'axios';
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
     name: 'AddUser',
+    components: {
+        ConfirmationModal
+    },
     props: {
         isVisible: {
             type: Boolean,
@@ -84,17 +99,48 @@ export default {
                 email: '',
                 password: '',
                 role: '',
-                degree: ''  // ✅ Added here
-            }
+                degree: ''
+            },
+            showConfirmModal: false,
+            isSubmitting: false
         };
     },
     setup() {
-        const toast = useToast(); // Initialize toast
-
+        const toast = useToast();
         return { toast };
     },
     methods: {
+        confirmSubmit() {
+            if (!this.validateForm()) return;
+            this.showConfirmModal = true;
+        },
+        validateForm() {
+            if (!this.formData.name.trim()) {
+                this.toast.error('Name is required');
+                return false;
+            }
+            if (!this.formData.email.trim()) {
+                this.toast.error('Email is required');
+                return false;
+            }
+            if (!this.formData.password) {
+                this.toast.error('Password is required');
+                return false;
+            }
+            if (!this.formData.role) {
+                this.toast.error('Role is required');
+                return false;
+            }
+            if (this.formData.role === 'student' && !this.formData.degree.trim()) {
+                this.toast.error('Degree is required for students');
+                return false;
+            }
+            return true;
+        },
         async handleSubmit() {
+            if (this.isSubmitting) return;
+            this.isSubmitting = true;
+            
             try {
                 const payload = {
                     name: this.formData.name.trim(),
@@ -104,12 +150,12 @@ export default {
                 };
 
                 if (this.formData.role === 'student') {
-  payload.degree = this.formData.degree?.trim();
-}
+                    payload.degree = this.formData.degree?.trim();
+                }
 
                 const response = await axios.post('http://127.0.0.1:8000/api/users/', payload);
 
-                this.toast.success('User added successfully!'); // Success toast
+                this.toast.success(`${this.formData.name} has been added successfully as a ${this.formData.role}!`);
                 this.$emit('user-added');
                 this.closeModal();
                 this.resetForm();
@@ -117,14 +163,19 @@ export default {
                 if (error.response) {
                     if (error.response.status === 422) {
                         const validationErrors = error.response.data.detail;
-                        this.toast.error(`Validation Error: ${validationErrors.map(err => err.msg).join(', ')}`); // Error toast
+                        this.toast.error(`Validation Error: ${validationErrors.map(err => err.msg).join(', ')}`);
+                    } else if (error.response.status === 409) {
+                        this.toast.error(`A user with this email already exists.`);
                     } else {
-                        this.toast.error(`Error: ${error.response.data.detail || 'An unexpected error occurred.'}`); // Error toast
+                        this.toast.error(`Error: ${error.response.data.detail || 'An unexpected error occurred.'}`);
                     }
                 } else {
-                    this.toast.error('Failed to connect to the server. Please try again.'); // Error toast
+                    this.toast.error('Failed to connect to the server. Please try again.');
                 }
                 console.error('Error adding user:', error);
+            } finally {
+                this.isSubmitting = false;
+                this.showConfirmModal = false;
             }
         },
         closeModal() {
@@ -137,9 +188,9 @@ export default {
                 email: '',
                 password: '',
                 role: '',
-                degree: ''  // ✅ Reset degree too
-
+                degree: ''
             };
+            this.showConfirmModal = false;
         }
     }
 };

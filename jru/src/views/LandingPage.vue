@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <!-- Header Section -->
     <header class="header">
       <div class="logo">
         <span class="logo-text">JRU</span>
@@ -22,12 +21,10 @@
       </nav>
     </header>
 
-    <!-- Hero Section -->
     <section class="hero">
 
     </section>
 
-    <!-- About Section -->
     <section id="about" class="info-section">
       <div class="section-container">
         <h2 class="section-title">About Us</h2>
@@ -58,7 +55,6 @@
       </div>
     </section>
 
-    <!-- Privacy Policy Section -->
     <section id="privacy" class="info-section accent-bg">
       <div class="section-container">
         <h2 class="section-title">Privacy Policy</h2>
@@ -82,7 +78,6 @@
       </div>
     </section>
 
-    <!-- Terms & Conditions Section -->
     <section id="terms" class="info-section">
       <div class="section-container">
         <h2 class="section-title">Terms & Conditions</h2>
@@ -115,7 +110,6 @@
       </div>
     </section>
 
-    <!-- Contact Us Section -->
     <section id="contact" class="info-section accent-bg">
       <div class="section-container">
         <h2 class="section-title">Contact Us</h2>
@@ -139,7 +133,6 @@
       </div>
     </section>
 
-    <!-- Meet the Team Section -->
     <section id="team" class="team-section">
       <div class="section-container">
         <h2 class="section-title">Meet the Team</h2>
@@ -171,7 +164,7 @@ export default {
   name: "App",
   data() {
     return {
-      showDropdown: false, // Controls the visibility of the role options
+      showDropdown: false, 
       roleSelected: null,
       email: "",
       password: "",
@@ -182,20 +175,18 @@ export default {
       { name: "Gi Linghon", role: "Project Manager" },
       { name: "Lorenz Papacoy", role: "QA Specialist" }
     ],
-      // Add more team members as needed
     };
   },
   methods: {
     navigateToLogin() {
-      this.$router.push('/login'); // Navigate to the login page
+      this.$router.push('/login'); 
     },
     scrollToAdmissions() {
       document.getElementById("admissions").scrollIntoView({ behavior: "smooth" });
     },
     handleSignIn() {
       console.log(`Signed in as ${this.roleSelected} with`, this.email, this.password);
-      // Here you can add authentication logic
-      this.showDropdown = false;  // Hide dropdown after sign-in
+      this.showDropdown = false;  
     }
   }
 };
@@ -223,35 +214,33 @@ button:hover {
   background-color: #F5F5F5;
 }
 
-/* Header Section */
-/* Header Section */
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
   background: 
-    url('@/assets/Untitled design (2).jpg') no-repeat top center, /* Top half image */
-    #002244; /* Bottom half color */
-  background-size: 100% 50%; /* Image takes the top half */
-  background-position: top; /* Position the image at the top */
+    url('@/assets/Untitled design (2).jpg') no-repeat top center, 
+    #002244;
+  background-size: 100% 50%; 
+  background-position: top;
   color: white;
   box-shadow: 0 4px 8px rgb(0, 0, 0);
   width: 100%;
   position: relative;
 }
 
-/* Logo Styling */
 .logo {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  height: 100%; /* Ensure the logo container doesn't affect the header size */
+  height: 100%; 
 }
 
 .logo-text {
   font-family: 'Inknut Antiqua', serif;
-  font-size: 50px; /* Increase the font size to make the logo text bigger */
+  font-size: 50px;
   font-weight: bolder;
   color: white;
   text-shadow: 
@@ -263,18 +252,17 @@ button:hover {
     0px -1px 0 #034694,
     1px 0px 0 #034694,
     -1px 0px 0 #034694;
-  line-height: 1.2; /* Adjust line-height for better spacing */
+  line-height: 1.2;
 }
 
 
-/* Sign In Button */
 .sign-in-container {
   position: relative;
-  z-index: 2; /* Ensure sign-in button is above the overlay */
+  z-index: 2;
 }
 .sign-in-button {
   position: relative;
-  z-index: 3; /* Make sure sign-in button is above the overlay */
+  z-index: 3; 
 }
 
 .sign-in-btn {
@@ -290,9 +278,9 @@ button:hover {
   color: #ffffff;
 }
 .role-options {
-  display: none; /* Initially hidden */
+  display: none; 
   position: absolute;
-  top: 40px; /* Position options below the button */
+  top: 40px; 
   left: 0;
   background-color: #D9D9D9;
   border-radius: 20px;
@@ -303,11 +291,11 @@ button:hover {
 }
 
 .sign-in-button:hover .role-options {
-  display: block; /* Show options on hover */
+  display: block; 
 }
 
 .role-options {
-  display: block; /* Will only show when `showDropdown` is true */
+  display: block; 
 }
 
 .role-option {
@@ -326,7 +314,6 @@ button:hover {
   color: #007BF6;
 }
 
-/* Navigation Styling */
 .nav {
   position: absolute;
   bottom: 0;
@@ -354,7 +341,7 @@ button:hover {
 }
 
 .nav a:hover {
-  color: #007BF6; /* Change the color on hover */
+  color: #007BF6; 
 }
 .hero {
   position: relative;
@@ -377,17 +364,17 @@ button:hover {
   justify-content: center;
   flex-direction: column;
   text-align: center;
-  padding: 20px; /* Add some padding to ensure content doesn't overlap */
+  padding: 20px;
 }
 
 
 .icon-container {
-  font-size: 80px; /* You can adjust the size to fit your design */
+  font-size: 80px;
   color: white;
   margin-bottom: 20px;
-  z-index: 2; /* Ensure it is on top of any overlay */
+  z-index: 2;
   display: flex;
-  justify-content: center; /* Align the icon in the center */
+  justify-content: center;
   align-items: center;
 }
 
@@ -411,7 +398,6 @@ button:hover {
   font-size: 18px;
 }
 
-/* Form Container Styling */
 .form-container {
   margin-top: 20px;
   text-align: center;
@@ -462,7 +448,6 @@ button:hover {
   margin: 0 auto;
 }
 
-/* Meet the Team Section */
 .team-section {
   background-color: #ffffff;
   padding: 60px 20px;
@@ -699,7 +684,6 @@ button:hover {
   grid-row: 2;
 }
 
-/* Adjust the last two cards positioning with proper gaps */
 .team-grid .team-card:nth-child(4) {
   grid-column: 1 / 2;
   justify-self: end;

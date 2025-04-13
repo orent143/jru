@@ -103,7 +103,6 @@ const routes = [
   { path: '/users', name: 'Users', component: Users },
 
 
-  // Catch-all route for undefined routes
   { 
     path: '/:pathMatch(.*)*', 
     redirect: '/',
@@ -116,27 +115,22 @@ const router = createRouter({
   routes
 });
 
-// Navigation guard
 router.beforeEach((to, from, next) => {
   const userData = localStorage.getItem('user');
   const isAuthenticated = !!userData;
 
-  // Check if the route requires authentication
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!isAuthenticated) {
-      // Redirect to login if not authenticated
       next({
         path: '/login',
         query: { redirect: to.fullPath }
       });
     } else {
-      // Check if the user has the required role
       const user = JSON.parse(userData);
       const userRole = user.role;
       const routeRole = to.meta.role;
 
       if (routeRole && userRole !== routeRole) {
-        // Redirect to appropriate dashboard based on role
         switch (userRole) {
           case 'student':
             next('/student-dashboard');
@@ -155,7 +149,6 @@ router.beforeEach((to, from, next) => {
       }
     }
   } else {
-    // For public routes, redirect to dashboard if already authenticated
     if (isAuthenticated && (to.path === '/login' || to.path === '/verify')) {
       const user = JSON.parse(userData);
       switch (user.role) {

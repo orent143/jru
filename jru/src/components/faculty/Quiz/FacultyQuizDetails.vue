@@ -1,118 +1,120 @@
 <template>
-    <div class="course-content-container">
-      <Header
-        :teacher="teacher"
-        :searchQuery="searchQuery"
-        :student="student"
-        @toggleSidebar="toggleSidebar"
-      />
-  
-      <div class="course-content">
-        <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
-  
-        <div class="quiz-detail-container" v-if="currentQuiz">
-          <button class="back-btn" @click="goBack">
-            <i class="pi pi-arrow-left"></i> Back to Quizzes
-          </button>
-  
-          <div class="quiz-content">
-            <!-- Main Content -->
-            <div class="main-content">
-              <div class="quiz-header">
-                <div class="header-content">
-                  <h1>{{ currentQuiz.title }}</h1>
-                  <button class="edit-btn" @click="editQuiz">
-                    <i class="pi pi-pencil"></i> Edit
-                  </button>
-                </div>
-  
-                <div class="quiz-meta">
-                  <span class="posted-date">
-                    <i class="pi pi-calendar"></i>
-                    Posted: {{ formatDate(currentQuiz.quiz_date) }}
-                  </span>
-                  <span class="duration">
-                    <i class="pi pi-clock"></i>
-                    Duration: {{ currentQuiz.duration_minutes }} mins
-                  </span>
-                </div>
-              </div>
-  
-              <div class="content-section-instructions">
-                <h2>Instructions:</h2>
-                <p>{{ currentQuiz.description }}</p>
-              </div>
-  
-              <!-- Quiz Materials -->
-              <div
-                class="content-section uploaded-materials"
-                v-if="currentQuiz.external_link"
-              >
-                <h2>Quiz Materials:</h2>
-                <div class="materials-list">
-                  <div
-                    class="material-item"
-                    @click="openLink(currentQuiz.external_link)"
-                  >
-                    <i class="pi pi-link"></i>
-                    <span>{{ getFileName(currentQuiz.external_link) }}</span>
-                    <i class="pi pi-external-link"></i>
-                  </div>
-                </div>
-              </div>
-              
-            </div>
-  
-            <!-- Side Content: Submissions -->
-            <div class="side-content">
-              <div class="submission-container" v-if="submissions.length">
-                <div class="submission-header">
-                  <h2>Submissions</h2>
-                  <button class="view-all-btn" @click="viewAllSubmissions">
-                    <i class="pi pi-list"></i> View All Submissions
-                  </button>
-                </div>
-  
-                <div class="submission-list">
-                  <div
-                    class="submission-item"
-                    v-for="(submission, index) in submissions.slice(0, 3)"
-                    :key="index"
-                  >
-                    <div class="student-info">
-                      <span>{{ submission.studentName }}</span>
-                      <span>{{ formatDate(submission.submissionDate) }}</span>
-                      <span
-                        :class="['status', submission.status.toLowerCase()]"
-                      >
-                        {{ submission.status }}
-                      </span>
-                    </div>
-                  </div>
-  
-                  <div v-if="submissions.length > 3" class="view-more">
-                    <button @click="viewAllSubmissions">
-                      View {{ submissions.length - 3 }} more submissions...
-                    </button>
-                  </div>
-                </div>
+  <div class="course-content-container">
+    <Header
+      :teacher="teacher"
+      :searchQuery="searchQuery"
+      :student="student"
+      @toggleSidebar="toggleSidebar"
+    />
+
+    <div class="course-content">
+      <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
+
+      <div class="quiz-detail-container" v-if="currentQuiz">
+        <button class="back-btn" @click="goBack">
+          <i class="pi pi-arrow-left"></i> Back to Quizzes
+        </button>
+
+        <div class="quiz-content">
+          <div class="main-content">
+            <div class="quiz-header">
+              <div class="header-content">
+                <h1>{{ currentQuiz.title }}</h1>
+                <button class="edit-btn" @click="editQuiz">
+                  <i class="pi pi-pencil"></i> Edit
+                </button>
               </div>
 
-                 <!-- Comments Section -->
-                 <div class="comments-section">
+              <div class="quiz-meta">
+                <span class="posted-date">
+                  <i class="pi pi-calendar"></i>
+                  When: {{ formatDate(currentQuiz.quiz_date) }}
+                </span>
+                <span class="duration">
+                  <i class="pi pi-clock"></i>
+                  Duration: {{ currentQuiz.duration_minutes }} mins
+                </span>
+              </div>
+            </div>
+
+            <div class="content-section-instructions">
+              <h2>Instructions:</h2>
+              <p>{{ currentQuiz.description }}</p>
+            </div>
+
+            <div
+              class="content-section uploaded-materials"
+              v-if="currentQuiz.file_path"
+            >
+              <h2>Quiz Materials:</h2>
+              <div class="materials-list">
+                <div
+                  v-if="isExternalLink(currentQuiz.file_path)"
+                  class="material-item"
+                >
+                  <i class="pi pi-link"></i>
+                  <a :href="currentQuiz.file_path" target="_blank">
+                    {{ currentQuiz.file_path }}
+                  </a>
+                </div>
+                <div
+                  v-else
+                  class="material-item"
+                  @click="downloadFile(currentQuiz.file_path)"
+                >
+                  <i class="pi pi-file"></i>
+                  <span>{{ getFileName(currentQuiz.file_path) }}</span>
+                  <i class="pi pi-download"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-content">
+            <div class="submission-container" v-if="submissions.length">
+              <div class="submission-header">
+                <h2>Submissions</h2>
+                <button class="view-all-btn" @click="viewAllSubmissions">
+                  <i class="pi pi-list"></i> View All Submissions
+                </button>
+              </div>
+
+              <div class="submission-list">
+                <div
+                  class="submission-item"
+                  v-for="(submission, index) in submissions.slice(0, 3)"
+                  :key="submission.submissionId"
+                >
+                  <div class="student-info">
+                    <span>{{ submission.studentName }}</span>
+                    <span>{{ formatDate(submission.submissionDate) }}</span>
+                    <span
+                      :class="['status', submission.status.toLowerCase()]"
+                    >
+                      {{ submission.status }}
+                    </span>
+                  </div>
+                </div>
+
+                <div v-if="submissions.length > 3" class="view-more">
+                  <button @click="viewAllSubmissions">
+                    View {{ submissions.length - 3 }} more submissions...
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="comments-section">
               <h2>Comments</h2>
-<!-- Loading -->
-<div v-if="isLoadingComments" class="comments-loading">
+              <div v-if="isLoadingComments" class="comments-loading">
                 <div class="loading-spinner"></div>
                 <p>Loading comments...</p>
               </div>
 
-              <!-- No comments -->
               <div v-else-if="comments.length === 0" class="no-comments">
                 <p>No comments yet.</p>
               </div>
 
-              <!-- Comment List -->
               <div v-else class="comments-list">
                 <div
                   v-for="comment in comments"
@@ -142,7 +144,6 @@
                 </div>
               </div>
               
-              <!-- Input -->
               <div class="comment-input">
                 <textarea
                   v-model="newComment"
@@ -157,28 +158,25 @@
                   <i class="pi pi-send"></i> Post Comment
                 </button>
               </div>
-
-             
             </div>
-            </div> <!-- end of side-content -->
-          </div> <!-- end of quiz-content -->
-        </div>
-  
-        <div v-else>
-          <p>No quiz found.</p>
-        </div>
+          </div> 
+        </div> 
       </div>
-  
-      <!-- Edit Modal -->
-      <EditQuizModal
-        v-if="showEditModal"
-        :quiz="currentQuiz"
-        @update-quiz="handleQuizUpdate"
-        @close="showEditModal = false"
-      />
+
+      <div v-else>
+        <p>No quiz found.</p>
+      </div>
     </div>
-  </template>
-  
+
+    <EditQuizModal
+      v-if="showEditModal"
+      :quiz="currentQuiz"
+      @update-quiz="handleQuizUpdate"
+      @close="showEditModal = false"
+    />
+  </div>
+</template>
+
 <script>
 import Header from '../../header.vue';
 import Sidebar from '../SideBar.vue';
@@ -204,19 +202,7 @@ export default {
             courses: [],
             currentQuiz: null,
             showEditModal: false,
-            submissions: [
-                {
-                    studentName: 'John Doe',
-                    submissionDate: '2025-03-25',
-                    status: 'Submitted'
-                },
-                {
-                    studentName: 'Jane Smith',
-                    submissionDate: '2025-03-26',
-                    status: 'Pending'
-                }
-            ],
-            // Comments-related data
+            submissions: [],
             comments: [],
             isLoadingComments: false,
             newComment: '',
@@ -224,23 +210,21 @@ export default {
         };
     },
     methods: {
-        // Fetch quiz details
         async fetchQuiz() {
             try {
-                const quizId = parseInt(this.$route.params.quizId); // Get quiz_id from route
+                const quizId = parseInt(this.$route.params.quizId); 
 
                 const response = await axios.get(`http://127.0.0.1:8000/api/quizzes/item/${quizId}`);
-                this.currentQuiz = response.data; // Set current quiz with the fetched data
+                this.currentQuiz = response.data; 
                 
-                // Fetch comments
                 await this.fetchComments();
+                await this.fetchSubmissions();
             } catch (error) {
                 console.error("Error fetching quiz:", error);
                 this.toast.error("Failed to load quiz details");
             }
         },
 
-        // Comment-related methods
         async fetchComments() {
             try {
                 if (!this.currentQuiz?.quiz_id) return;
@@ -255,6 +239,39 @@ export default {
                 console.error("Error fetching comments:", error);
                 this.toast.error("Failed to load comments");
                 this.isLoadingComments = false;
+            }
+        },
+
+        async fetchSubmissions() {
+            try {
+                if (!this.currentQuiz?.quiz_id) return;
+                
+                try {
+                    const response = await axios.get(
+                        `http://127.0.0.1:8000/api/quiz_submissions/${this.currentQuiz.quiz_id}`
+                    );
+                    
+                    this.submissions = response.data.submissions.map(sub => ({
+                        submissionId: sub.submission_id,
+                        studentId: sub.student_id,
+                        studentName: sub.student_name,
+                        submissionDate: sub.submitted_at,
+                        status: sub.grade !== null ? 'Graded' : 'Submitted',
+                        grade: sub.grade,
+                        feedback: sub.feedback
+                    }));
+                } catch (error) {
+                    // Handle 404 error (no submissions) by setting empty array
+                    if (error.response && error.response.status === 404) {
+                        this.submissions = [];
+                        console.log("No submissions found for this quiz");
+                    } else {
+                        throw error; // Re-throw other errors
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching submissions:", error);
+                this.toast.error("Failed to load quiz submissions");
             }
         },
         
@@ -301,23 +318,33 @@ export default {
             }
         },
 
-        // Format the date for display
         formatDate(date) {
             if (!date) return 'N/A';
             return new Date(date).toLocaleDateString();
         },
 
-        // Extract the file name from the URL (external link)
         getFileName(fileUrl) {
-            return fileUrl ? fileUrl.split('/').pop() : 'Unknown File';
+            if (!fileUrl) return 'Unknown File';
+            if (this.isExternalLink(fileUrl)) return fileUrl;
+            return fileUrl.split('/').pop();
         },
 
-        // Open the external link in a new window/tab
         openLink(fileUrl) {
             window.open(fileUrl, '_blank');
         },
 
-        // Navigate back to the quizzes list
+        downloadFile(filePath) {
+            if (this.isExternalLink(filePath)) {
+                this.openLink(filePath);
+                return;
+            }
+            
+            const fileName = this.getFileName(filePath);
+            if (fileName) {
+                window.open(`http://127.0.0.1:8000/api/quizzes/download/${fileName}`, '_blank');
+            }
+        },
+
         goBack() {
             this.$router.push({
                 name: 'FacultyQuizContent',
@@ -325,7 +352,6 @@ export default {
             });
         },
 
-        // Edit quiz details
         editQuiz() {
             this.showEditModal = true;
         },
@@ -343,12 +369,14 @@ export default {
                     quizId: this.$route.params.quizId 
                 }
             });
+        },
+
+        isExternalLink(path) {
+            return path && (path.startsWith('http://') || path.startsWith('https://'));
         }
     },
 
-    // Fetch quiz when the component is mounted
     mounted() {
-        // Get user data for comments
         const userData = localStorage.getItem("user");
         if (userData) {
             try {
@@ -372,11 +400,13 @@ export default {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
 .course-content {
     display: flex;
     flex: 1;
+    overflow: hidden;
 }
 
 .quiz-detail-container {
@@ -384,8 +414,10 @@ export default {
     padding: 1rem;
     max-width: 100%;
     margin: 0 auto;
-    max-height: 100%;
+    overflow-y: auto;
+    max-height: calc(100vh - 64px);
     background-color: #fff;
+    position: relative;
 }
 
 .back-btn {
@@ -398,6 +430,10 @@ export default {
     margin-bottom: 1rem;
     padding: 0.5rem 1rem;
     border-radius: 4px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .back-btn:hover {
@@ -408,8 +444,7 @@ export default {
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 2rem;
-    height: auto;
-    margin-bottom: 5rem;
+    padding-bottom: 2rem;
 }
 
 .main-content {
@@ -493,13 +528,42 @@ export default {
     border-radius: 4px;
     margin-bottom: 0.5rem;
     cursor: pointer;
+    color: #212121;
 }
+
+.material-item a {
+    color: #007BF6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.material-item a:hover {
+    text-decoration: underline;
+}
+
+.material-item span {
+    color: #212121;
+    font-weight: 500;
+}
+
+.material-item i {
+    color: #444;
+    font-size: 1.25rem;
+}
+
+.content-section.uploaded-materials h2 {
+    font-weight: bold;
+    color: #212121;
+}
+
 .submission-container{
     padding: 1.5rem;
     border-radius: 8px;
-    min-height: 300px;
+    min-height: 200px;
+    max-height: 400px;
     background-color: #D9D9D9;
     color: #212121;
+    overflow-y: auto;
 }
 .submission-container h2{
   font-weight: bold;
@@ -527,7 +591,6 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    max-height: 300px;
     overflow-y: auto;
 }
 
@@ -557,6 +620,11 @@ export default {
 .status.pending {
     background-color: #FFDD57;
     color: black;
+}
+
+.status.graded {
+    background-color: #007BF6;
+    color: white;
 }
 
 .submission-header {
@@ -600,7 +668,6 @@ export default {
     text-decoration: underline;
 }
 
-/* Add comments section styles */
 .comments-section {
     background-color: #D9D9D9;
     border-radius: 8px;
@@ -755,5 +822,12 @@ export default {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+.comments-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    border-radius: 8px;
 }
 </style>

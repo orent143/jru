@@ -73,7 +73,6 @@
         </div>
       </div>
 
-      <!-- Event Modal -->
       <div v-if="showEventModal" class="modal">
         <div class="modal-content">
           <span class="close" @click="closeEventModal">&times;</span>
@@ -219,21 +218,12 @@ export default {
       const year = this.displayDate.getFullYear();
       const month = this.displayDate.getMonth();
       
-      // First day of the month
       const firstDay = new Date(year, month, 1);
-      // Last day of the month
       const lastDay = new Date(year, month + 1, 0);
-      
-      // Get the day of the week for the first day (0-6)
       const firstDayOfWeek = firstDay.getDay();
-      
-      // Get the number of days in the previous month
       const prevMonthLastDay = new Date(year, month, 0).getDate();
-      
-      // Create an array for the calendar days
       const days = [];
       
-      // Add days from the previous month
       for (let i = firstDayOfWeek - 1; i >= 0; i--) {
         const date = prevMonthLastDay - i;
         days.push({
@@ -244,7 +234,6 @@ export default {
         });
       }
       
-      // Add days from the current month
       for (let i = 1; i <= lastDay.getDate(); i++) {
         const isToday = this.isToday(new Date(year, month, i));
         days.push({
@@ -255,8 +244,7 @@ export default {
         });
       }
       
-      // Add days from the next month to complete the grid
-      const remainingDays = 42 - days.length; // 6 rows of 7 days = 42
+      const remainingDays = 42 - days.length; 
       for (let i = 1; i <= remainingDays; i++) {
         days.push({
           date: i,
@@ -366,14 +354,12 @@ export default {
       
       try {
         if (this.isEditingEvent) {
-          // Update existing event
           await axios.put(`http://127.0.0.1:8000/api/events/${this.eventForm.id}`, {
             ...this.eventForm,
             user_id: this.faculty.user_id
           });
           toast.success('Event updated successfully');
         } else {
-          // Create new event
           await axios.post('http://127.0.0.1:8000/api/events/', {
             ...this.eventForm,
             user_id: this.faculty.user_id
@@ -402,7 +388,6 @@ export default {
           this.events = [];
         }
         
-        // Refresh the calendar display to show event indicators
         this.refreshCalendarView();
       } catch (error) {
         console.error('Error fetching events:', error);
@@ -412,11 +397,9 @@ export default {
       }
     },
     refreshCalendarView() {
-      // Force computed property re-evaluation
       this.displayDate = new Date(this.displayDate);
     },
     viewSchedule() {
-      // Navigate to schedule view
       this.$router.push('/faculty/schedule');
     },
     loadUserData() {
@@ -432,7 +415,6 @@ export default {
           return;
         }
         
-        // Use the courses endpoint with user_id query parameter
         const response = await axios.get(`http://127.0.0.1:8000/api/courses?user_id=${this.faculty.user_id}`);
         this.courses = response.data;
       } catch (error) {

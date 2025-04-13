@@ -20,7 +20,6 @@
         </div>
 
         <div v-else class="submission-details">
-          <!-- Student Information -->
           <div class="student-info-section">
             <h2>Student Information</h2>
             <div class="info-grid">
@@ -92,16 +91,12 @@
                   </div>
                 </div>
 
-                <div v-if="submission.external_link" class="link-content">
-                  <h3>External Link</h3>
-                  <a :href="submission.external_link" target="_blank" class="external-link">
-                    <i class="pi pi-external-link"></i> Open Link
-                  </a>
+                <div v-if="!submission.file_path && !submission.submission_text" class="no-content">
+                  <p>No submission content available.</p>
                 </div>
               </div>
             </div>
 
-            <!-- Grading Section -->
             <div class="grading-section">
               <h2>Grading</h2>
               <div class="grade-form">
@@ -171,11 +166,9 @@ export default {
         this.submission = response.data;
         this.submission.status = this.submission.grade !== null ? 'Graded' : 'Submitted';
         
-        // Fetch exam details
         const examResponse = await axios.get(`http://127.0.0.1:8000/api/exams/item/${this.submission.exam_id}`);
         this.exam = examResponse.data;
         
-        // If already graded, set the grade and feedback
         if (this.submission.grade !== null) {
           this.grade = this.submission.grade;
           this.feedback = this.submission.feedback || '';
@@ -219,12 +212,13 @@ export default {
       }
 
       try {
+        const formData = new FormData();
+        formData.append('grade', this.grade);
+        formData.append('feedback', this.feedback || '');
+        
         const response = await axios.put(
           `http://127.0.0.1:8000/api/exam-submission/${this.submission.submission_id}/grade`,
-          {
-            grade: this.grade,
-            feedback: this.feedback
-          }
+          formData
         );
         
         this.submission.status = 'Graded';

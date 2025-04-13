@@ -66,7 +66,7 @@ export default {
       isSidebarCollapsed: false,
       assignments: [],
       courses: [],
-      course: { course_name: "Loading..." }, // Default placeholder before API fetch
+      course: { course_name: "Loading..." },
       studentId: null
     };
   },
@@ -107,35 +107,29 @@ export default {
 
         console.log("Fetched Assignments:", response.data);
 
-        // First initialize assignments with completed = false
         const assignmentsData = response.data.assignments || [];
         this.assignments = assignmentsData.map(assignment => ({
           ...assignment,
           completed: false
         }));
         
-        // Then check for existing submissions
         for (let i = 0; i < this.assignments.length; i++) {
           try {
             const submissionResponse = await axios.get(
               `http://127.0.0.1:8000/api/assignment-submission/${this.assignments[i].assignment_id}/${this.studentId}`
             );
             
-            // If submission exists, mark as completed
             if (submissionResponse.data && submissionResponse.data.submission_id) {
               this.assignments[i].completed = true;
             }
           } catch (error) {
-            // If 404, there's no submission
             if (error.response && error.response.status === 404) {
-              // Keep as false (already set)
             } else {
               console.error(`Error checking submission for assignment ${this.assignments[i].assignment_id}:`, error);
             }
           }
         }
         
-        // ✅ Correctly assign course_name from the API response
         this.course = { course_name: response.data.course_name || "Course Name Not Available" };
       } catch (error) {
         console.error("Error fetching assignments:", error);
@@ -179,7 +173,6 @@ export default {
   flex-direction: column;
   gap: 2rem;
   background-color: #fff;
-
 }
 
 .assignment-header {
@@ -188,6 +181,7 @@ export default {
   padding: 20px;
   border-radius: 20px;
   background-color: #D9D9D9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .assignment-header h2 {
@@ -224,6 +218,7 @@ export default {
   background: #D9D9D9;
   cursor: pointer;
   color: black;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-weight: bold;
 }
 

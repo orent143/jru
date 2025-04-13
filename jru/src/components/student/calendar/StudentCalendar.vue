@@ -200,21 +200,15 @@ export default {
       const year = this.displayDate.getFullYear();
       const month = this.displayDate.getMonth();
       
-      // First day of the month
       const firstDay = new Date(year, month, 1);
-      // Last day of the month
       const lastDay = new Date(year, month + 1, 0);
       
-      // Get the day of the week for the first day (0-6)
       const firstDayOfWeek = firstDay.getDay();
       
-      // Get the number of days in the previous month
       const prevMonthLastDay = new Date(year, month, 0).getDate();
       
-      // Create an array for the calendar days
       const days = [];
       
-      // Add days from the previous month
       for (let i = firstDayOfWeek - 1; i >= 0; i--) {
         const date = prevMonthLastDay - i;
         days.push({
@@ -226,7 +220,6 @@ export default {
         });
       }
       
-      // Add days from the current month
       for (let i = 1; i <= lastDay.getDate(); i++) {
         const isToday = this.isToday(new Date(year, month, i));
         days.push({
@@ -238,8 +231,7 @@ export default {
         });
       }
       
-      // Add days from the next month to complete the grid
-      const remainingDays = 42 - days.length; // 6 rows of 7 days = 42
+      const remainingDays = 42 - days.length; 
       for (let i = 1; i <= remainingDays; i++) {
         days.push({
           date: i,
@@ -254,14 +246,13 @@ export default {
     },
     upcomingEvents() {
       const now = new Date();
-      // Filter events that are today or in the future, sorted by date
       return this.courseEvents
         .filter(event => {
           const eventDate = new Date(event.date);
           return eventDate >= new Date(now.setHours(0, 0, 0, 0));
         })
         .sort((a, b) => new Date(a.date) - new Date(b.date))
-        .slice(0, 5); // Limit to 5 upcoming events
+        .slice(0, 5); 
     },
     selectedDateFormatted() {
       if (!this.selectedDate) return '';
@@ -277,9 +268,7 @@ export default {
   mounted() {
     this.loadUserData();
     
-    // Check if user data is available before continuing
     if (!this.student) {
-      // Try again in a moment if student data isn't loaded yet
       setTimeout(() => {
         this.loadUserData();
         this.initializeData();
@@ -325,7 +314,6 @@ export default {
       
       this.selectedDate = day.fullDate;
       
-      // Get events for the selected date
       this.selectedDateEvents = this.courseEvents.filter(event => {
         const eventDate = new Date(event.date);
         return eventDate.getDate() === day.fullDate.getDate() &&
@@ -349,7 +337,6 @@ export default {
     formatEventTime(timeString) {
       if (!timeString) return '';
       
-      // Parse the time (e.g., "14:30:00" to "2:30 PM")
       const [hours, minutes] = timeString.split(':');
       const hour = parseInt(hours, 10);
       const minute = parseInt(minutes, 10);
@@ -387,10 +374,8 @@ export default {
           return;
         }
         
-        // Use the student_courses endpoint to get enrolled courses
         const response = await axios.get(`http://127.0.0.1:8000/api/student_courses/${this.student.user_id}`);
         
-        // The response format should be { student_id, courses: [...] }
         if (response.data && response.data.courses) {
           this.courses = response.data.courses;
           console.log('Fetched student courses:', this.courses);
@@ -406,7 +391,6 @@ export default {
     },
     async fetchCourseDetails() {
       if (!this.courseId) {
-        // If no courseId is provided, don't try to fetch a specific course
         console.log('No course ID provided, skipping course details fetch');
         return;
       }
@@ -426,29 +410,23 @@ export default {
         let allEvents = [];
         
         if (this.courseId) {
-          // If a specific course is selected, fetch events for that course
           const response = await axios.get(`http://127.0.0.1:8000/api/events/course/${this.courseId}`);
           allEvents = response.data;
         } else if (this.courses && this.courses.length > 0) {
-          // If no specific course is selected, fetch events for all enrolled courses
-          // We'll make parallel requests for better performance
           const eventPromises = this.courses.map(course => 
             axios.get(`http://127.0.0.1:8000/api/events/course/${course.course_id}`)
               .then(response => response.data)
               .catch(error => {
                 console.error(`Error fetching events for course ${course.course_id}:`, error);
-                return []; // Return empty array for failed requests
+                return []; 
               })
           );
           
-          // Wait for all requests to complete
           const eventsArrays = await Promise.all(eventPromises);
           
-          // Combine all events into a single array
           allEvents = eventsArrays.flat();
         }
         
-        // Sort events by date
         this.courseEvents = allEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
         console.log('Fetched and processed events:', this.courseEvents);
       } catch (error) {
@@ -464,7 +442,6 @@ export default {
       try {
         await this.fetchCourses();
         
-        // Only fetch course details if courseId is provided
         if (this.courseId) {
           await this.fetchCourseDetails();
         }

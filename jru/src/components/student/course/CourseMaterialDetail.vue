@@ -39,25 +39,16 @@
           <div class="side-content">
             <div class="content-section comments">
               <h2>Class Comments</h2>
-              <div class="comment-input">
-                <input type="text" v-model="newComment" placeholder="Add class comment..." @keyup.enter="addComment" />
-                <button class="send-btn" @click="addComment">
-                  <i class="pi pi-send"></i>
-                </button>
-              </div>
               
-              <!-- Loading state -->
               <div v-if="isLoadingComments" class="comments-loading">
                 <div class="loading-spinner"></div>
                 <p>Loading comments...</p>
               </div>
               
-              <!-- No comments state -->
               <div v-else-if="comments.length === 0" class="no-comments">
                 <p>No comments yet. Be the first to comment!</p>
               </div>
               
-              <!-- Comments list -->
               <div v-else class="comments-list">
                 <div v-for="comment in comments" :key="comment.comment_id" class="comment">
                   <div class="comment-avatar">
@@ -68,7 +59,6 @@
                       <h4>{{ comment.user_name }}</h4>
                       <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
                       
-                      <!-- Delete button for own comments -->
                       <button 
                         v-if="comment.user_id === studentId" 
                         class="delete-comment-btn"
@@ -80,6 +70,21 @@
                     <p class="comment-text">{{ comment.content }}</p>
                   </div>
                 </div>
+              </div>
+              
+              <div class="comment-input">
+                <textarea
+                  v-model="newComment"
+                  placeholder="Add a comment..."
+                  rows="3"
+                ></textarea>
+                <button
+                  class="post-comment-btn"
+                  @click="addComment"
+                  :disabled="!newComment.trim()"
+                >
+                  <i class="pi pi-send"></i> Post Comment
+                </button>
               </div>
             </div>
           </div>
@@ -171,7 +176,7 @@ export default {
         if (response.status === 200) {
           this.toast.success("Comment added successfully!");
           this.newComment = "";
-          await this.fetchComments(); // Refresh comments
+          await this.fetchComments();
         }
       } catch (error) {
         console.error("Error adding comment:", error);
@@ -186,7 +191,7 @@ export default {
         
         if (response.status === 200) {
           this.toast.success("Comment deleted successfully!");
-          await this.fetchComments(); // Refresh comments
+          await this.fetchComments();
         }
       } catch (error) {
         console.error("Error deleting comment:", error);
@@ -197,11 +202,11 @@ export default {
       return date ? new Date(date).toLocaleDateString() : 'N/A';
     },
     downloadAttachment(filePath) {
-      const formattedPath = filePath.replace(/\\/g, '/'); // Ensure proper path formatting
+      const formattedPath = filePath.replace(/\\/g, '/');
       window.open(`http://127.0.0.1:8000/${formattedPath}`, "_blank");
     },
     getFileName(filePath) {
-      return filePath.split(/[\\/]/).pop(); // Handle both forward and backslashes
+      return filePath.split(/[\\/]/).pop();
     },
     goBack() {
       this.$router.go(-1);
@@ -216,11 +221,13 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden; 
 }
 
 .course-content {
   display: flex;
   flex: 1;
+  overflow: hidden; 
 }
 
 .material-detail-container {
@@ -228,11 +235,12 @@ export default {
   padding: 1rem;
   max-width: 100%;
   margin: 0 auto;
-  overflow-y: auto; /* This will enable vertical scrolling */
-  max-height: 100%; /* Set a maximum height for the container */
+  overflow-y: auto; 
+  max-height: calc(100vh - 64px);
   background-color: #fff;
-
+  position: relative; 
 }
+
 .back-btn {
   display: flex;
   align-items: center;
@@ -243,21 +251,22 @@ export default {
   margin-bottom: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .back-btn:hover {
   background-color: #f0f0f0;
 }
 
-
 .material-content {
   display: grid;
   grid-template-columns: 3fr 1fr;
   gap: 2rem;
-  height: 100%; /* Ensure content takes up full height */
-  margin-bottom: 5rem; /* Add bottom margin here */
+  padding-bottom: 2rem;
 }
-
 
 .main-content {
   display: flex;
@@ -269,14 +278,14 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  margin-bottom: 2rem; /* Add bottom margin here */
+  margin-bottom: 2rem;
 }
-
 
 .material-header {
   background-color: #D9D9D9;
   padding: 2rem;
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .material-header h1 {
@@ -296,12 +305,12 @@ export default {
   border-radius: 8px;
   min-height: 300px;
   color: #212121;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .content-section h2 {
   margin-bottom: 1.5rem;
   font-size: 1.25rem;
-
   color: #333;
 }
 
@@ -340,71 +349,53 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-height: 300px; /* Adjust this value to fit your design */
-  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .comment-input {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
-.comment-input input {
-  flex: 1;
+.comment-input textarea {
   padding: 0.75rem;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  background-color: white;
 }
-.send-btn {
-  background-color: #2c3e50;
+
+.comment-input textarea:focus {
+  outline: none;
+  border-color: #007BF6;
+  box-shadow: 0 0 0 2px rgba(0, 123, 246, 0.1);
+}
+
+.post-comment-btn {
+  align-self: flex-end;
+  background-color: #007BF6;
   color: white;
-  padding: 0.5rem 1rem;
   border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
   cursor: pointer;
-}
-
-.send-btn:hover {
-  background-color: #1a252f;
-}
-
-.comment {
   display: flex;
-  gap: 1rem;
-  background-color: #fff;
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
 }
 
-.comment img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+.post-comment-btn:hover:not(:disabled) {
+  background-color: #0056b3;
 }
 
-.comment-content {
-  flex: 1;
-}
-
-.status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.status.not-submitted {
-  background-color: #FF6B6B;
-  color: white;
-}
-
-.status.pending {
-  background-color: #FFDD57;
-  color: black;
-}
-
-.status.upcoming {
-  background-color: #4C9A2A;
-  color: white;
+.post-comment-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .comments-loading, .no-comments {
@@ -431,6 +422,16 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
+.comment {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
+  background-color: white;
+  border-radius: 8px;
+}
+
 .comment-avatar {
   width: 40px;
   height: 40px;
@@ -439,6 +440,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .comment-avatar i {
@@ -446,14 +448,26 @@ export default {
   color: #6c757d;
 }
 
+.comment-content {
+  flex: 1;
+}
+
 .comment-header {
   display: flex;
   align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.comment-header h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  margin-right: 0.5rem;
 }
 
 .comment-date {
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #6c757d;
 }
 
@@ -464,7 +478,8 @@ export default {
   color: #dc3545;
   cursor: pointer;
   opacity: 0.5;
-  transition: opacity 0.2s;
+  padding: 0.25rem;
+  font-size: 0.8rem;
 }
 
 .delete-comment-btn:hover {
@@ -472,8 +487,18 @@ export default {
 }
 
 .comment-text {
-  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #333;
+  line-height: 1.5;
+  margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.comments-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  border-radius: 8px;
 }
 </style>

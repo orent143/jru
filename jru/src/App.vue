@@ -10,7 +10,6 @@ import { onMounted } from 'vue';
 
 const router = useRouter();
 
-// 🚀 Redirect to the last visited page on refresh
 onMounted(() => {
   const lastPage = localStorage.getItem('lastPage');
   if (lastPage) {
@@ -20,5 +19,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Add any scoped styles here */
 </style>

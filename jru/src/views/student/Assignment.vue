@@ -4,11 +4,9 @@
     <div class="dashboard-content">
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
       <main class="dashboard-main">
-        <!-- Header for Assignments -->
         <div class="course-header">
           <h2>Assignments: <span>{{ totalAssignments }}</span></h2>
           
-          <!-- Course Sections -->
           <div class="course-sections" v-if="courses.length">
             <ul>
               <li v-for="section in courses[0].sections" :key="section.id">
@@ -19,7 +17,6 @@
         </div>
 
         <div class="course-cards">
-          <!-- Looping through courses -->
           <div 
             class="course-card" 
             v-for="course in courses" 
@@ -32,7 +29,6 @@
               <h4 class="course-name">{{ course.course_name }}</h4>
             </div>
 
-            <!-- Display first assignment -->
             <div class="assignments-list" v-if="course.assignments.length > 0">
               <ul>
                 <li 
@@ -84,7 +80,6 @@ export default {
           const response = await axios.get(`http://127.0.0.1:8000/api/student_courses/${this.student.user_id}`);
           const courses = response.data.courses;
 
-          // Fetch assignments for each course
           for (const course of courses) {
             const assignmentsResponse = await axios.get(`http://127.0.0.1:8000/api/student_assignments/${this.student.user_id}/${course.course_id}`);
             course.assignments = assignmentsResponse.data.assignments;
@@ -123,20 +118,20 @@ export default {
 .dashboard-container {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Full height of the viewport */
-  overflow: hidden; /* Prevents overflow in the container itself */
+  height: 100vh;
+  overflow: hidden;
 }
 
 .dashboard-content {
   display: flex;
-  flex: 1; /* Take up the remaining space */
-  overflow: hidden; /* Prevents overflow in the content area */
+  flex: 1;
+  overflow: hidden;
 }
 
 .dashboard-main {
-  flex: 1; /* Main area should take the remaining space */
+  flex: 1;
   padding: 2rem;
-  overflow-y: auto; /* Allow scrolling if content overflows */
+  overflow-y: auto;
   background-color: #fff;
 }
 
@@ -144,7 +139,7 @@ export default {
   background-color: #D9D9D9;
   padding: 1rem;
   border-radius: 10px;
-  margin-bottom: 2rem; /* Space between header and the course cards */
+  margin-bottom: 2rem;
 }
 
 .course-header h2 {
@@ -166,8 +161,8 @@ export default {
 
 .course-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 items per row */
-  gap: 4rem; /* Adds space between cards */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4rem;
 }
 
 .course-card {
@@ -177,7 +172,7 @@ export default {
   display: flex;
   flex-direction: column;
   padding: 20px;
-  height: auto; /* Auto height to adjust based on content */
+  height: auto;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -194,20 +189,20 @@ export default {
 
 .course-info {
   display: flex;
-  align-items: center; /* Aligns the logo and text horizontally */
-  gap: 10px; /* Adds space between the icon and course name */
+  align-items: center;
+  gap: 10px;
 }
 
 .course-logo {
-  font-size: 20px; /* Adjust the icon size */
-  color: inherit; /* Set the icon color */
+  font-size: 20px;
+  color: inherit;
 }
 .course-card:not(.has-assignments) .course-name {
   color: black;
 }
 
 .course-card:not(.has-assignments) .course-logo {
-  color: black; /* Black logo when no assignments */
+  color: black;
 }
 .course-name {
   font-size: 20px;
@@ -233,5 +228,4 @@ export default {
   font-size: 0.9rem;
   color: #888;
 }
-
 </style>

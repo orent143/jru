@@ -26,7 +26,6 @@
                                 <div class="status-badge" :class="submission.status ? submission.status.toLowerCase() : 'unknown'">
                                     {{ submission.status || 'Unknown' }}
                                 </div>
-                                <!-- Display score if grade exists -->
                                 <div class="score" v-if="submission.grade !== null">
                                     <span class="score-label">Score:</span>
                                     <span class="score-value">{{ submission.grade }} / {{ exam.total_points }}</span>

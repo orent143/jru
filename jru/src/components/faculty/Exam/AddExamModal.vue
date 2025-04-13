@@ -40,7 +40,7 @@
 
 <script>
 import axios from "axios";
-import { useToast } from 'vue-toastification'; // Import the toast module
+import { useToast } from 'vue-toastification'; 
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
@@ -94,6 +94,10 @@ export default {
       this.showConfirmation = false;
       const toast = useToast();
 
+      if (!this.validateForm()) {
+        return;
+      }
+
       this.isSubmitting = true;
 
       const formData = new FormData();
@@ -103,12 +107,14 @@ export default {
       formData.append("exam_date", this.pendingExam.exam_date);
       formData.append("duration_minutes", this.pendingExam.duration);
 
+      // Only one of file or external link should be provided
+      let filePath = null;
       if (this.pendingExam.externalLink) {
         formData.append("external_link", this.pendingExam.externalLink);
-      }
-
-      if (this.pendingExam.file) {
+        filePath = this.pendingExam.externalLink;
+      } else if (this.pendingExam.file) {
         formData.append("file", this.pendingExam.file);
+        filePath = "File uploaded"; // Placeholder, will be replaced on refetch
       }
 
       try {
@@ -117,7 +123,14 @@ export default {
         });
 
         toast.success('Exam added successfully!');
-        this.$emit("add-exam", response.data);
+        
+        // Add file_path to the response data if needed
+        const examData = response.data;
+        if (!examData.file_path && filePath) {
+          examData.file_path = filePath;
+        }
+        
+        this.$emit("add-exam", examData);
         this.resetForm();
       } catch (error) {
         console.error("Error adding exam:", error);
@@ -125,6 +138,23 @@ export default {
       } finally {
         this.isSubmitting = false;
       }
+    },
+    validateForm() {
+      const toast = useToast();
+      
+      if (!this.courseId || !this.pendingExam.title || !this.pendingExam.description || 
+          !this.pendingExam.exam_date || !this.pendingExam.duration) {
+        toast.error('Please fill in all required fields.');
+        return false;
+      }
+      
+      // Check if both file and external link are provided
+      if (this.pendingExam.file && this.pendingExam.externalLink) {
+        toast.error('Please provide either a file OR an external link, not both.');
+        return false;
+      }
+      
+      return true;
     },
     resetForm() {
       this.title = "";

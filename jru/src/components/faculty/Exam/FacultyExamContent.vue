@@ -40,7 +40,6 @@
       </main>
     </div>
 
-    <!-- ✅ Add Exam Modal -->
     <AddExamModal v-if="showAddExamModal"
                   :courseId="this.$route.params.courseId"
                   @close="showAddExamModal = false"
@@ -86,7 +85,7 @@ export default {
   methods: {
     async fetchExams() {
       try {
-        const courseId = this.$route.params.courseId; // Get course ID from route
+        const courseId = this.$route.params.courseId; 
         const response = await axios.get(`http://127.0.0.1:8000/api/exams/exams/${courseId}`);
 
         this.course = {
@@ -94,7 +93,6 @@ export default {
           exams: response.data.exams,
         };
 
-        // Filter upcoming exams (example: filter by future dates)
         this.upcomingExams = this.course.exams.filter(exam => {
           return new Date(exam.exam_date) >= new Date();
         });
@@ -155,7 +153,6 @@ export default {
     background-color: #fff;
 }
 
-/* Course Header */
 .course-header {
     justify-content: space-between;
     align-items: center;

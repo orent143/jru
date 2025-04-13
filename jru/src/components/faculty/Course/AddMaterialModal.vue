@@ -32,7 +32,7 @@
 
 <script>
 import axios from "axios";
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification'; 
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
@@ -40,7 +40,7 @@ export default {
     ConfirmationModal
   },
   props: {
-    courseId: Number, // Ensure the parent component passes the courseId
+    courseId: Number, 
   },
   data() {
     return {

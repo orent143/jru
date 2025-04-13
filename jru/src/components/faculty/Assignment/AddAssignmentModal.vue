@@ -1,28 +1,26 @@
 <template>
-  <div class="modal-container">
-    <div class="modal">
-      <div class="modal-content">
-        <span class="close" @click="closeModal">&times;</span>
-        <h2>Add New Assignment</h2>
-        
-        <label for="title">Assignment Title:</label>
-        <input v-model="title" type="text" placeholder="Enter Title" required />
-  
-        <label for="description">Assignment Description:</label>
-        <textarea v-model="description" placeholder="Enter Description"></textarea>
-  
-        <label for="due_date">Due Date:</label>
-        <input v-model="due_date" type="date" required />
-  
-        <label for="file-upload">Upload File:</label>
-        <input type="file" @change="handleFileUpload" />
-        <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
+  <div class="modal">
+    <div class="modal-content">
+      <span class="close" @click="closeModal">&times;</span>
+      <h2>Add New Assignment</h2>
 
-        <label for="external-link">External Link (Optional):</label>
-        <input v-model="externalLink" type="url" placeholder="Enter external link (if any)" />
-  
-        <button @click="confirmAddAssignment" :disabled="isSubmitting">Add Assignment</button>
-      </div>
+      <label for="title">Assignment Title:</label>
+      <input v-model="title" type="text" placeholder="Enter Title" required />
+
+      <label for="description">Assignment Description:</label>
+      <textarea v-model="description" placeholder="Enter Description"></textarea>
+
+      <label for="due_date">Due Date:</label>
+      <input v-model="due_date" type="date" required />
+
+      <label for="file-upload">Upload File (Optional):</label>
+      <input type="file" @change="handleFileUpload" />
+      <p v-if="fileName" class="file-name">Selected File: {{ fileName }}</p>
+
+      <label for="external_link">External Link (Optional):</label>
+      <input v-model="externalLink" type="url" placeholder="Enter external link (if any)" />
+
+      <button @click="confirmAddAssignment" :disabled="isSubmitting">Add Assignment</button>
     </div>
   </div>
 
@@ -39,13 +37,11 @@
 
 <script>
 import axios from "axios";
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
-  components: {
-    ConfirmationModal
-  },
+  components: { ConfirmationModal },
   props: {
     courseId: Number,
   },
@@ -59,7 +55,7 @@ export default {
       externalLink: "",
       isSubmitting: false,
       showConfirmation: false,
-      pendingAssignment: null
+      pendingAssignment: null,
     };
   },
   methods: {
@@ -67,7 +63,6 @@ export default {
       this.file = event.target.files[0];
       this.fileName = this.file ? this.file.name : "";
     },
-
     confirmAddAssignment() {
       const toast = useToast();
 
@@ -81,12 +76,11 @@ export default {
         description: this.description,
         due_date: this.due_date,
         file: this.file,
-        externalLink: this.externalLink
+        externalLink: this.externalLink,
       };
 
       this.showConfirmation = true;
     },
-
     async handleAssignmentSubmission() {
       this.showConfirmation = false;
       const toast = useToast();
@@ -99,12 +93,13 @@ export default {
       formData.append("description", this.pendingAssignment.description);
       formData.append("due_date", this.pendingAssignment.due_date);
 
-      if (this.pendingAssignment.file) {
-        formData.append("file", this.pendingAssignment.file);
-      }
-
+      let filePath = null;
       if (this.pendingAssignment.externalLink) {
         formData.append("external_link", this.pendingAssignment.externalLink);
+        filePath = this.pendingAssignment.externalLink;
+      } else if (this.pendingAssignment.file) {
+        formData.append("file", this.pendingAssignment.file);
+        filePath = "File uploaded";
       }
 
       try {
@@ -113,7 +108,13 @@ export default {
         });
 
         toast.success('Assignment added successfully!');
-        this.$emit("add-assignment", response.data);
+
+        const assignmentData = response.data;
+        if (!assignmentData.file_path && filePath) {
+          assignmentData.file_path = filePath;
+        }
+
+        this.$emit("add-assignment", assignmentData);
         this.resetForm();
       } catch (error) {
         console.error("Error adding assignment:", error);
@@ -137,7 +138,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 .modal {
@@ -192,14 +192,13 @@ export default {
   border-radius: 12px;
   width: 100%;
   border: 1px solid #ccc;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .file-name {
   font-size: 14px;
   color: #007BF6;
-  margin-bottom: 10px;
-  font-weight: 600;
+  margin-bottom: 15px;
 }
 
 .modal-content button {
@@ -215,5 +214,10 @@ export default {
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.modal-content button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 </style>

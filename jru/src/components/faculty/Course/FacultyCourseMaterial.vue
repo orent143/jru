@@ -4,7 +4,6 @@
     <div class="course-content">
       <Sidebar :isCollapsed="isSidebarCollapsed" />
 
-      <!-- ✅ Material Details -->
       <div class="material-detail-container">
         <button class="back-btn" @click="goBack">
           <i class="pi pi-arrow-left"></i> Back to Course
@@ -31,7 +30,6 @@
               <p>{{ material?.content || "No content available" }}</p>
             </div>
 
-            <!-- ✅ Display File Link -->
             <div v-if="material?.file_path" class="uploaded-materials">
               <h2>Attachments:</h2>
               <div class="material-item">
@@ -48,7 +46,6 @@
           </div>
 
           <div class="side-content">
-            <!-- ✅ Messages Section (For Future Chat Feature) -->
             <div class="messages-section">
               <h2>Discussion</h2>
               <div v-if="messages.length">
@@ -117,7 +114,6 @@ handleMaterialUpdate(updatedMaterial) {
         const response = await axios.get(`http://127.0.0.1:8000/api/course_materials/${this.courseId}`);
         const materials = response.data.materials;
 
-        // ✅ Find the correct material based on materialId
         this.material = materials.find(m => m.content_id == this.materialId);
 
         if (!this.material) {
@@ -142,7 +138,6 @@ handleMaterialUpdate(updatedMaterial) {
         this.newMessage = "";
       }
     },
-    // Format the posted_at date
     formatDate(dateString) {
       const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
       const date = new Date(dateString);
@@ -156,7 +151,6 @@ handleMaterialUpdate(updatedMaterial) {
 </script>
 
 <style scoped>
-/* Style for the posted at date */
 .posted-at {
   font-size: 1rem;
   color: #777;
@@ -167,11 +161,13 @@ handleMaterialUpdate(updatedMaterial) {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden; 
 }
 
 .course-content {
   display: flex;
   flex: 1;
+  overflow: hidden; 
 }
 
 .material-detail-container {
@@ -179,7 +175,10 @@ handleMaterialUpdate(updatedMaterial) {
   padding: 1rem;
   max-width: 100%;
   margin: 0 auto;
+  overflow-y: auto; 
+  max-height: calc(100vh - 64px);
   background-color: #fff;
+  position: relative; 
 }
 
 .back-btn {
@@ -192,6 +191,10 @@ handleMaterialUpdate(updatedMaterial) {
   margin-bottom: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .back-btn:hover {
@@ -202,8 +205,7 @@ handleMaterialUpdate(updatedMaterial) {
   display: grid;
   grid-template-columns: 3fr 1fr;
   gap: 2rem;
-  height: auto;
-  margin-bottom: 5rem;
+  padding-bottom: 2rem; 
 }
 
 .main-content {

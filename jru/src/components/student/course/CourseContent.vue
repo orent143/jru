@@ -82,10 +82,10 @@ export default {
           `http://127.0.0.1:8000/api/student_course_content/${this.studentId}/${this.courseId}`
         );
 
-        console.log("Fetched Data:", response.data); // Debugging
+        console.log("Fetched Data:", response.data); 
 
-        this.courseMaterials = response.data.content || []; // ✅ Use `content` from API
-        this.course = response.data.course || { course_name: `Course ${this.courseId}` }; // ✅ Ensure `course` is assigned properly
+        this.courseMaterials = response.data.content || []; 
+        this.course = response.data.course || { course_name: `Course ${this.courseId}` }; 
       } catch (error) {
         console.error("Error fetching course content:", error);
       }
@@ -136,6 +136,8 @@ export default {
   padding: 20px;
   border-radius: 20px;
   background-color: #D9D9D9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+
 }
 
 .course-header h2 {
@@ -165,6 +167,8 @@ export default {
   background-color: #D9D9D9;
   padding: 1rem;
   border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
 }
 
 .announcements h3 {

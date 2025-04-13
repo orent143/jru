@@ -6,14 +6,12 @@
             <main class="dashboard-main">
                 <h1>Welcome back, {{ faculty?.name || 'Instructor' }}!</h1>
                 
-                <!-- Loading State -->
                 <div v-if="isLoading" class="loading-container">
                     <div class="loading-spinner"></div>
                     <p>Loading your dashboard...</p>
                 </div>
                 
                 <div v-else>
-                    <!-- Current Courses -->
                     <div class="una-container">
                         <h2>Current Courses</h2>
                         <table v-if="courses.length > 0">
@@ -59,7 +57,6 @@
                     </div>
 
                     <div class="side-by-side">
-                        <!-- Upcoming Classes -->
                         <div class="upcoming-class-container">
                             <h2>Upcoming Classes</h2>
                             <div v-if="upcomingEvents.length > 0">
@@ -88,7 +85,6 @@
                             </div>
                         </div>
                         
-                        <!-- Recent Submissions -->
                         <div class="submissions-container">
                             <h2>Recent Submissions</h2>
                             <div v-if="recentSubmissions.length > 0">
@@ -150,7 +146,6 @@ export default {
     computed: {
         upcomingEvents() {
             const today = new Date();
-            // Get events for next 7 days that are of type 'class'
             return this.events
                 .filter(event => {
                     const eventDate = new Date(event.date);
@@ -231,19 +226,12 @@ export default {
         },
         
         async fetchSubmissions() {
-            // This is a placeholder - you should replace with actual API call
-            // when the submissions endpoint is available
             try {
-                // Simulated data - replace with actual API call
                 this.recentSubmissions = [
                     { id: 1, student_name: 'John Doe', assignment_title: 'Assignment 1', status: 'Submitted' },
                     { id: 2, student_name: 'Jane Smith', assignment_title: 'Quiz 1', status: 'Graded' },
                     { id: 3, student_name: 'Bob Johnson', assignment_title: 'Assignment 2', status: 'Pending' }
                 ];
-                
-                // Uncomment when API endpoint is available
-                // const response = await axios.get('http://127.0.0.1:8000/api/submissions/recent');
-                // this.recentSubmissions = response.data;
             } catch (error) {
                 console.error('Error fetching submissions:', error);
                 throw error;
@@ -319,8 +307,8 @@ export default {
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    max-height: 300px; /* Set a smaller height for the container */
-    overflow-y: auto;  /* Enable vertical scrolling if content overflows */
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .una-container h2 {
@@ -459,7 +447,6 @@ h1 {
     text-decoration: underline;
 }
 
-/* Status indicators */
 .status-submitted {
     color: #007BF6;
     font-weight: 600;
@@ -480,7 +467,6 @@ h1 {
     font-weight: 600;
 }
 
-/* Loading spinner */
 .loading-container {
     display: flex;
     flex-direction: column;

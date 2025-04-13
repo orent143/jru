@@ -113,6 +113,10 @@ export default {
       this.showConfirmation = false;
       const toast = useToast();
 
+      if (!this.validateForm()) {
+        return;
+      }
+
       this.isSubmitting = true;
 
       const formData = new FormData();
@@ -121,12 +125,13 @@ export default {
       formData.append("exam_date", this.pendingExam.exam_date);
       formData.append("duration_minutes", this.pendingExam.duration_minutes);
 
-      if (this.pendingExam.file) {
-        formData.append("file", this.pendingExam.file);
-      }
-
+      let newFilePath = this.exam.file_path; 
       if (this.pendingExam.externalLink) {
         formData.append("external_link", this.pendingExam.externalLink);
+        newFilePath = this.pendingExam.externalLink;
+      } else if (this.pendingExam.file) {
+        formData.append("file", this.pendingExam.file);
+        newFilePath = "updated"; 
       }
 
       try {
@@ -135,14 +140,16 @@ export default {
         });
 
         toast.success('Exam updated successfully!');
+        
         this.$emit("update-exam", {
           ...this.exam,
           title: this.pendingExam.title,
           description: this.pendingExam.description,
           exam_date: this.pendingExam.exam_date,
           duration_minutes: this.pendingExam.duration_minutes,
-          external_link: this.pendingExam.externalLink
+          file_path: newFilePath
         });
+        
         this.closeModal();
       } catch (error) {
         console.error("Error updating exam:", error);
@@ -151,7 +158,23 @@ export default {
         this.isSubmitting = false;
       }
     },
-
+    validateForm() {
+      const toast = useToast();
+      
+      if (!this.pendingExam.title || !this.pendingExam.description || 
+          !this.pendingExam.exam_date || !this.pendingExam.duration_minutes) {
+        toast.error('Please fill in all required fields.');
+        return false;
+      }
+      
+      // Check if both file and external link are provided
+      if (this.pendingExam.file && this.pendingExam.externalLink) {
+        toast.error('Please provide either a file OR an external link, not both.');
+        return false;
+      }
+      
+      return true;
+    },
     closeModal() {
       this.$emit("close");
     }

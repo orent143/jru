@@ -38,7 +38,9 @@
                   <td>{{ user.user_id }}</td>
                   <td>{{ user.name }}</td>
                   <td>{{ user.email }}</td>
-                  <td>{{ user.role }}</td>
+                  <td>
+                    <span :class="['role-badge', user.role]">{{ user.role }}</span>
+                  </td>
                   <td>{{ formatDate(user.created_at) }}</td>
                   <td>
                     <button class="action-btn edit" @click="editUser(user)">
@@ -56,51 +58,83 @@
       </div>
     </div>
 
-    <!-- Add User Modal -->
     <AddUser 
       :isVisible="showAddUserModal" 
       @close="closeAddUserModal" 
       @user-added="fetchUsers"
     />
 
-    <!-- Edit User Modal -->
     <EditUser 
       :show="showEditUserModal" 
       :user="selectedUser" 
       @close="closeEditUserModal" 
       @update="fetchUsers"
     />
+    
+    <ConfirmationModal
+      :show="showConfirmModal"
+      :title="confirmModalTitle"
+      :message="confirmModalMessage"
+      :confirm-text="confirmModalButton"
+      :type="confirmModalType"
+      @confirm="handleConfirmAction"
+      @cancel="cancelConfirmAction"
+    />
   </div>
 </template>
 
 <script>
 import axios from 'axios';
-import { useToast } from 'vue-toastification'; // Import toast
+import { useToast } from 'vue-toastification';
 import Header from '@/components/header.vue';
 import SideBar from '@/components/admin/sidebar.vue';
 import AddUser from '@/components/admin/users/AddUser.vue';
 import EditUser from '@/components/admin/users/EditUser.vue';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
 export default {
   name: 'UserManagement',
-  components: { Header, SideBar, AddUser, EditUser },
+  components: { 
+    Header, 
+    SideBar, 
+    AddUser, 
+    EditUser,
+    ConfirmationModal 
+  },
+  setup() {
+    const toast = useToast();
+    return { toast };
+  },
   data() {
     return {
       searchQuery: '',
       roleFilter: '',
       users: [],
+      user: {
+        name: 'Admin User',
+        role: 'admin'
+      },
       isSidebarCollapsed: false,
       showAddUserModal: false,
       showEditUserModal: false,
       selectedUser: null,
+      showConfirmModal: false,
+      confirmModalTitle: '',
+      confirmModalMessage: '',
+      confirmModalButton: '',
+      confirmModalType: 'primary',
+      pendingAction: null,
+      pendingActionData: null
     };
   },
   computed: {
     filteredUsers() {
       return this.users.filter(user => {
         return (
-          (user.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-            user.email.toLowerCase().includes(this.searchQuery.toLowerCase())) &&
+          (this.searchQuery === '' || 
+           user.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+           user.email.toLowerCase().includes(this.searchQuery.toLowerCase())
+          ) && 
           (!this.roleFilter || user.role === this.roleFilter)
         );
       });
@@ -121,35 +155,48 @@ export default {
         const response = await axios.get('http://127.0.0.1:8000/api/users/');
         this.users = response.data;
       } catch (error) {
-        alert('Error fetching users: ' + (error.response?.data?.detail || error.message));
+        this.toast.error('Error fetching users: ' + (error.response?.data?.detail || error.message));
         console.error('Error fetching users:', error);
       }
     },
     formatDate(dateString) {
       return new Date(dateString).toLocaleString();
     },
-    openEditUserModal(user) {
-      this.selectedUser = { ...user }; // Clone the user object
+    editUser(user) {
+      this.selectedUser = { ...user };
       this.showEditUserModal = true;
     },
     closeEditUserModal() {
       this.showEditUserModal = false;
       this.selectedUser = null;
     },
-    async confirmDelete(userId) {
-      if (confirm('Are you sure you want to delete this user?')) {
-        await this.deleteUser(userId);
+    confirmDelete(userId) {
+      this.pendingAction = 'deleteUser';
+      this.pendingActionData = userId;
+      this.confirmModalTitle = 'Delete User';
+      this.confirmModalMessage = 'Are you sure you want to delete this user? This action cannot be undone.';
+      this.confirmModalButton = 'Delete';
+      this.confirmModalType = 'danger';
+      this.showConfirmModal = true;
+    },
+    handleConfirmAction() {
+      if (this.pendingAction === 'deleteUser') {
+        this.deleteUser(this.pendingActionData);
       }
+      this.showConfirmModal = false;
+    },
+    cancelConfirmAction() {
+      this.pendingAction = null;
+      this.pendingActionData = null;
+      this.showConfirmModal = false;
     },
     async deleteUser(userId) {
-      const toast = useToast(); // Initialize toast
-
       try {
         await axios.delete(`http://127.0.0.1:8000/api/users/${userId}`);
-        this.toast.success('✅ User deleted successfully!'); // Success toast
-        this.fetchUsers(); // Refresh the users list
+        this.toast.success('User deleted successfully!');
+        this.fetchUsers();
       } catch (error) {
-        this.toast.error('❌ Error deleting user. Please try again.'); // Error toast
+        this.toast.error('Error deleting user. Please try again.');
         console.error('Error deleting user:', error);
       }
     }
@@ -160,12 +207,18 @@ export default {
 };
 </script>
 
-
-  <style scoped>
+<style scoped>
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
 
 .content-wrapper {
   display: flex;
   flex: 1;
+  overflow: hidden;
 }
 
 .main-content {
@@ -179,169 +232,107 @@ export default {
   width: 100%;
 }
   
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #2c3e50;
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+  
+.add-user-btn {
+  background-color: #007BF6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.2s;
+}
 
-    margin-bottom: 20px;
-  }
+.add-user-btn:hover {
+  background-color: #0056b3;
+}
   
-  .add-user-btn {
-    background-color: #007BF6;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
+.filters {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
   
-  .filters {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
+.filters select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: white;
+  font-size: 14px;
+}
   
-  .search-box input,
-  .filter-options select {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-  }
-  
-  .table-container {
-  background: white;  /* Changed from rgb(0, 0, 0) */
-  border-radius: 10px;
+.table-container {
+  background: white;
+  border-radius: 8px;
   color: #333;
-
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
   
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
   
-  th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
   
-  th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-  }
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
   
-  .role-badge, .status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 12px;
-    font-weight: 500;
-  }
+.role-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
   
-  .role-badge.student { background: #e3f2fd; color: #1565c0; }
-  .role-badge.faculty { background: #f3e5f5; color: #7b1fa2; }
-  .role-badge.admin { background: #fbe9e7; color: #d84315; }
+.role-badge.student { background: #e3f2fd; color: #1565c0; }
+.role-badge.faculty { background: #f3e5f5; color: #7b1fa2; }
+.role-badge.admin { background: #fbe9e7; color: #d84315; }
   
-  .status-badge.active { background: #e8f5e9; color: #2e7d32; }
-  .status-badge.inactive { background: #ffebee; color: #c62828; }
-  
-  .actions {
-    display: flex;
-    gap: 5px;
-  }
-  
-  .action-btn {
-    padding: 8px;
+.action-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
   background-color: transparent;
   border: none;
   border-radius: 50%;
   cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.3s;
-  margin-right: 10px;
-  width: 35px;
-  height: 35px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  }
+  transition: background-color 0.2s;
+  margin-right: 5px;
+}
   
-  .action-btn.edit {
-  color: #1976d2;
+.action-btn.edit { color: #1976d2; }
+.action-btn.delete { color: #dc3545; }
+  
+.action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.action-btn.delete {
-  color: #dc3545;
-}
-  
-  .action-btn:hover {
+.action-btn:active {
   background-color: rgba(0, 0, 0, 0.1);
 }
-
-.action-btn:active {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-.action-btn:active {
-  background-color: #004080;
-}
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .modal-content {
-    background: white;
-    padding: 20px;
-    color:#333;
-    border-radius: 10px;
-    width: 500px;
-  }
-  
-  .form-group {
-    margin-bottom: 15px;
-  }
-  
-  .form-group label {
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  .form-group input,
-  .form-group select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-  }
-  
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .save-btn {
-    background: #007BF6;
-    color: white;
-  }
-  
-  .cancel-btn {
-    background: #6c757d;
-    color: white;
-  }
-  </style>
+</style> 

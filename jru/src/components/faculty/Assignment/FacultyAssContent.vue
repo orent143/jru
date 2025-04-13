@@ -80,7 +80,7 @@ export default {
     return {
       course: null,
       assignments: [],
-      courses: [], // This can be empty as placeholder for Sidebar
+      courses: [],
       showAddAssignmentModal: false,
       teacher: {},
       searchQuery: '',
@@ -105,16 +105,13 @@ export default {
   methods: {
     async fetchAssignments() {
       try {
-        // Fetch assignments data for a specific course
         const response = await axios.get(`http://127.0.0.1:8000/api/assignments/assignments/${this.courseId}`);
 
-        // Assign the fetched course and assignments to the component data
         this.course = {
           name: response.data.course_name, 
-          sections: [],  // You can add sections to the course if needed
+          sections: [],
         };
 
-        // Now map the assignments data from the response
         this.assignments = response.data.assignments.map(assignment => ({
           assignment_id: assignment.assignment_id,
           title: assignment.title,
@@ -162,7 +159,7 @@ export default {
     }
   },
   mounted() {
-    this.fetchAssignments();  // Fetch assignments on mount
+    this.fetchAssignments();
   }
 };
 </script>
@@ -190,7 +187,6 @@ export default {
   background-color: #fff;
 }
 
-/* Course Header */
 .course-header {
   justify-content: space-between;
   align-items: center;
@@ -199,7 +195,7 @@ export default {
   background-color: #D9D9D9;
   position: relative;
 }
-/* Add Material Button */
+
 .add-btn {
   position: absolute;
   top: 15px;
@@ -236,15 +232,13 @@ export default {
   margin-bottom: 0.5rem;
 }
 
-/* Main Content Layout */
 .course-hero {
   display: flex;
   flex: 1;
-  overflow: auto; /* Allow scrolling in the course-hero section */
-  max-height: 60vh; /* Adjust as needed */
+  overflow: auto;
+  max-height: 60vh;
 }
 
-/* Left Panel */
 .content-left {
   display: flex;
   flex-direction: column;
@@ -254,7 +248,6 @@ export default {
   overflow: auto;
 }
 
-/* Right Panel */
 .content-right {
   display: flex;
   flex-direction: column;
@@ -265,7 +258,6 @@ export default {
   overflow: auto;
 }
 
-/* Course Materials */
 .course-materials {
   display: flex;
   flex-direction: column;
@@ -298,7 +290,6 @@ export default {
   color: #2c3e50;
 }
 
-/* Announcements & Assignments */
 .assignments-summary {
   background-color: #D9D9D9;
   padding: 1rem;
@@ -354,7 +345,6 @@ export default {
   margin-bottom: 0.5rem;
 }
 
-/* Form Groups */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -378,7 +368,6 @@ export default {
   color: #aaa;
 }
 
-/* Section Titles */
 .course-materials h3,
 .quizzes h3 {
   font-size: 1.5rem;
@@ -405,7 +394,7 @@ export default {
 .view-btn:hover {
   background-color: #1a252f;
 }
-/* Responsive Design */
+
 @media (max-width: 768px) {
   .course-content {
     flex-direction: column;

@@ -1,4 +1,3 @@
-<!-- ConfirmationModal.vue -->
 <template>
   <div v-if="show" class="modal-overlay">
     <div class="modal-content">

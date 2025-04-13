@@ -81,7 +81,7 @@ export default {
           }
 
           this.courses = courses;
-          console.log('Courses with exams:', this.courses); // Debugging log
+          console.log('Courses with exams:', this.courses); 
         } else {
           console.error("User is not authenticated or not a student");
         }

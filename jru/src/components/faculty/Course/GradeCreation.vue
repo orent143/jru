@@ -62,7 +62,6 @@
             </table>
           </div>
 
-          <!-- Add/Edit Grade Modal -->
           <div v-if="showGradeModal" class="modal">
             <div class="modal-content">
               <span class="close" @click="closeGradeModal">&times;</span>
@@ -158,7 +157,6 @@
             </div>
           </div>
 
-          <!-- Confirmation Modal for Delete -->
           <ConfirmationModal
             :show="showDeleteConfirmation"
             title="Delete Grade"
@@ -223,7 +221,6 @@ export default {
   },
   computed: {
     isFormValid() {
-      // At least one grade must be provided
       return this.gradeForm.student_id && 
              (this.gradeForm.prelim_grade !== null || 
               this.gradeForm.midterm_grade !== null || 
@@ -237,7 +234,7 @@ export default {
     getCurrentSchoolYear() {
       const now = new Date();
       const year = now.getFullYear();
-      const month = now.getMonth() + 1; // 0-based month
+      const month = now.getMonth() + 1; 
       const startYear = month < 7 ? year - 1 : year;
       const endYear = month < 7 ? year : year + 1;
       return `${startYear}-${endYear}`;
@@ -296,13 +293,11 @@ export default {
     async submitGrade() {
       const toast = useToast();
       
-      // Validate at least one grade is provided
       if (!this.isFormValid) {
         toast.error("Please provide at least one grade");
         return;
       }
       
-      // Validate grade ranges
       if ((this.gradeForm.prelim_grade !== null && (this.gradeForm.prelim_grade < 0 || this.gradeForm.prelim_grade > 100)) ||
           (this.gradeForm.midterm_grade !== null && (this.gradeForm.midterm_grade < 0 || this.gradeForm.midterm_grade > 100)) ||
           (this.gradeForm.finals_grade !== null && (this.gradeForm.finals_grade < 0 || this.gradeForm.finals_grade > 100))) {

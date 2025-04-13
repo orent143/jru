@@ -9,30 +9,25 @@
                         <h1>Assignments</h1>
                     </div>
 
-                    <!-- Show loading message -->
                     <p v-if="loading">Loading assignments...</p>
-
-                    <!-- Show error message if request fails -->
                     <p v-if="error" class="error">{{ error }}</p>
 
                     <div v-if="!loading && assignments.length" class="assignment-cards">
-    <div 
-        v-for="assignment in assignments" 
-        :key="assignment.assignment_id" 
-        class="assignment-card" 
-        @click="startAssignment(assignment.assignment_id, assignment.course_id)"
-    >
-        <div class="card-header">
-            <h2>{{ getCourseName(assignment.course_id) }} </h2>
-            <p>Section: {{ getCourseSection(assignment.course_id) }}</p>
-
-        </div>
-        <div class="assignment-details">
-            <p><strong>Description:</strong> {{ assignment.description }}</p>
-        </div>
-    </div>
-</div>
-
+                        <div 
+                            v-for="assignment in assignments" 
+                            :key="assignment.assignment_id" 
+                            class="assignment-card" 
+                            @click="startAssignment(assignment.assignment_id, assignment.course_id)"
+                        >
+                            <div class="card-header">
+                                <h2>{{ getCourseName(assignment.course_id) }} </h2>
+                                <p>Section: {{ getCourseSection(assignment.course_id) }}</p>
+                            </div>
+                            <div class="assignment-details">
+                                <p><strong>Description:</strong> {{ assignment.description }}</p>
+                            </div>
+                        </div>
+                    </div>
 
                     <div v-if="showCreateAssignmentForm" class="modal">
                         <div class="modal-content">
@@ -82,7 +77,7 @@ export default {
                 due_date: '',
                 course_id: null
             },
-            user: null // Store logged-in user data
+            user: null
         };
     },
     methods: {
@@ -126,13 +121,13 @@ export default {
             }
         },
         getCourseName(course_id) {
-        const course = this.courses.find(course => course.course_id === course_id);
-        return course ? course.course_name : 'Unknown Course';
-    },
-    getCourseSection(course_id) {
-        const course = this.courses.find(course => course.course_id === course_id);
-        return course ? course.section : 'Unknown Section';
-    },
+            const course = this.courses.find(course => course.course_id === course_id);
+            return course ? course.course_name : 'Unknown Course';
+        },
+        getCourseSection(course_id) {
+            const course = this.courses.find(course => course.course_id === course_id);
+            return course ? course.section : 'Unknown Section';
+        },
         async createAssignment() {
             try {
                 if (!this.user) return;
@@ -165,7 +160,6 @@ export default {
             }
         },
         async editAssignment(assignment_id) {
-            // Placeholder for edit function (modal or inline editing can be added)
             console.log(`Edit assignment ${assignment_id}`);
         },
         startAssignment(assignmentId, courseId) {
@@ -202,8 +196,8 @@ export default {
     flex-grow: 1;
     padding: 20px;
     background-color: #fff;
-    overflow-y: auto; /* Allow vertical scrolling if the content is too long */
-    max-height: 100vh; /* Make sure it doesn't overflow out of the screen */
+    overflow-y: auto;
+    max-height: 100vh;
 }
 .assignments {
     margin-bottom: 5rem;
@@ -221,20 +215,20 @@ export default {
 
 .assignment-cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 items per row */
-    gap: 4rem; /* Adds space between cards */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4rem;
 }
 
 .assignment-card {
     background-color: #D9D9D9ff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  width: 95%;
-  height: auto;
-  cursor: pointer; /* Change the cursor to a pointer to indicate the card is clickable */
-  transition: transform 0.2s, box-shadow 0.2s; /* Add a transition effect for hover */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+    height: auto;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .assignment-card:hover {
@@ -243,7 +237,7 @@ export default {
 }
 
 .card-header {
-    position: relative; /* Needed for absolute positioning of card actions */
+    position: relative;
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
@@ -261,7 +255,7 @@ export default {
 }
 
 .card-actions {
-    position: absolute; /* Position the actions at the top-right corner */
+    position: absolute;
     top: 10px;
     right: 10px;
     display: flex;
@@ -281,8 +275,7 @@ export default {
     border-radius: 8px;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
-    display: flex
-;
+    display: flex;
     flex-direction: column;
     min-height: 100px;
 }

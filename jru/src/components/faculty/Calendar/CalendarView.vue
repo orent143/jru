@@ -459,7 +459,7 @@ export default {
 }
 
 .calendar-header h1 {
-  color: #000;
+  color: #2c3e50;
 }
 
 .current-date {

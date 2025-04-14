@@ -158,6 +158,22 @@ export default {
         localStorage.setItem('notifications', JSON.stringify(this.notifications));
       } catch (error) {
         console.error('Error fetching notifications:', error);
+        
+        // Add a fallback notification if there are no notifications
+        if (this.notifications.length === 0) {
+          const notificationType = this.user?.role === 'student' ? 'student-welcome' : 'system-welcome';
+          const notificationTitle = this.user?.role === 'student' ? 'Welcome to Student Dashboard' : 
+                                  (this.user?.role === 'faculty' ? 'Welcome to Faculty Dashboard' : 'Welcome to JRU Dashboard');
+          
+          this.notifications.push({
+            id: notificationType,
+            title: notificationTitle,
+            message: 'Welcome to your personalized dashboard. Your activities will appear here.',
+            time: new Date().toISOString(),
+            read: false,
+            type: 'system'
+          });
+        }
       }
     },
     async fetchStudentEventNotifications() {
@@ -168,42 +184,59 @@ export default {
           const courses = courseResponse.data.courses;
           
           for (const course of courses) {
-            const eventsResponse = await axios.get(`http://127.0.0.1:8000/api/events/course/${course.course_id}`);
-            
-            if (eventsResponse.data && eventsResponse.data.length > 0) {
-              const now = new Date();
-              const nextWeek = new Date();
-              nextWeek.setDate(nextWeek.getDate() + 7);
+            try {
+              const eventsResponse = await axios.get(`http://127.0.0.1:8000/api/events/course/${course.course_id}`);
               
-              const upcomingEvents = eventsResponse.data.filter(event => {
-                const eventDate = new Date(event.date);
-                return eventDate >= now && eventDate <= nextWeek;
-              });
-              
-              for (const event of upcomingEvents) {
-                const existingNotif = this.notifications.find(n => 
-                  n.eventId === event.event_id && n.type === event.type
-                );
+              if (eventsResponse.data && eventsResponse.data.length > 0) {
+                const now = new Date();
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
                 
-                if (!existingNotif) {
-                  this.notifications.push({
-                    id: `event-${event.event_id}`,
-                    title: `Upcoming ${event.type}: ${event.title}`,
-                    message: `${event.course_name} - ${new Date(event.date).toLocaleDateString()}`,
-                    time: new Date().toISOString(),
-                    read: false,
-                    type: event.type,
-                    eventId: event.event_id,
-                    courseId: event.course_id,
-                    date: event.date
-                  });
+                const upcomingEvents = eventsResponse.data.filter(event => {
+                  const eventDate = new Date(event.date);
+                  return eventDate >= now && eventDate <= nextWeek;
+                });
+                
+                for (const event of upcomingEvents) {
+                  const existingNotif = this.notifications.find(n => 
+                    n.eventId === event.event_id && n.type === event.type
+                  );
+                  
+                  if (!existingNotif) {
+                    this.notifications.push({
+                      id: `event-${event.event_id}`,
+                      title: `Upcoming ${event.type}: ${event.title}`,
+                      message: `${event.course_name} - ${new Date(event.date).toLocaleDateString()}`,
+                      time: new Date().toISOString(),
+                      read: false,
+                      type: event.type,
+                      eventId: event.event_id,
+                      courseId: event.course_id,
+                      date: event.date
+                    });
+                  }
                 }
               }
+            } catch (eventError) {
+              console.warn(`Could not fetch events for course ${course.course_id}:`, eventError);
+              // Continue with next course even if one fails
             }
           }
         }
       } catch (error) {
         console.error('Error fetching student event notifications:', error);
+        
+        // Add fallback notification if there are no courses
+        if (!this.notifications.find(n => n.id === 'student-welcome')) {
+          this.notifications.push({
+            id: 'student-welcome',
+            title: 'Welcome to Student Dashboard',
+            message: 'You can view your courses and upcoming assignments here.',
+            time: new Date().toISOString(),
+            read: false,
+            type: 'system'
+          });
+        }
       }
     },
     async fetchFacultyNotifications() {

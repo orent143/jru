@@ -14,7 +14,7 @@
   
         <li>
           <i class="pi pi-chart-bar"></i>
-          <router-link to="/analytics"><strong>Reports & Analytics</strong></router-link>
+          <router-link to="/reports"><strong>Reports & Analytics</strong></router-link>
         </li>
   
         <li>

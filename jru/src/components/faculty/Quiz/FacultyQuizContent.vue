@@ -170,6 +170,8 @@ export default {
   border-radius: 20px;
   background-color: #D9D9D9;
   position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+
 }
 .add-btn {
   position: absolute;
@@ -275,6 +277,7 @@ export default {
   padding: 1rem;
   border-radius: 8px;
   width: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 

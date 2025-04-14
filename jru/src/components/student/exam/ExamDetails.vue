@@ -33,12 +33,15 @@
 
                 <div v-if="isExternalLink(currentExam.file_path)" class="attachment-item">
                   <i class="pi pi-link"></i>
-                  <a :href="currentExam.file_path" target="_blank">{{ getFileName(currentExam.file_path) }}</a>
+                  <a :href="currentExam.file_path" target="_blank" class="file-link">{{ currentExam.file_path }}</a>
+                  <i class="pi pi-external-link"></i>
                 </div>
-                <div v-else class="attachment-item" @click="downloadFile(currentExam.file_path)">
+                <div v-else class="attachment-item">
                   <i class="pi pi-file"></i>
-                  <span>{{ getFileName(currentExam.file_path) }}</span>
-                  <i class="pi pi-download"></i>
+                  <span class="file-name">{{ getFileName(currentExam.file_path) }}</span>
+                  <button class="download-button" @click="downloadFile(currentExam.file_path)">
+                    <i class="pi pi-download"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -66,12 +69,13 @@
                   <div v-if="existingSubmission.file_path" class="attachment-item">
                     <div v-if="isExternalLink(existingSubmission.file_path)">
                       <i class="pi pi-link"></i>
-                      <a :href="existingSubmission.file_path" target="_blank">{{ getFileName(existingSubmission.file_path) }}</a>
+                      <a :href="existingSubmission.file_path" target="_blank" class="file-link">{{ existingSubmission.file_path }}</a>
+                      <i class="pi pi-external-link"></i>
                     </div>
-                    <div v-else>
+                    <div v-else class="attachment-item-inner">
                       <i class="pi pi-file"></i>
-                      <span>{{ getFileName(existingSubmission.file_path) }}</span>
-                      <button @click="downloadFile(existingSubmission.file_path)" class="download-btn">
+                      <span class="file-name">{{ getFileName(existingSubmission.file_path) }}</span>
+                      <button @click="downloadFile(existingSubmission.file_path)" class="download-button">
                         <i class="pi pi-download"></i>
                       </button>
                     </div>
@@ -358,15 +362,27 @@ export default {
     },
 
     getFileName(fileUrl) {
-      return fileUrl ? fileUrl.split('/').pop() : '';
+      if (!fileUrl) return '';
+      if (this.isExternalLink(fileUrl)) return fileUrl;
+      
+      // Replace backslashes with forward slashes for consistency
+      const formattedUrl = fileUrl.replace(/\\/g, '/');
+      // Get the file name from the path
+      return formattedUrl.split('/').pop();
     },
 
     downloadFile(fileUrl) {
+      if (!fileUrl) return;
+      
       if (this.isExternalLink(fileUrl)) {
         window.open(fileUrl, '_blank');
-      } else {
-        const fileName = this.getFileName(fileUrl);
-        window.open(`http://127.0.0.1:8000/api/exams/download/${encodeURIComponent(fileName)}`, '_blank');
+        return;
+      }
+      
+      // Get just the filename without the path
+      const fileName = this.getFileName(fileUrl);
+      if (fileName) {
+        window.open(`http://127.0.0.1:8000/api/exams/download/${fileName}`, '_blank');
       }
     },
 
@@ -1022,5 +1038,39 @@ export default {
     overflow-y: auto;
     margin-bottom: 1rem;
     border-radius: 8px;
+}
+
+.file-link {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.download-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.download-button:hover {
+  background-color: #e9ecef;
+}
+
+.attachment-item-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
 }
 </style>

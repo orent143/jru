@@ -202,10 +202,56 @@ export default {
       return date ? new Date(date).toLocaleDateString() : 'N/A';
     },
     downloadAttachment(filePath) {
-      const formattedPath = filePath.replace(/\\/g, '/');
-      window.open(`http://127.0.0.1:8000/${formattedPath}`, "_blank");
+      if (!filePath) return;
+      
+      try {
+        // First check if it's an external URL (starting with http or https)
+        if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+          this.openFileInNewTab(filePath);
+          return;
+        }
+        
+        // If it's a local file path
+        let cleanPath = filePath.replace(/\\/g, '/');
+        
+        // Get the filename for download endpoints
+        const fileName = this.getFileName(cleanPath);
+        
+        // Try multiple approaches to maximize chances of success
+        // 1. Try the course-content download endpoint first
+        this.tryDownloadMethods([
+          `http://127.0.0.1:8000/api/course-content/download/${encodeURIComponent(fileName)}`,
+          `http://127.0.0.1:8000/api/assignments/download/${encodeURIComponent(fileName)}`,
+          `http://127.0.0.1:8000${cleanPath}`,
+          `http://127.0.0.1:8000/uploads/${encodeURIComponent(fileName)}`
+        ]);
+      } catch (error) {
+        console.error("Error downloading file:", error);
+        this.toast.error("Error downloading file. Please try again later.");
+      }
+    },
+    tryDownloadMethods(urls) {
+      // Try the first URL
+      if (urls.length > 0) {
+        this.openFileInNewTab(urls[0]);
+        
+        // If the user needs to try another method, they can click again
+        // For more advanced handling, we could implement fallback logic
+        console.log("Tried download URL:", urls[0]);
+        console.log("Alternative URLs if needed:", urls.slice(1));
+      }
+    },
+    openFileInNewTab(url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     },
     getFileName(filePath) {
+      if (!filePath) return 'Unknown file';
       return filePath.split(/[\\/]/).pop();
     },
     goBack() {

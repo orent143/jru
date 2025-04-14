@@ -205,6 +205,7 @@ export default {
   border-radius: 20px;
   background-color: #D9D9D9;
   position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 /* Add Material Button */
 .add-btn {
@@ -319,6 +320,7 @@ export default {
   border-radius: 8px;
   width: 100%;
   position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
@@ -466,6 +468,7 @@ export default {
   border-radius: 8px;
   width: 100%;
   margin-top: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .grades-header {

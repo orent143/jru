@@ -25,6 +25,7 @@
                 </span>
               </div>
             </div>
+
             <div class="content-section">
               <h2>Content description:</h2>
               <p>{{ material?.content || "No content available" }}</p>
@@ -32,15 +33,10 @@
 
             <div v-if="material?.file_path" class="uploaded-materials">
               <h2>Attachments:</h2>
-              <div class="material-item">
+              <div class="material-item" @click="downloadAttachment(material.file_path)">
                 <i class="pi pi-file"></i>
-                <a
-                  :href="`http://127.0.0.1:8000/${material.file_path}`"
-                  target="_blank"
-                  class="file-link"
-                >
-                  {{ material.file_path.split('/').pop() }}
-                </a>
+                <span class="file-name">{{ getFileName(material.file_path) }}</span>
+                <i class="pi pi-download"></i>
               </div>
             </div>
           </div>
@@ -63,17 +59,17 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
+
     <EditMaterialModal
-  v-if="showEditModal"
-  :courseId="courseId"
-  :material="selectedMaterial"
-  @update-material="handleMaterialUpdate"
-  @close="showEditModal = false"
-/>
+      v-if="showEditModal"
+      :courseId="courseId"
+      :material="selectedMaterial"
+      @update-material="handleMaterialUpdate"
+      @close="showEditModal = false"
+    />
   </div>
 </template>
 
@@ -102,18 +98,17 @@ export default {
   },
   methods: {
     openEditModal() {
-  this.selectedMaterial = this.material;
-  this.showEditModal = true;
-},
-handleMaterialUpdate(updatedMaterial) {
-  this.material = updatedMaterial;
-  this.showEditModal = false;
-},
+      this.selectedMaterial = this.material;
+      this.showEditModal = true;
+    },
+    handleMaterialUpdate(updatedMaterial) {
+      this.material = updatedMaterial;
+      this.showEditModal = false;
+    },
     async fetchMaterialDetails() {
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/course_materials/${this.courseId}`);
         const materials = response.data.materials;
-
         this.material = materials.find(m => m.content_id == this.materialId);
 
         if (!this.material) {
@@ -142,6 +137,36 @@ handleMaterialUpdate(updatedMaterial) {
       const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', options);
+    },
+    downloadAttachment(filePath) {
+      if (!filePath) return;
+
+      const cleanPath = filePath.replace(/\\/g, '/');
+      const fileName = this.getFileName(cleanPath);
+
+      if (cleanPath.startsWith("http://") || cleanPath.startsWith("https://")) {
+        // External link - open in new tab
+        const link = document.createElement("a");
+        link.href = cleanPath;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // Local file - download from backend
+        const downloadUrl = `http://127.0.0.1:8000/api/course-content/download/${encodeURIComponent(fileName)}`;
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.setAttribute("download", fileName);
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    },
+    getFileName(filePath) {
+      return filePath.split(/[\\/]/).pop();
     }
   },
   mounted() {
@@ -149,6 +174,7 @@ handleMaterialUpdate(updatedMaterial) {
   }
 };
 </script>
+
 
 <style scoped>
 .posted-at {
@@ -213,6 +239,7 @@ handleMaterialUpdate(updatedMaterial) {
   flex-direction: column;
   border-radius: 20px;
   background-color: #D9D9D9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 .course-header {
     background-color: #D9D9D9;
@@ -322,6 +349,7 @@ handleMaterialUpdate(updatedMaterial) {
   border-radius: 8px;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .messages-section h2,
@@ -351,7 +379,7 @@ handleMaterialUpdate(updatedMaterial) {
 
 .message-input button {
   padding: 0.75rem 1.5rem;
-  background-color: #4CAF50;
+  background-color: #007BF6;
   color: white;
   border: none;
   border-radius: 4px;
@@ -359,6 +387,6 @@ handleMaterialUpdate(updatedMaterial) {
 }
 
 .message-input button:hover {
-  background-color: #45a049;
+  background-color: #0056b3;
 }
 </style>

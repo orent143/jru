@@ -409,6 +409,7 @@ export default {
     flex-direction: column;
     border-radius: 20px;
     background-color: #D9D9D9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 .content-section-instructions{
     padding: 1.5rem;
@@ -518,6 +519,8 @@ export default {
     background-color: #D9D9D9;
     color: #212121;
     overflow-y: auto;
+    
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .submission-header {
@@ -613,6 +616,8 @@ export default {
   padding: 1.5rem;
   margin-top: 2rem;
   margin-bottom: 2rem;
+  
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .comments-section h2 {

@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 // Common Views
 import LandingPage from '@/views/LandingPage.vue';
 import Login from '@/views/Login.vue';
-import VerifyCode from '@/views/VerifyCode.vue';
 
 // Student Views
 import StudentDashboard from '@/views/student/StudentDashboard.vue';
@@ -49,12 +48,13 @@ import ScheduleView from '@/components/faculty/Calendar/ScheduleView.vue';
 // Admin Views
 import AdminDashboard from '@/views/admin/Home.vue';
 import Users from '@/views/admin/Users.vue';
+import Reports from '@/views/admin/Reports.vue';
+import Settings from '@/views/admin/Settings.vue';
 
 const routes = [
   // Common Routes
   { path: '/', name: 'LandingPage', component: LandingPage },
   { path: '/login', name: 'Login', component: Login },
-  { path: '/verify', name: 'VerifyCode', component: VerifyCode },
 
   // Student Routes
   { path: '/student-dashboard', name: 'StudentDashboard', component: StudentDashboard },
@@ -101,7 +101,8 @@ const routes = [
   // Admin Routes
   { path: '/admin-dashboard', name: 'AdminDashboard', component: AdminDashboard },
   { path: '/users', name: 'Users', component: Users },
-
+  { path: '/reports', name: 'Reports', component: Reports },
+  { path: '/settings', name: 'Settings', component: Settings },
 
   { 
     path: '/:pathMatch(.*)*', 
@@ -149,7 +150,7 @@ router.beforeEach((to, from, next) => {
       }
     }
   } else {
-    if (isAuthenticated && (to.path === '/login' || to.path === '/verify')) {
+    if (isAuthenticated && to.path === '/login') {
       const user = JSON.parse(userData);
       switch (user.role) {
         case 'student':

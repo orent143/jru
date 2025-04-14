@@ -38,32 +38,27 @@
               <p>{{ currentExam.description }}</p>
             </div>
 
-            <div
-              class="content-section uploaded-materials"
-              v-if="currentExam.file_path"
-            >
-              <h2>Exam Materials:</h2>
-              <div class="materials-list">
-                <div
-                  v-if="isExternalLink(currentExam.file_path)"
-                  class="material-item"
-                >
-                  <i class="pi pi-link"></i>
-                  <a :href="currentExam.file_path" target="_blank">
-                    {{ getFileName(currentExam.file_path) }}
-                  </a>
-                </div>
-                <div
-                  v-else
-                  class="material-item"
-                  @click="downloadAttachment(currentExam.file_path)"
-                >
-                  <i class="pi pi-file"></i>
-                  <span>{{ getFileName(currentExam.file_path) }}</span>
-                  <i class="pi pi-download"></i>
-                </div>
-              </div>
-            </div>
+            <div class="content-section uploaded-materials" v-if="currentExam.file_path">
+  <h2>Exam Materials:</h2>
+  <div class="materials-list">
+    <div class="material-item">
+      <template v-if="isExternalLink(currentExam.file_path)">
+        <i class="pi pi-link"></i>
+        <a :href="currentExam.file_path" target="_blank">
+          {{ currentExam.file_path }}
+        </a>
+      </template>
+      <template v-else>
+        <i class="pi pi-file"></i>
+        <span>{{ getFileName(currentExam.file_path) }}</span>
+        <button class="download-button" @click="downloadAttachment(currentExam.file_path)">
+          <i class="pi pi-download"></i>
+        </button>
+      </template>
+    </div>
+  </div>
+</div>
+
           </div>
 
           <div class="side-content">
@@ -322,14 +317,26 @@ export default {
             return new Date(dateString).toLocaleDateString();
         },
         getFileName(filePath) {
-            return filePath ? filePath.split('/').pop() : 'Unknown File';
+            if (!filePath) return 'Unknown File';
+            if (this.isExternalLink(filePath)) return filePath;
+            
+            // Replace backslashes with forward slashes for consistency
+            const formattedUrl = filePath.replace(/\\/g, '/');
+            // Get the file name from the path
+            return formattedUrl.split('/').pop();
         },
         downloadAttachment(filePath) {
-            if (filePath && filePath.startsWith("http")) {
+            if (!filePath) return;
+            
+            if (this.isExternalLink(filePath)) {
                 window.open(filePath, "_blank");
-            } else {
-                const downloadUrl = `http://127.0.0.1:8000/api/exams/download/${encodeURIComponent(filePath.split('/').pop())}`;
-                window.open(downloadUrl, '_blank');
+                return;
+            }
+            
+            // Get just the filename without the path
+            const fileName = this.getFileName(filePath);
+            if (fileName) {
+                window.open(`http://127.0.0.1:8000/api/exams/download/${fileName}`, '_blank');
             }
         },
         editExam() {
@@ -345,10 +352,9 @@ export default {
             this.currentExam = updatedExam;
             this.showEditModal = false;
             
-            // Refetch exam details to ensure we have the latest data
             setTimeout(() => {
                 this.fetchExam();
-            }, 500); // Add a small delay to ensure the backend has processed the update
+            }, 500); 
         },
         isExternalLink(filePath) {
             return filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'));
@@ -427,6 +433,7 @@ export default {
     flex-direction: column;
     border-radius: 20px;
     background-color: #D9D9D9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 .content-section-instructions{
     padding: 1.5rem;
@@ -535,6 +542,8 @@ export default {
     background-color: #D9D9D9;
     color: #212121;
     overflow-y: auto;
+    
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 .submission-container h2{
     font-weight: bold;
@@ -646,6 +655,8 @@ export default {
     padding: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 2rem;
+    
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
 }
 
 .comments-section h2 {
@@ -801,5 +812,18 @@ export default {
     overflow-y: auto;
     margin-bottom: 1rem;
     border-radius: 8px;
+}
+
+.download-button {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.download-button:hover {
+    background-color: #e9ecef;
 }
 </style>

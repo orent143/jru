@@ -53,7 +53,13 @@ export default {
             errorMessage: ''
         }
     },
+    mounted() {
+        this.clearLocalStorage();
+    },
     methods: {
+        clearLocalStorage() {
+            localStorage.removeItem('user');
+        },
         async handleLogin() {
             this.loading = true;
             this.errorMessage = '';
@@ -69,7 +75,7 @@ export default {
                 if (response.data.access_token) {
                     console.log("Login successful, storing user data...");
 
-                    localStorage.setItem('tempUserData', JSON.stringify({
+                    localStorage.setItem('user', JSON.stringify({
                         user_id: response.data.user_id,
                         name: response.data.name,
                         email: response.data.email,
@@ -78,10 +84,19 @@ export default {
                         courses: response.data.courses
                     }));
 
-                    this.$router.push({
-                        name: 'VerifyCode',
-                        query: { email: this.email }
-                    }).catch(err => console.error("Navigation Error:", err));
+                    switch(response.data.role) {
+                        case 'student':
+                            this.$router.push('/student-dashboard');
+                            break;
+                        case 'faculty':
+                            this.$router.push('/faculty-dashboard');
+                            break;
+                        case 'admin':
+                            this.$router.push('/admin-dashboard');
+                            break;
+                        default:
+                            this.$router.push('/');
+                    }
                 } else {
                     console.log("Unexpected response:", response.data);
                     this.errorMessage = "Unexpected response. Please try again.";

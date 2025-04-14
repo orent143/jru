@@ -313,21 +313,26 @@ export default {
     },
 
     getFileName(fileUrl) {
-      return fileUrl ? fileUrl.split('/').pop() : '';
+      if (!fileUrl) return '';
+      if (this.isExternalLink(fileUrl)) return fileUrl;
+      
+      // Replace backslashes with forward slashes for consistency
+      const formattedUrl = fileUrl.replace(/\\/g, '/');
+      // Get the file name from the path
+      return formattedUrl.split('/').pop();
     },
     
     downloadFile(fileUrl) {
       if (!fileUrl) return;
       
-      const formattedUrl = fileUrl.replace(/\\/g, '/');
-
-      if (formattedUrl.startsWith('http')) {
-        window.open(formattedUrl, '_blank');
-      } else {
-        const fileName = this.getFileName(formattedUrl);
-        const downloadUrl = `http://127.0.0.1:8000/api/download/${fileName}`;
-        window.open(downloadUrl, '_blank');
+      if (this.isExternalLink(fileUrl)) {
+        window.open(fileUrl, '_blank');
+        return;
       }
+      
+      // Get just the filename without the path
+      const fileName = this.getFileName(fileUrl);
+      window.open(`http://127.0.0.1:8000/api/download/${fileName}`, '_blank');
     },
     
     confirmSubmitAssignment(event) {

@@ -194,6 +194,8 @@ export default {
   border-radius: 20px;
   background-color: #D9D9D9;
   position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+
 }
 
 .add-btn {
@@ -296,6 +298,8 @@ export default {
   border-radius: 8px;
   width: 100%;
   position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
 }
 .material-card p{
     font-size: 1rem;

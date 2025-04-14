@@ -4,7 +4,10 @@
         <div class="dashboard-content">
             <SideBar :isCollapsed="isSidebarCollapsed" :courses="courses" />
             <main class="dashboard-main">
-                <h1>Welcome back, {{ faculty?.name || 'Instructor' }}!</h1>
+                <div class="header-container">
+                    <h1>Welcome back, {{ faculty?.name || 'Instructor' }}!</h1>
+                    <button class="logout-btn" @click="logout">Logout</button>
+                </div>
                 
                 <div v-if="isLoading" class="loading-container">
                     <div class="loading-spinner"></div>
@@ -200,17 +203,37 @@ export default {
             if (!this.faculty || !this.faculty.user_id) return;
             
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/courses?user_id=${this.faculty.user_id}`);
+                const token = this.faculty.access_token;
+                if (!token) {
+                    throw new Error('No access token available');
+                }
+                
+                const response = await axios.get(
+                    `http://127.0.0.1:8000/api/courses?user_id=${this.faculty.user_id}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
                 this.courses = response.data;
             } catch (error) {
                 console.error('Error fetching courses:', error);
+                if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                    this.logout();
+                }
                 throw error;
             }
         },
         
         async fetchEvents() {
             try {
-                const response = await axios.get('http://127.0.0.1:8000/api/events/');
+                const token = this.faculty?.access_token;
+                if (!token) {
+                    throw new Error('No access token available');
+                }
+                
+                const response = await axios.get(
+                    'http://127.0.0.1:8000/api/events/',
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                
                 if (this.faculty && this.faculty.user_id) {
                     this.events = response.data.filter(event => 
                         event.user_id === this.faculty.user_id || 
@@ -221,6 +244,9 @@ export default {
                 }
             } catch (error) {
                 console.error('Error fetching events:', error);
+                if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                    this.logout();
+                }
                 throw error;
             }
         },
@@ -277,6 +303,13 @@ export default {
             };
             
             return statusMap[status] || '';
+        },
+        
+        logout() {
+            localStorage.removeItem('user');
+            this.$router.push('/login');
+            const toast = useToast();
+            toast.info('Your session has expired. Please login again.');
         }
     }
 };
@@ -483,6 +516,28 @@ h1 {
     height: 40px;
     animation: spin 1s linear infinite;
     margin-bottom: 15px;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.logout-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
 }
 
 @keyframes spin {

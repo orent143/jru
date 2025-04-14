@@ -5,8 +5,9 @@
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
       <main class="dashboard-main">
         <div class="header">
-                        <h1>Courses</h1>
-                    </div>
+          <h1>Courses</h1>
+          <button class="logout-btn" @click="logout">Logout</button>
+        </div>
         <section class="course-cards">
           <div class="course-card" 
                v-for="course in courses" 
@@ -52,17 +53,37 @@ export default {
         const storedUser = JSON.parse(localStorage.getItem('user'));
         if (storedUser && storedUser.role === 'student') {
           this.studentId = storedUser.user_id;
-          const response = await axios.get(`http://127.0.0.1:8000/api/student_courses/${this.studentId}`);
+          const token = storedUser.access_token;
+          
+          if (!token) {
+            throw new Error('No access token available');
+          }
+          
+          const response = await axios.get(
+            `http://127.0.0.1:8000/api/student_courses/${this.studentId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           this.courses = response.data.courses;
         } else {
           console.error("User is not authenticated or not a student");
+          this.logout();
         }
       } catch (error) {
         console.error("Error fetching student courses:", error);
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          this.logout();
+        }
       }
     },
     navigateToCourse(courseId) {
       this.$router.push({ name: 'StudentCourseContent', params: { courseId } });
+    },
+    logout() {
+      localStorage.removeItem('user');
+      this.$router.push('/login');
+    },
+    toggleSidebar() {
+      this.isSidebarCollapsed = !this.isSidebarCollapsed;
     }
   }
 };
@@ -102,6 +123,22 @@ export default {
     color: #2c3e50;
     font-weight: 900;
 }
+
+.logout-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+}
+
 .course-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

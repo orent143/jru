@@ -6,7 +6,11 @@
       <SideBar :isCollapsed="isSidebarCollapsed" />
       
       <main class="dashboard-main">
-        <h1 class="page-title">Reports & Analytics</h1>
+        <div class="page-info">
+          <h1 class="page-title">Reports & Analytics</h1>
+          <p class="page-description">  Gain insights into platform performance, user activity, course engagement, and academic outcomes with comprehensive, real-time analytics.
+          </p>
+        </div>
 
         <div class="report-filters">
           <div class="filter-group">
@@ -422,16 +426,24 @@ export default {
 .dashboard-main {
   flex: 1;
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color: #fff;
   overflow-y: auto;
 }
 
-.page-title {
-  color: #2c3e50;
+.page-info {
+  max-width: 60%;
   margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
 }
+  .page-description {
+    color: #7f8c8d;
+    font-size: 14px;
+  }
+
+  .page-title {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+  }
 
 /* Report Filters */
 .report-filters {

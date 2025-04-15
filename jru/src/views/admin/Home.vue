@@ -6,6 +6,14 @@
       <SideBar :isCollapsed="isSidebarCollapsed" />
       
       <main class="dashboard-main">
+
+        <div class="page-info">
+    <h1 class="page-title">Admin Dashboard</h1>
+    <p class="page-description">
+      Overview of system metrics, user activity, and pending administrative actions.
+    </p>
+  </div>
+
         <div class="system-overview-container" v-if="isLoading">
           <div class="loading-spinner">Loading dashboard data...</div>
         </div>
@@ -206,9 +214,24 @@ overflow: hidden;
 .dashboard-main {
 flex: 1;
 padding: 20px;
-background-color: #f5f5f5;
+background-color: #fff;
 overflow-y: auto;
 }
+
+.page-info {
+  max-width: 60%;
+  margin-bottom: 20px;
+}
+  .page-description {
+    color: #7f8c8d;
+    font-size: 14px;
+  }
+
+  .page-title {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+  }
 
 /* Loading indicators */
 .loading-spinner {

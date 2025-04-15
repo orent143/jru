@@ -6,20 +6,41 @@
       <div class="main-content">
         <div class="user-management">
           <div class="page-header">
-            <h1>User Management</h1>
-            <button class="add-user-btn" @click="openAddUserModal">
-              <i class="pi pi-plus"></i> Add New User
-            </button>
+              <div class="page-info">
+              <h1 class="page-title">User Management</h1>
+              <p class="page-description">Manage and monitor all users within the system, including students, faculty, and admins.</p>
+              </div>
+
+
+            <div class="header-actions">
+                <input
+                  type="text"
+                  v-model="searchQuery"
+                  placeholder="Search by name or email"
+                  class="search-input"
+                />
+                <button class="reports-btn">
+                  <i class="pi pi-chart-bar"></i> Reports
+                </button>  
+
+              
+              <button class="add-user-btn" @click="openAddUserModal">
+                <i class="pi pi-plus"></i> Add New User
+              </button>
+              </div>
           </div>
 
-          <div class="filters">
-            <select v-model="roleFilter">
-              <option value="">All Roles</option>
-              <option value="student">Student</option>
-              <option value="faculty">Faculty</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
+          <div class="filters role-tabs">
+  <div 
+    v-for="role in roleTabs" 
+    :key="role.value" 
+    class="role-tab-item" 
+    :class="{ active: roleFilter === role.value }"
+    @click="roleFilter = role.value"
+  >
+    {{ role.label }}
+  </div>
+</div>
 
           <div class="table-container">
             <table>
@@ -108,6 +129,12 @@ export default {
   data() {
     return {
       searchQuery: '',
+      roleTabs: [
+        { label: 'All Users', value: '' },
+        { label: 'Students', value: 'student' },
+        { label: 'Faculty', value: 'faculty' },
+        { label: 'Admins', value: 'admin' }
+      ],
       roleFilter: '',
       users: [],
       user: {
@@ -224,7 +251,7 @@ export default {
 .main-content {
   flex: 1;
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color: #fff;
   overflow-y: auto;
 }
 
@@ -235,16 +262,43 @@ export default {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   color: #2c3e50;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
-  
-.add-user-btn {
-  background-color: #007BF6;
+
+.page-info {
+  max-width: 60%;
+}
+  .page-description {
+    color: #7f8c8d;
+    font-size: 14px;
+  }
+
+  .page-title {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+  }
+  .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  }
+  .search-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f8f9fa;
+  font-size: 14px;
+}
+
+.reports-btn {
+  background-color: #6c757d;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 10px 16px;
   border-radius: 5px;
   cursor: pointer;
   display: flex;
@@ -253,24 +307,53 @@ export default {
   transition: background-color 0.2s;
 }
 
-.add-user-btn:hover {
-  background-color: #0056b3;
+.reports-btn:hover {
+  background-color: #5a6268;
 }
+  .add-user-btn {
+    background-color: #007BF6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+  }
   
-.filters {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
+  .add-user-btn:hover {
+    background-color: #0056b3;
+  }
+    
+  .role-tabs {
+    display: flex;
+    background-color: white;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-  
-.filters select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: white;
-  font-size: 14px;
+.role-tab-item {
+  padding: 15px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s;
+    color: #666;
+    font-weight: 500;
 }
-  
+
+.role-tab-item:hover {
+  background-color: #dcdcdc;
+}
+
+.role-tab-item.active {
+  background-color: #007BF6;
+  color: white;
+}
 .table-container {
   background: white;
   border-radius: 8px;

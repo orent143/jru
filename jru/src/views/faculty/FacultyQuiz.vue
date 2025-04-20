@@ -1,47 +1,119 @@
 <template>
-    <div class="quiz-container">
-        <Header :student="student" :searchQuery="searchQuery" @toggleSidebar="toggleSidebar" />
-        <div class="quiz-content">
+    <div class="dashboard-container">
+        <Header @toggleSidebar="toggleSidebar" />
+        <div class="dashboard-content">
             <SideBar :isCollapsed="isSidebarCollapsed" />
-            <main class="quiz-main">
-                <div class="quizzes">
-                    <div class="header">
+            <main class="dashboard-main">
+                <div class="page-header">
+                    <div class="page-header-content">
                         <h1>Quizzes</h1>
+                        <p class="page-subtitle">Create and manage quizzes for your courses. Set time limits, add questions, and evaluate student performance with detailed analytics.</p>
                     </div>
-
-                    <p v-if="loading">Loading quizzes...</p>
-
-                    <p v-if="error" class="error">{{ error }}</p>
-
-                    <div v-if="!loading && quizzes.length" class="quiz-cards">
-                        <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-card" @click="startQuiz(quiz.id, quiz.course_id)">
-                            <div class="card-header">
-                                <h2>{{ getCourseName(quiz.course_id) }}</h2>
-                                <p>Section: {{ getCourseSection(quiz.course_id) }}</p>
-                            </div>
-                            <div class="quiz-details">
-                                <p>Duration: {{ quiz.duration }} minutes</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="showCreateQuizForm" class="modal">
-                        <div class="modal-content">
-                            <span class="close" @click="showCreateQuizForm = false">&times;</span>
-                            <h2>Create Quiz</h2>
-                            <form @submit.prevent="createQuiz" class="quiz-form">
-                                <label for="courseName">Course Name:</label>
-                                <input type="text" v-model="newQuiz.courseName" required>
-                                <label for="courseSection">Course Section:</label>
-                                <input type="text" v-model="newQuiz.courseSection" required>
-                                <label for="duration">Duration (minutes):</label>
-                                <input type="number" v-model="newQuiz.duration" required>
-                                <button type="submit">Create</button>
-                            </form>
-                        </div>
+                    <div class="header-actions">
+                        <button @click="showCreateQuizForm = true" class="create-btn">
+                            <i class="pi pi-plus"></i>
+                            Create Quiz
+                        </button>
                     </div>
                 </div>
+
+                <div v-if="loading" class="loading-container">
+                    <i class="pi pi-spin pi-spinner"></i>
+                    <p>Loading your quizzes...</p>
+                </div>
+                
+                <div v-if="error" class="error-container">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    <p>{{ error }}</p>
+                </div>
+
+                <div v-else-if="!loading && quizzes.length === 0" class="empty-state">
+                    <i class="pi pi-file-excel"></i>
+                    <h3>No Quizzes Available</h3>
+                    <p>You haven't created any quizzes yet.</p>
+                </div>
+
+                <section v-else class="item-grid">
+                    <div 
+                        v-for="quiz in quizzes" 
+                        :key="quiz.id" 
+                        class="item-card" 
+                        @click="startQuiz(quiz.id, quiz.course_id)"
+                    >
+                        <div class="course-color-indicator" :style="getRandomColorStyle()"></div>
+                        <div class="card-content">
+                            <div class="course-icon-container">
+                            <div class="course-icon">
+                                <i class="pi pi-check-square"></i>
+                            </div>
+                            <div class="card-header-contents">
+                                <div class="card-header-desc">
+                                    <h4>20 Lessons</h4>
+                                    <h4>30 Students</h4>
+                                </div>
+                            <h3>{{ getCourseName(quiz.course_id) }}</h3>
+                        </div>
+                        </div>
+                            <div class="card-header">
+                                <span class="course-code">{{ getCourseSection(quiz.course_id) }}</span>
+                            </div>
+                            <div class="card-details">
+                                <div class="detail-item">
+                                    <i class="pi pi-clock"></i>
+                                    <span>Duration: {{ quiz.duration || '30' }} minutes</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="pi pi-question"></i>
+                                    <span>{{ quiz.questions_count || '0' }} Questions</span>
+                                </div>
+                            </div>
+                            <div class="card-actions">
+                                <button @click.stop="editQuiz(quiz.id)" class="action-button edit">
+                                    <i class="pi pi-pencil"></i>
+                                </button>
+                                <button @click.stop="confirmDeleteQuiz(quiz.id)" class="action-button delete">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
+        </div>
+    </div>
+
+    <div v-if="showCreateQuizForm" class="modal">
+        <div class="modal-content">
+            <span class="close" @click="closeModal">&times;</span>
+            <h2>Create Quiz</h2>
+            <form @submit.prevent="createQuiz" class="form">
+                <div class="form-group">
+                    <label for="course">Course</label>
+                    <select id="course" v-model="newQuiz.course_id" required>
+                        <option value="" disabled selected>Select a course</option>
+                        <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
+                            {{ course.course_name }} ({{ course.section }})
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">Quiz Title</label>
+                    <input type="text" id="title" v-model="newQuiz.title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" v-model="newQuiz.description" rows="3"></textarea>
+                </div>
+                  
+                <div class="form-group">
+                    <label for="duration">Duration (minutes)</label>
+                    <input type="number" id="duration" v-model="newQuiz.duration" min="5" required>
+                </div>
+
+                <button type="submit" class="submit-btn">Create Quiz</button>
+            </form>
         </div>
     </div>
 </template>
@@ -65,11 +137,18 @@ export default {
             error: null,
             showCreateQuizForm: false,
             newQuiz: {
-                courseName: '',
-                courseSection: '',
-                duration: ''
+                course_id: '',
+                title: '',
+                description: '',
+                duration: 30
             },
-            user: null
+            user: null,
+            colorPalette: [
+                '#4285F4', '#EA4335', '#FBBC05', '#34A853',
+                '#1877F2', '#45BD62', '#F02849',
+                '#0077B5', '#00A0DC',
+                '#007BF6', '#6c5ce7', '#00cec9', '#e84393', '#00b894', '#6ab04c'
+            ]
         };
     },
     methods: {
@@ -125,18 +204,25 @@ export default {
                 if (!this.user) return;
                 
                 const response = await axios.post('http://127.0.0.1:8000/api/quizzes/', {
-                    courseName: this.newQuiz.courseName,
-                    courseSection: this.newQuiz.courseSection,
+                    title: this.newQuiz.title,
+                    description: this.newQuiz.description,
                     duration: this.newQuiz.duration,
+                    course_id: this.newQuiz.course_id,
                     user_id: this.user.user_id
                 });
                 
                 this.quizzes.push({ ...this.newQuiz, id: response.data.id });
                 this.showCreateQuizForm = false;
-                this.newQuiz = { courseName: '', courseSection: '', duration: '' };
+                this.resetForm();
             } catch (err) {
                 this.error = 'Failed to create quiz.';
             }
+        },
+        editQuiz(quizId) {
+            console.log(`Edit quiz ${quizId}`);
+        },
+        confirmDeleteQuiz(quizId) {
+            console.log(`Confirm delete quiz ${quizId}`);
         },
         startQuiz(quizId, courseId) {
             this.$router.push({ 
@@ -146,6 +232,18 @@ export default {
         },
         closeModal() {
             this.showCreateQuizForm = false;
+        },
+        resetForm() {
+            this.newQuiz = {
+                course_id: '',
+                title: '',
+                description: '',
+                duration: 30
+            };
+        },
+        getRandomColorStyle() {
+            const colorIndex = Math.floor(Math.random() * this.colorPalette.length);
+            return { backgroundColor: this.colorPalette[colorIndex] };
         }
     },
     mounted() {
@@ -155,121 +253,262 @@ export default {
 };
 </script>
 
-
 <style scoped>
-.quiz-container {
+.dashboard-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
-.quiz-content {
+.dashboard-content {
     display: flex;
-    flex-grow: 1;
+    flex: 1;
+    overflow: hidden;
 }
 
-.quiz-main {
-    flex-grow: 1;
-    padding: 20px;
-    background-color: #fff;
+.dashboard-main {
+    flex: 1;
+    padding: 2rem;
     overflow-y: auto;
-    max-height: 100vh;
+    background-color: #f8f9fa;
 }
 
-.quizzes {
-margin-bottom: 5rem;
-}
-
-.header {
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
 }
 
-.header h1 {
+.page-header-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-header h1 {
     color: #2c3e50;
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin: 0;
 }
 
-.quiz-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4rem;
+.page-subtitle {
+    color: #6c757d;
+    font-size: 1rem;
 }
 
-.quiz-card {
-    background-color: #D9D9D9ff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.header-actions {
     display: flex;
-    flex-direction: column;
-    width: 95%;
-    height: auto;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.quiz-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-}
-
-.card-header {
-    position: relative;
-    justify-content: space-between;
     align-items: center;
-    padding: 1rem;
 }
 
-.card-header h2 {
-    font-size: 25px;
-    font-weight: 900;
-    color: #000;
-}
-
-.card-header p {
-    font-size: 16px;
-    color: #666;
-}
-
-.card-actions {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 0.5rem;
-}
-
-.card-actions button {
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-.quiz-details {
-    background-color: #F5F5F5;
-    padding: 1rem;
-    padding-top: 0%;
-    border-radius: 8px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-    display: flex;
-    flex-direction: column;
-    min-height: 100px;
-}
-
-.quiz-details p {
-    color: #000;
-}
-
-.create-quiz-btn {
+.create-btn {
     background-color: #007BF6;
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.create-btn:hover {
+    background-color: #0066cc;
+}
+
+.create-btn i {
+    font-size: 0.9rem;
+}
+
+.loading-container, .empty-state, .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.loading-container i, .empty-state i, .error-container i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.loading-container i, .empty-state i {
+    color: #007BF6;
+}
+
+.error-container i {
+    color: #dc3545;
+}
+
+.empty-state h3, .error-container h3 {
+    color: #2c3e50;
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-state p, .loading-container p, .error-container p {
+    color: #6c757d;
+    margin: 0;
+}
+
+.item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.item-card {
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    height: 100%;
+    position: relative;
+}
+
+.item-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.course-color-indicator {
+    height: 8px;
+    width: 100%;
+}
+
+.card-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.course-icon-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.card-header-contents {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.card-header-desc {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.card-header-desc h4 {
+    font-size: 0.8rem;
+    color: #6c757d;
     font-weight: 500;
+}
+.course-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background-color: #f0f4f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.course-icon i {
+    font-size: 1.5rem;
+    color: #007BF6;
+}
+
+.card-header {
+    margin-bottom: 1.25rem;
+}
+
+.course-icon-container h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 0.25rem 0;
+    line-height: 1.4;
+}
+
+.course-code {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex: 1;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.detail-item i {
+    color: #6c757d;
+    font-size: 0.9rem;
+    width: 16px;
+}
+
+.detail-item span {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.action-button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.action-button.edit {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+}
+
+.action-button.edit:hover {
+    background-color: #e2e6ea;
+}
+
+.action-button.delete {
+    background-color: #f8f9fa;
+    color: #dc3545;
+}
+
+.action-button.delete:hover {
+    background-color: #e2e6ea;
 }
 
 .modal {
@@ -282,68 +521,104 @@ margin-bottom: 5rem;
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
 .modal-content {
     background-color: #ffffff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.459);
-    position: fixed;
-    right: 50%;
-    top: 50%;
-    transform: translate(50%, -50%);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    position: relative;
     width: 400px;
-    max-width: 100%;
-    z-index: 1000;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .modal-content h2 {
-    font-size: 25px;
-    font-weight: 1000;
-    color: #000000;
-}
-
-.modal-content label {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 5px;
-    display: block;
-    color: #272727;
-}
-
-.quiz-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.quiz-form input {
-    padding: 10px;
-    font-size: 14px;
-    border-radius: 12px;
-    width: 100%;
-    border: 1px solid #ccc;
-}
-
-.quiz-form button {
-    padding: 10px 20px;
-    background-color: #007BF6;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
 }
 
 .close {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    color: #6c757d;
     cursor: pointer;
-    color: #000000;
-    font-size: 25px;
+    transition: color 0.2s;
+}
+
+.close:hover {
+    color: #343a40;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #007BF6;
+    box-shadow: 0 0 0 3px rgba(0, 123, 246, 0.25);
+}
+
+.submit-btn {
+    background-color: #007BF6;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 0.5rem;
+}
+
+.submit-btn:hover {
+    background-color: #0066cc;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .item-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>

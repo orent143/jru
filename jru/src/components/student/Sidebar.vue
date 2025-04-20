@@ -2,34 +2,29 @@
   <aside class="sidebar" :class="{'collapsed': isCollapsed}">
     <ul>
       <li>
-        <i class="pi pi-home"></i>
-        <router-link to="/student-dashboard"><strong>Home</strong></router-link>
+        <router-link to="/student-dashboard">
+          <i class="pi pi-home"></i>
+          <strong>Home</strong>
+        </router-link>
       </li>
-
-      <li @click="toggleCoursesDropdown" :aria-expanded="isCoursesDropdownOpen.toString()">
-        <i class="pi pi-book"></i>
-        <strong>Courses</strong>
-        <i v-if="isCoursesDropdownOpen" class="pi pi-angle-down"></i>
-        <i v-else class="pi pi-angle-right"></i>
-      </li>
-      <ul v-if="isCoursesDropdownOpen" class="dropdown-menu">
-        <li v-for="course in courses" :key="course.course_id">
-          <router-link :to="`/student/course/${course.course_id}`">{{ course.course_name }}</router-link>
-        </li>
-      </ul>
 
       <li>
-        <i class="pi pi-pen-to-square"></i>
-        <router-link to="/student/assignment-dashboard"><strong>Assignments</strong></router-link>
+        <router-link to="/student/courses">
+          <i class="pi pi-book"></i>
+          <strong>Courses</strong>
+        </router-link>
       </li>
 
       <li @click="toggleTestsDropdown" :aria-expanded="isTestsDropdownOpen.toString()">
         <i class="pi pi-file-edit"></i>
-        <strong>Tests</strong>
-        <i v-if="isTestsDropdownOpen" class="pi pi-angle-down"></i>
-        <i v-else class="pi pi-angle-right"></i>
+        <strong>Assessments</strong>
+        <i v-if="isTestsDropdownOpen" class="pi pi-angle-down" style="width: auto; margin-left: auto; font-size: 14px;"></i>
+        <i v-else class="pi pi-angle-right" style="width: auto; margin-left: auto; font-size: 14px;"></i>
       </li>
-      <ul v-if="isTestsDropdownOpen" class="dropdown-menu">
+      <ul v-if="isTestsDropdownOpen" class="dropdown-menu" :class="{'open': isTestsDropdownOpen}">
+        <li>
+          <router-link to="/student/assignment-dashboard">Assignments</router-link>
+        </li>
         <li>
           <router-link to="/student/quiz-dashboard">Quiz</router-link>
         </li>
@@ -39,13 +34,17 @@
       </ul>
 
       <li>
-        <i class="pi pi-graduation-cap"></i>
-        <router-link to="/student/grade-dashboard"><strong>Grades</strong></router-link>
+        <router-link to="/student/grade-dashboard">
+          <i class="pi pi-graduation-cap"></i>
+          <strong>Grades</strong>
+        </router-link>
       </li>
 
       <li>
-        <i class="pi pi-calendar"></i>
-        <router-link to="/student/calendar"><strong>Calendar</strong></router-link>
+        <router-link to="/student/calendar">
+          <i class="pi pi-calendar"></i>
+          <strong>Calendar</strong>
+        </router-link>
       </li>
     </ul>
   </aside>
@@ -82,14 +81,14 @@ export default {
 
 <style scoped>
 .sidebar {
-  width: 220px;
-  background-color: #002244;
-  padding-top: 1rem;
-  transition: width 0.3s ease, transform 0.3s ease;
+  width: 250px;
+  background: linear-gradient(180deg, #001a33 0%, #002244 100%);
+  padding-top: 1.5rem;
+  transition: all 0.3s ease;
   height: 100vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.884);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .sidebar.collapsed {
@@ -99,23 +98,80 @@ export default {
 
 .sidebar ul {
   list-style-type: none;
-  padding-left: 10px;
+  padding-left: 0;
   margin: 0;
+}
+
+.sidebar > ul {
+  padding: 0 8px;
 }
 
 .sidebar li {
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 5px;
-  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
+  gap: 5px;
 }
 
 .sidebar li:hover {
-  background-color: #007bf6;
-  width: 200px;
+  background-color: rgba(0, 123, 246, 0.8);
   color: #ffffff;
+  transform: translateX(5px);
+}
+
+.sidebar li:active {
+  transform: translateX(5px) scale(0.98);
+}
+
+.sidebar li strong {
+  color: #f5f5f5;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+
+.sidebar .dropdown-menu {
+  padding-left: 25px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  gap: 10px;
+}
+
+.sidebar .dropdown-menu.open {
+  max-height: 300px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.sidebar .dropdown-menu li {
+  color: #e0e0e0;
+  font-size: 14px;
+  padding: 8px 12px;
+  margin-bottom: 3px;
+  border-radius: 6px;
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
+  
+}
+
+.sidebar .dropdown-menu li:hover {
+  background-color: rgba(0, 51, 85, 0.6);
+  border-left: 2px solid #007bf6;
+}
+
+.sidebar li i {
+  font-size: 18px;
+  color: #8ca8c9;
+  transition: all 0.2s ease;
+  width: 24px;
+  text-align: center;
 }
 
 .sidebar li:hover i {
@@ -124,62 +180,30 @@ export default {
 
 .sidebar li:hover strong {
   color: #ffffff;
-  transform: scale(0.95);
-}
-
-.sidebar li strong {
-  color: #ffffff;
-  text-decoration: none;
-  font-weight: 750;
-  font-size: 17px;
-  display: flex;
-  align-items: center;
-  padding: 1px 5px;
-  margin: 8px;
-}
-
-.sidebar .dropdown-menu li {
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  padding: 3px 40px;
-  margin: 7px;
-}
-
-.sidebar .dropdown-menu li:hover {
-  background-color: #003355;
-  width: 160px;
-  color: #ffffff;
-}
-
-.sidebar li i {
-  margin-right: 10px;
-  transition: transform 0.3s ease;
-  font-size: 20px;
-  color: #ffffff;
-}
-
-.sidebar li:hover i {
-  color: #ffffff;
 }
 
 .sidebar::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background-color: #007bf600;
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
 
-.sidebar::-webkit-scrollbar-track {
-  background: #f1f1f100;
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-.sidebar .dropdown-menu {
-  max-height: 300px;
-  overflow-y: auto;
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar a {
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+  display: flex;
+  align-items: center;
 }
 </style>

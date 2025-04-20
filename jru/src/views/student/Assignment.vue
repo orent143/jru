@@ -5,8 +5,12 @@
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
       <main class="dashboard-main">
         <div class="course-header">
+          <div class="header-title-section">
           <h2>Assignments: <span>{{ totalAssignments }}</span></h2>
-          
+          <p class="header-description">
+            Browse and manage assignments across all your enrolled courses.
+          </p>
+          </div>
           <div class="course-sections" v-if="courses.length">
             <ul>
               <li v-for="section in courses[0].sections" :key="section.id">
@@ -136,13 +140,24 @@ export default {
 }
 
 .course-header {
-  background-color: #D9D9D9;
+  background-color: white;
   padding: 1rem;
   border-radius: 10px;
   margin-bottom: 2rem;
+  border-top: 4px solid #007BF6;
+  box-shadow: 0 10px 8px rgba(0, 0, 0, 0.123);
+}
+.header-title-section {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
 }
 
-.course-header h2 {
+.header-description {
+  font-size: 14px;
+  color: #6c757d;
+}
+.header-title-section h2 {
   font-size: 24px;
   font-weight: bold;
   color: #2c3e50;

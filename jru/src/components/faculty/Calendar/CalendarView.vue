@@ -6,66 +6,71 @@
 
       <div class="calendar-content-wrapper">
         <div class="calendar-header">
+          <div class="calendar-header-title">
           <h1>Academic Calendar</h1>
+          <p class="calendar-subtitle">Plan, schedule, and manage your academic activities. Keep track of important dates, classes, exams, and events throughout the semester.</p>
+        </div>
           <div class="current-date">
             <i class="pi pi-calendar"></i>
             <span>{{ formattedCurrentDate }}</span>
           </div>
         </div>
 
-        <div class="calendar-content">
-          <div class="calendar-sidebar">
-            <div class="date-info">
-              <h3>Today's Date</h3>
-              <div class="date-display">
-                <div class="day">{{ currentDay }}</div>
-                <div class="month-year">
-                  <div class="month">{{ currentMonth }}</div>
-                  <div class="year">{{ currentYear }}</div>
+        <div class="scrollable-content">
+          <div class="calendar-content">
+            <div class="calendar-sidebar">
+              <div class="date-info">
+                <h3>Today's Date</h3>
+                <div class="date-display">
+                  <div class="day">{{ currentDay }}</div>
+                  <div class="month-year">
+                    <div class="month">{{ currentMonth }}</div>
+                    <div class="year">{{ currentYear }}</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="quick-actions">
-              <h3>Quick Actions</h3>
-              <button class="action-btn" @click="addEvent">
-                <i class="pi pi-plus"></i> Add Event
-              </button>
-              <button class="action-btn" @click="viewSchedule">
-                <i class="pi pi-list"></i> View Schedule
-              </button>
-            </div>
-          </div>
-
-          <div class="calendar-main">
-            <div class="calendar-controls">
-              <button @click="previousMonth" class="nav-btn">
-                <i class="pi pi-chevron-left"></i>
-              </button>
-              <h3>{{ displayMonth }} {{ displayYear }}</h3>
-              <button @click="nextMonth" class="nav-btn">
-                <i class="pi pi-chevron-right"></i>
-              </button>
-            </div>
-
-            <div class="calendar-grid">
-              <div class="calendar-weekdays">
-                <div v-for="day in weekDays" :key="day" class="weekday">{{ day }}</div>
+              <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <button class="action-btn" @click="addEvent">
+                  <i class="pi pi-plus"></i> Add Event
+                </button>
+                <button class="action-btn" @click="viewSchedule">
+                  <i class="pi pi-list"></i> View Schedule
+                </button>
               </div>
-              <div class="calendar-days">
-                <div 
-                  v-for="(day, index) in calendarDays" 
-                  :key="index" 
-                  class="calendar-day"
-                  :class="{
-                    'other-month': day.otherMonth,
-                    'today': day.isToday,
-                    'has-event': day.hasEvent
-                  }"
-                  @click="selectDate(day)"
-                >
-                  <span class="day-number">{{ day.date }}</span>
-                  <div v-if="day.hasEvent" class="event-indicator"></div>
+            </div>
+
+            <div class="calendar-main">
+              <div class="calendar-controls">
+                <button @click="previousMonth" class="nav-btn">
+                  <i class="pi pi-chevron-left"></i>
+                </button>
+                <h3>{{ displayMonth }} {{ displayYear }}</h3>
+                <button @click="nextMonth" class="nav-btn">
+                  <i class="pi pi-chevron-right"></i>
+                </button>
+              </div>
+
+              <div class="calendar-grid">
+                <div class="calendar-weekdays">
+                  <div v-for="day in weekDays" :key="day" class="weekday">{{ day }}</div>
+                </div>
+                <div class="calendar-days">
+                  <div 
+                    v-for="(day, index) in calendarDays" 
+                    :key="index" 
+                    class="calendar-day"
+                    :class="{
+                      'other-month': day.otherMonth,
+                      'today': day.isToday,
+                      'has-event': day.hasEvent
+                    }"
+                    @click="selectDate(day)"
+                  >
+                    <span class="day-number">{{ day.date }}</span>
+                    <div v-if="day.hasEvent" class="event-indicator"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -433,33 +438,45 @@ export default {
   flex-direction: column;
   min-height: 100vh;
   background-color: #f8f9fa;
+  overflow: hidden;
 }
 
 .main-content {
   display: flex;
   flex: 1;
-  position: relative;
+  overflow: hidden;
+  height: calc(100vh - 60px); /* Adjust based on header height */
 }
 
 .calendar-content-wrapper {
   flex: 1;
-  padding: 20px;
-  transition: margin-left 0.3s ease;
-}
-
-.calendar-content-wrapper.sidebar-collapsed {
-  margin-left: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
 .calendar-header {
+  padding: 20px 20px 0;
+  background-color: #fff;
+  z-index: 10;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
-
+.calendar-header-title {
+  display: flex;
+  flex-direction: column;
+}
 .calendar-header h1 {
   color: #2c3e50;
+}
+
+.calendar-subtitle {
+  font-size: 16px;
+  color: #6c757d;
+  margin-bottom: 10px;
 }
 
 .current-date {
@@ -475,6 +492,32 @@ export default {
 .current-date i {
   margin-right: 10px;
   font-size: 18px;
+}
+
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 20px;
+  background-color: #fff;
+  scrollbar-width: thin;
+  scrollbar-color: #bcc3ce #f8f9fa;
+}
+
+.scrollable-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background-color: #bcc3ce;
+  border-radius: 4px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+  background-color: #a0a8b5;
 }
 
 .calendar-content {

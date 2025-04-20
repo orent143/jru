@@ -4,40 +4,75 @@
     <div class="course-content">
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
       <main class="course-main" v-if="course">
-        <div class="course-header">
-          <h2>{{ course.name }} - Quizzes</h2>
-          <button class="add-btn" @click="showAddQuizModal = true">+</button>
+        <div class="page-header">
+          <div class="header-content">
+            <h1>{{ course.name }} - Quizzes</h1>
+            <p class="course-subtitle">Create and manage short quizzes to assess student understanding.</p>
+          </div>
+          <div class="header-actions">
+            <button class="action-btn" @click="showAddQuizModal = true">
+              <i class="pi pi-plus"></i>
+              Create Quiz
+            </button>
+          </div>
         </div>
 
-        <div class="course-hero">
-          <div class="content-left">
+        <div class="content-grid">
+          <div class="content-column-left">
             <section class="quiz-summary">
-              <h3>Upcoming Quizzes:</h3>
-              <ul>
-                <li v-for="quiz in upcomingQuizzes" :key="quiz.quiz_id">
-                  {{ quiz.title }} - Date: {{ quiz.quiz_date }}
+              <div class="section-header">
+                <h2>
+                  <i class="pi pi-calendar section-icon"></i>
+                  Upcoming Quizzes
+                </h2>
+                <span class="last-updated">Last updated: {{ formattedDate }}</span>
+              </div>
+              <div v-if="upcomingQuizzes.length === 0" class="empty-state">
+                <i class="pi pi-info-circle"></i>
+                <p>No upcoming quizzes available</p>
+              </div>
+              <ul v-else class="quiz-list">
+                <li v-for="quiz in upcomingQuizzes" :key="quiz.quiz_id" class="quiz-item">
+                  <h3>{{ quiz.title }}</h3>
+                  <p>Date: {{ formatDate(quiz.quiz_date) }}</p>
                 </li>
               </ul>
             </section>
           </div>
 
-          <div class="content-right">
+          <div class="content-column-right">
             <section class="quizzes">
-              <h3>All Quizzes</h3>
-              <div class="material-cards">
+              <div class="section-header">
+                <h2>
+                  <i class="pi pi-file-edit section-icon"></i>
+                  All Quizzes
+                </h2>
+              </div>
+              <div v-if="course.quizzes.length === 0" class="empty-state">
+                <i class="pi pi-folder"></i>
+                <p>No quizzes available</p>
+              </div>
+              <div v-else class="material-cards">
                 <div
                   v-for="quiz in course.quizzes"
                   :key="quiz.quiz_id"
                   class="material-card"
                   @click="navigateToQuiz(quiz)"
                 >
-                  <div class="card-header">
+                  <div class="material-icon">
                     <i class="pi pi-file-edit"></i>
-                    <h4>{{ quiz.title }}</h4>
-                    <i
-                      class="pi pi-trash"
+                  </div>
+                  <div class="material-info">
+                    <h3>{{ quiz.title }}</h3>
+                    <div class="material-meta">
+                      <span class="material-type">Quiz</span>
+                      <span class="material-date">{{ formatDate(quiz.quiz_date) }}</span>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <i 
+                      class="pi pi-trash delete-icon"
                       @click.stop="confirmDeleteQuiz(quiz.quiz_id)"
-                      style="cursor: pointer; margin-left: auto;"
                     ></i>
                   </div>
                 </div>
@@ -88,6 +123,15 @@ export default {
       pendingDeleteQuizId: null,
     };
   },
+  computed: {
+    formattedDate() {
+      return new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  },
   async created() {
     await this.fetchQuizzes();
   },
@@ -137,6 +181,14 @@ export default {
       this.showDeleteConfirmation = false;
       this.pendingDeleteQuizId = null;
     },
+    formatDate(dateString) {
+      if (!dateString) return "Date not available";
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
   },
 };
 </script>
@@ -152,6 +204,7 @@ export default {
 .course-content {
   display: flex;
   flex: 1;
+  overflow: hidden;
 }
 
 .course-main {
@@ -160,273 +213,290 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  background-color: #fff;
+  background-color: #f8f9fa;
+  overflow-y: auto;
+  max-height: calc(100vh - 64px);
 }
 
-.course-header {
+.page-header {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-radius: 20px;
-  background-color: #D9D9D9;
-  position: relative;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
-
-}
-.add-btn {
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  background-color: #2c3e50;
-  color: white;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: bold;
-  padding: 8px 15px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  background-color: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
 }
 
-.add-btn:hover {
-  background-color: #1a252f;
-}
-
-.course-header h2 {
-  font-size: 2rem;
+.header-content h1 {
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #000;
+  color: #2c3e50;
+  margin: 0;
 }
 
-.course-sections ul {
-  list-style: none;
-  padding-left: 0;
+.course-subtitle {
+  font-size: 1rem;
+  color: #6c757d;
+  margin: 0.25rem 0 0 0;
 }
 
-.course-sections li {
-  font-size: 1.1rem;
-  color: #181818;
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #007BF6;
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #0069d9;
+}
+
+.content-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+}
+
+.content-column-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 30%;
+}
+
+.content-column-right {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 70%;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.75rem;
+}
+
+.section-header h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-icon {
+  color: #007BF6;
+}
+
+.last-updated {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #dee2e6;
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 2rem;
+  color: #adb5bd;
   margin-bottom: 0.5rem;
 }
 
-/* Main Content Layout */
-.course-hero {
-  display: flex;
-  flex: 1;
-  overflow: auto; /* Allow scrolling in the course-hero section */
-  max-height: 60vh; /* Adjust as needed */
+.empty-state p {
+  color: #6c757d;
+  margin: 0;
 }
 
-/* Left Panel */
-.content-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  flex: 1;
-  width: 25%;
-  overflow: auto;
+/* Quiz Summary */
+.quiz-summary {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  max-height: 250px;
+  overflow-y: auto;
 }
 
-/* Right Panel */
-.content-right {
+.quiz-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  flex: 2;
-  width: 50%;
-  padding-left: 2rem;
-  overflow: auto;
+  gap: 1rem;
 }
 
-/* Course Materials */
-.course-materials {
-  display: flex;
-  flex-direction: column;
+.quiz-item {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007BF6;
+}
+
+.quiz-item h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+}
+
+.quiz-item p {
+  font-size: 0.9rem;
+  color: #495057;
+  margin: 0;
+}
+
+/* Quizzes Section */
+.quizzes {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
 }
 
 .material-cards {
-  display: grid;
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .material-card {
-  background-color: #D9D9D9;
-  border-radius: 8px;
-  height: 80px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  position: relative;
+  display: flex
+;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    position: relative;
+    border-left: 4px solid #007BF6;
+
 }
 
 .material-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #f0f4f9;
 }
 
-.material-card i {
-  font-size: 1.5rem;
-  color: #2c3e50;
-}
-
-/* Announcements & Assignments */
-.quiz-summary {
-  background-color: #D9D9D9;
-  padding: 1rem;
-  border-radius: 8px;
-  width: 100%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-.card-header {
+.material-icon {
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-  color: #333;
-  width: 100%;
-  position: relative;  /* Add this if not already present */
-  z-index: 1;  /* Ensure it's on top of other elements */
-}
-
-
-.card-header h4 {
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #333;
-}
-.card-header i.pi-trash {
-  font-size: 15px;
-  color: #e74c3c;
-  cursor: pointer;
-  z-index: 2;  /* Ensure it's above other content */
-}
-
-.card-body {
-  font-size: 1rem;
-  color: #666;
-  margin-top: 0.5rem;
-}
-
-.quiz-summary h3 {
-  font-size: 17px;
-  font-weight: 600;
-  color: #000000d2;
-}
-
-.quiz-summary ul {
-  list-style: none;
-  padding-left: 0;
-  
-}
-
-.quiz-summary li {
-  font-size: 1.1rem;
-  color: #444;
-  margin-bottom: 0.5rem;
-}
-
-/* Form Groups */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  font-weight: 500;
-  margin-bottom: 0.3rem;
-  color: #333;
-}
-
-.form-group input {
-  padding: 0.5rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.form-group input::placeholder {
-  color: #aaa;
-}
-
-/* Section Titles */
-.course-materials h3,
-.quizzes h3 {
-  font-size: 1.5rem;
-  color: #2c3e50;
-}
-.student-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.view-btn {
-  background-color: #2c3e50;
-  color: rgb(255, 255, 255);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
-.view-btn:hover {
-  background-color: #1a252f;
-}
-.confirmation-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
   justify-content: center;
+  background-color: #e6f2ff;
+  color: #007BF6;
+  border-radius: 8px;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.material-icon i {
+  font-size: 1.2rem;
+}
+
+.material-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.material-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.material-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.material-type,
+.material-date {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.material-type {
+  background-color: #e9ecef;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.card-actions {
+  display: flex;
   align-items: center;
 }
 
-.confirmation-modal {
-  background: white;
-  padding: 20px 30px;
-  border-radius: 10px;
-  text-align: center;
-  max-width: 400px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+.delete-icon {
+  font-size: 1rem;
+  color: #dc3545;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
 }
 
-.modal-buttons {
-  margin-top: 15px;
-  display: flex;
-  justify-content: space-evenly;
+.delete-icon:hover {
+  background-color: rgba(220, 53, 69, 0.1);
 }
 
-.modal-buttons button {
-  padding: 8px 15px;
-  font-weight: bold;
-  cursor: pointer;
-}
-/* Responsive Design */
-@media (max-width: 768px) {
-  .course-content {
+@media (max-width: 1200px) {
+  .content-grid {
     flex-direction: column;
   }
-
-  .content-left,
-  .content-right {
-    padding-left: 0;
-    padding-right: 0;
-    flex: none;
+  
+  .content-column-left,
+  .content-column-right {
+    width: 100%;
   }
+}
 
-  .content-right {
-    padding-left: 0;
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
   }
 }
 </style>

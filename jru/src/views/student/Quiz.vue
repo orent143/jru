@@ -5,7 +5,12 @@
       <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
       <main class="quiz-main">
         <div class="course-header">
+          <div class="header-title-section">
           <h2>Quizzes: <span>{{ totalQuizzes }}</span></h2>
+          <p class="header-description">
+            Test your knowledge with quizzes and assessments from your courses.
+          </p>
+          </div>
         </div>
 
         <div class="course-cards">
@@ -20,6 +25,18 @@
               <i class="pi pi-file-edit course-logo"></i>
               <h4 class="course-name">{{ course.course_name }}</h4>
             </div>
+
+            <div class="quizzes-list" v-if="course.quizzes.length > 0">
+              <ul>
+                <li 
+                  v-for="quiz in course.quizzes" 
+                  :key="quiz.quiz_id"
+                  @click.stop="navigateToQuizDetail(course.course_id, quiz.quiz_id)"
+                >
+                
+                  </li>
+                </ul>
+              </div>
           </div>
         </div>
       </main>
@@ -119,16 +136,29 @@ export default {
   }
 
 .course-header {
-    background-color: #D9D9D9;
+  background-color: white;
     padding: 1rem;
     border-radius: 10px;
     margin-bottom: 2rem;
+    border-top: 4px solid #007BF6;
+    box-shadow: 0 10px 8px rgba(0, 0, 0, 0.123);
 }
 
-.course-header h2 {
-    font-size: 24px;
-    font-weight: bold;
-    color: #2c3e50;
+.header-title-section h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.header-title-section {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.header-description {
+  font-size: 14px;
+  color: #6c757d;
 }
 
 .course-sections ul {

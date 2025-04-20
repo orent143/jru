@@ -6,6 +6,9 @@
       <main class="assignment-main" v-if="course">
         <div class="assignment-header">
           <h2>{{ course.course_name }} - Assignments</h2>
+          <p class="assignment-subtitle">
+            View your upcoming and completed assignments, and stay prepared for important assessments.
+          </p>
         </div>
 
         <div class="assignment-hero">
@@ -164,6 +167,7 @@ export default {
 .assignment-content {
   display: flex;
   flex: 1;
+  overflow: hidden;
 }
 
 .assignment-main {
@@ -172,39 +176,87 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  background-color: #fff;
+  background-color: #f8f9fa;
+  overflow-y: auto;
+  max-height: calc(100vh - 64px);
 }
 
 .assignment-header {
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  border-radius: 20px;
-  background-color: #D9D9D9;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.assignment-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background-color: #007BF6;
 }
 
 .assignment-header h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #000000;
+  color: #2c3e50;
+  margin: 0;
 }
+.assignment-subtitle {
+  color: #6c757d;
+  font-size: 1rem;
+  max-width: 600px;
+}
+
 
 .assignment-hero {
   display: flex;
-  flex: 1;
+  flex-direction: row;
+  gap: 2rem;
   overflow: auto;
-  max-height: 60vh;
 }
 
 .content-left {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  flex: 1;
-  width: 20%;
+  width: 30%;
+}
+
+.content-right {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 70%;
   overflow: auto;
 }
+
+.assignments-summary {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.assignments-summary h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.75rem;
+}
+
 
 .assignment-summary-cards {
   display: flex;
@@ -213,99 +265,134 @@ export default {
 }
 
 .assignment-summary-card {
-  padding: 1.5rem;
+  padding: 1.2rem;
   border-radius: 8px;
-  background: #D9D9D9;
+  background-color: #f8f9fa;
   cursor: pointer;
-  color: black;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  font-weight: bold;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+  padding-left: 1.5rem;
+}
+
+.assignment-summary-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.assignment-summary-card.pending {
+  border-left: 4px solid #fd7e14;
+}
+
+.assignment-summary-card.completed {
+  border-left: 4px solid #28a745;
 }
 
 .assignment-summary-card h4 {
-  font-size: 17px;
+  font-size: 1rem;
   font-weight: 600;
-  color: #000000d2;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
 }
 
 .assignment-summary-card p {
-  font-size: 1.1rem;
-  color: #444;
-}
-
-.content-right {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  flex: 2;
-  width: 50%;
-  padding-left: 2rem;
-  overflow: auto;
+  font-size: 0.9rem;
+  color: #495057;
+  margin: 0;
 }
 
 .assignments-list {
-  flex-direction: column;
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+.assignments-list h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.75rem;
+}
+
+
 .assignment-cards {
-  display: grid;
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .assignment-card {
-  background-color: #D9D9D9;
-  border-radius: 8px;
-  height: 80px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  flex-direction: row;
-  padding: 1rem;
   display: flex;
   align-items: center;
+  padding: 1rem 1rem 1rem 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  height: auto;
+  min-height: 60px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid #007BF6;
+  position: relative;
+}
+
+.assignment-card::before {
+  content: "\e933"; /* PrimeIcons file-edit icon */
+  font-family: 'primeicons';
+  position: absolute;
+  top: 1rem;
+  left: -2px;
+  color: #007BF6;
+  font-size: 0.9rem;
+  transform: translateX(-50%);
+  background-color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .assignment-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #f0f4f9;
 }
 
 .card-header {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-  color: #333;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #495057;
+  width: 100%;
 }
 
 .card-header h4 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: #333;
-}
-
-.card-body {
-  font-size: 1rem;
-  color: #666;
-  margin-top: 0.5rem;
+  color: #6c757d;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 @media (max-width: 768px) {
-  .assignment-content {
+  .assignment-hero {
     flex-direction: column;
   }
 
   .content-left,
   .content-right {
-    padding-left: 0;
-    padding-right: 0;
-    flex: none;
-  }
-
-  .content-right {
-    padding-left: 0;
+    width: 100%;
   }
 }
 </style>

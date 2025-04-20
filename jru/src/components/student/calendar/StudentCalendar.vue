@@ -6,7 +6,12 @@
 
       <div class="calendar-content-wrapper">
         <div class="calendar-header">
+          <div class="header-title-section">
           <h1>{{ course ? course.course_name : 'Academic Calendar' }}</h1>
+          <p class="header-description">
+            {{ course ? 'This calendar contains all key dates and events for this course.' : 'View all your upcoming academic events and important dates here.' }}
+          </p>
+        </div>
           <div class="current-date">
             <i class="pi pi-calendar"></i>
             <span>{{ formattedCurrentDate }}</span>
@@ -505,8 +510,20 @@ export default {
 
 .calendar-header h1 {
   color: #2c3e50;
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin: 0;
+}
+.header-title-section {
+  display: flex;
+  flex-direction: column;
 }
 
+.header-description {
+  font-size: 1rem;
+    color: #6c757d;
+    max-width: 600px;
+}
 .current-date {
   display: flex;
   align-items: center;

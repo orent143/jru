@@ -5,7 +5,12 @@
             <Sidebar :isCollapsed="isSidebarCollapsed" :courses="courses" />
             <div class="content">
                 <div class="academic-records-container">
+                    <div class="academic-records-header">
                     <h1>Academic Records</h1>
+                    <p class="records-subtitle">
+                       View your official grades for each semester and school year. Filter by academic term to find specific results.
+                    </p>
+                    </div>
                     <div class="student-info">
                         <h2>Student Information</h2>
                         <p>Student ID: {{ student.id }}</p>
@@ -247,7 +252,11 @@ export default {
     flex-direction: column;
     height: 100%;
 }
-
+.academic-records-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
 .student-info {
     margin-bottom: 20px;
     background-color: #fff;
@@ -332,9 +341,17 @@ h1, h2, p {
     margin: 0 0 10px;
 }
 
-h1 {
+.academic-records-header h1 {
     color: #2c3e50;
-    font-size: 24px;
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.records-subtitle {
+  font-size: 1rem;
+  color: #6c757d;
+  max-width: 600px;
 }
 
 h2 {

@@ -382,22 +382,24 @@ export default {
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    font-family: 'Roboto', sans-serif;
 }
 
 .course-content {
     display: flex;
     flex: 1;
     overflow: hidden;
+    background-color: #f5f7fa;
 }
 
 .exam-detail-container {
     flex: 1;
-    padding: 1rem;
+    padding: 1.5rem;
     max-width: 100%;
     margin: 0 auto;
     overflow-y: auto;
     max-height: calc(100vh - 64px);
-    background-color: #fff;
+    background-color: #f5f7fa;
     position: relative;
 }
 
@@ -408,17 +410,23 @@ export default {
     background: none;
     border: none;
     cursor: pointer;
-    margin-bottom: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #4a5568;
 }
 
 .back-btn:hover {
-    background-color: #f0f0f0;
+  background-color: rgba(0, 123, 246, 0.8);
+  color: #ffffff;
+  transform: translateX(5px);
 }
 
 .exam-content {
@@ -431,21 +439,30 @@ export default {
 .main-content {
     display: flex;
     flex-direction: column;
-    border-radius: 20px;
-    background-color: #D9D9D9;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+    border-radius: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
 }
-.content-section-instructions{
-    padding: 1.5rem;
-    border-radius: 8px;
+
+.content-section-instructions {
+    padding: 2rem;
     min-height: 300px;
     color: #212121;
 }
 
-.content-section-instructions h2{
-    font-weight: bold;
-    color: #212121;
+.content-section-instructions h2 {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
 }
+
+.content-section-instructions p {
+    line-height: 1.6;
+    color: #4a5568;
+}
+
 .side-content {
     display: flex;
     flex-direction: column;
@@ -454,37 +471,56 @@ export default {
 }
 
 .exam-header {
-    background-color: #D9D9D9;
+    background-color: #ffffff;
     padding: 2rem;
-    border-radius: 8px;
     position: relative;
+    border-bottom: 1px solid #edf2f7;
 }
 
 .header-content h1 {
-    color: #333;
-    font-weight: bold;
+    color: #1a202c;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .edit-btn {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 2rem;
+    right: 2rem;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1rem;
+    color: #4299e1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+    background-color: #ebf8ff;
 }
 
 .exam-meta {
     display: flex;
     gap: 2rem;
     margin-top: 1rem;
-    color: #666;
+    color: #718096;
+}
+
+.exam-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .content-section {
-    background-color: #D9D9D9;
-    padding: 1.5rem;
+    background-color: #ffffff;
+    padding: 2rem;
     border-radius: 8px;
     min-height: 300px;
     color: #212121;
@@ -493,26 +529,38 @@ export default {
 .content-section h2 {
     margin-bottom: 1.5rem;
     font-size: 1.25rem;
-    color: #333;
-    font-weight: bold;
+    color: #2d3748;
+    font-weight: 600;
 }
 
 .material-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background-color: #fff;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
     cursor: pointer;
     color: #212121;
+    transition: all 0.2s ease;
+    border: 1px solid #edf2f7;
+}
+
+.material-item:hover {
+    background-color: #edf2f7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .material-item a {
-    color: #007BF6;
+    color: #3182ce;
     text-decoration: none;
     font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .material-item a:hover {
@@ -520,37 +568,44 @@ export default {
 }
 
 .material-item span {
-    color: #212121;
+    color: #4a5568;
     font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .material-item i {
-    color: #444;
+    color: #4a5568;
     font-size: 1.25rem;
 }
 
 .content-section.uploaded-materials h2 {
-    font-weight: bold;
-    color: #212121;
+    font-weight: 600;
+    color: #2d3748;
 }
 
-.submission-container{
+.submission-container {
     padding: 1.5rem;
-    border-radius: 8px;
+    border-radius: 12px;
     min-height: 200px;
     max-height: 400px;
-    background-color: #D9D9D9;
+    background-color: #ffffff;
     color: #212121;
     overflow-y: auto;
-    
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-.submission-container h2{
-    font-weight: bold;
-    margin-bottom:10px;
+
+.submission-container h2 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2d3748;
+    font-size: 1.25rem;
 }
+
 .submission-stats {
-    background-color: #D9D9D9;
+    background-color: #ffffff;
 }
 
 .stats {
@@ -562,23 +617,50 @@ export default {
 .stat-item {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem;
-    background-color: #fff;
-    border-radius: 4px;
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #edf2f7;
 }
 
 .submission-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
     max-height: 300px;
     overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.submission-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.submission-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.submission-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.submission-list::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }
 
 .submission-item {
-    background-color: #fff;
-    padding: 0.75rem;
-    border-radius: 4px;
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #edf2f7;
+    transition: all 0.2s ease;
+}
+
+.submission-item:hover {
+    background-color: #edf2f7;
+    transform: translateX(2px);
 }
 
 .student-info {
@@ -588,23 +670,24 @@ export default {
 }
 
 .status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
+    padding: 0.35rem 0.85rem;
+    border-radius: 6px;
     font-weight: 500;
+    font-size: 0.85rem;
 }
 
 .status.submitted {
-    background-color: #4CAF50;
+    background-color: #48bb78;
     color: white;
 }
 
 .status.pending {
-    background-color: #FFDD57;
-    color: black;
+    background-color: #ecc94b;
+    color: #744210;
 }
 
 .status.graded {
-    background-color: #007BF6;
+    background-color: #4299e1;
     color: white;
 }
 
@@ -612,24 +695,27 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .view-all-btn {
-    background-color: #007BF6;
+    background-color: #4299e1;
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 .view-all-btn:hover {
-    background-color: #005bb5;
+    background-color: #3182ce;
+    transform: translateY(-1px);
 }
 
 .view-more {
@@ -640,29 +726,33 @@ export default {
 .view-more button {
     background: none;
     border: none;
-    color: #007BF6;
+    color: #4299e1;
     cursor: pointer;
     font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
 .view-more button:hover {
-    text-decoration: underline;
+    background-color: #ebf8ff;
+    text-decoration: none;
 }
 
 .comments-section {
-    background-color: #D9D9D9;
-    border-radius: 8px;
+    background-color: #ffffff;
+    border-radius: 12px;
     padding: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 2rem;
-    
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .comments-section h2 {
-    margin-bottom: 1rem;
-    font-weight: bold;
-    color: #212121;
+    margin-bottom: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 1.25rem;
 }
 
 .comment-input {
@@ -670,43 +760,49 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
 }
 
 .comment-input textarea {
-    padding: 0.75rem;
-    border: 1px solid #ccc;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     font-size: 1rem;
     resize: vertical;
-    background-color: white;
+    background-color: #f9fafb;
+    transition: all 0.2s ease;
 }
 
 .comment-input textarea:focus {
     outline: none;
-    border-color: #007BF6;
-    box-shadow: 0 0 0 2px rgba(0, 123, 246, 0.1);
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+    background-color: white;
 }
 
 .post-comment-btn {
     align-self: flex-end;
-    background-color: #007BF6;
+    background-color: #4299e1;
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 .post-comment-btn:hover:not(:disabled) {
-    background-color: #0056b3;
+    background-color: #3182ce;
+    transform: translateY(-1px);
 }
 
 .post-comment-btn:disabled {
-    background-color: #cccccc;
+    background-color: #cbd5e0;
     cursor: not-allowed;
 }
 
@@ -715,18 +811,18 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
-    color: #6c757d;
+    padding: 2.5rem;
+    color: #718096;
 }
 
 .loading-spinner {
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #007BF6;
+    border: 3px solid #e2e8f0;
+    border-top: 3px solid #4299e1;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     animation: spin 1s linear infinite;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 @keyframes spin {
@@ -737,17 +833,22 @@ export default {
 .comment {
     display: flex;
     gap: 1rem;
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 0.5rem;
-    background-color: white;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    background-color: #f9fafb;
     border-radius: 8px;
+    border: 1px solid #edf2f7;
+    transition: all 0.2s ease;
+}
+
+.comment:hover {
+    background-color: #edf2f7;
 }
 
 .comment-avatar {
-    width: 40px;
-    height: 40px;
-    background-color: #e9ecef;
+    width: 45px;
+    height: 45px;
+    background-color: #e2e8f0;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -757,7 +858,7 @@ export default {
 
 .comment-avatar i {
     font-size: 20px;
-    color: #6c757d;
+    color: #718096;
 }
 
 .comment-content {
@@ -767,63 +868,87 @@ export default {
 .comment-header {
     display: flex;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .comment-header h4 {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #333;
+    color: #2d3748;
     margin: 0;
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
 }
 
 .comment-date {
-    font-size: 0.8rem;
-    color: #6c757d;
+    font-size: 0.85rem;
+    color: #718096;
 }
 
 .delete-comment-btn {
     margin-left: auto;
     background: none;
     border: none;
-    color: #dc3545;
+    color: #e53e3e;
     cursor: pointer;
-    opacity: 0.5;
-    padding: 0.25rem;
-    font-size: 0.8rem;
+    opacity: 0.6;
+    padding: 0.35rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
 }
 
 .delete-comment-btn:hover {
     opacity: 1;
+    background-color: #fed7d7;
 }
 
 .comment-text {
-    font-size: 0.9rem;
-    color: #333;
-    line-height: 1.5;
+    font-size: 0.95rem;
+    color: #4a5568;
+    line-height: 1.6;
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
 }
 
 .comments-list {
-    max-height: 300px;
+    max-height: 350px;
     overflow-y: auto;
     margin-bottom: 1rem;
     border-radius: 8px;
+    padding-right: 0.5rem;
+}
+
+.comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }
 
 .download-button {
-    background: none;
+    background-color: #ebf8ff;
     border: none;
-    color: #007bff;
+    color: #3182ce;
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
 .download-button:hover {
-    background-color: #e9ecef;
+    background-color: #bee3f8;
+    transform: translateY(-1px);
 }
 </style>

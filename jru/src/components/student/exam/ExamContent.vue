@@ -7,10 +7,15 @@
       <main class="exams-main">
         <div class="exams-header">
           <h2>Exams</h2>
+          <p class="exams-subtitle">
+            View your upcoming and completed exams, and stay prepared for important assessments.
+          </p>
         </div>
 
         <div class="exams-hero">
           <div class="content-left">
+            <section class="exams-summary">
+              <h3>Exam Overview</h3>
             <section class="exams-cards">
               <router-link
                 class="exams-card"
@@ -25,6 +30,7 @@
                 <p>{{ completedExams.length }} Completed</p>
               </div>
             </section>
+          </section>
           </div>
 
           <div class="content-right">
@@ -201,11 +207,13 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
 }
 
 .exams-content {
   display: flex;
   flex: 1;
+  overflow: hidden;
 }
 
 .exams-main {
@@ -214,25 +222,48 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  background-color: #fff;
+  background-color: #f8f9fa;
+  overflow-y: auto;
+  max-height: calc(100vh - 64px);
 }
 
 .exams-header {
-  padding: 20px;
-  border-radius: 10px;
-  background-color: #d9d9d9;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.exams-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background-color: #FD7E14;
 }
 
 .exams-header h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #000;
+  color: #2c3e50;
+  margin: 0;
 }
 
+.exams-subtitle {
+  color: #6c757d;
+  font-size: 1rem;
+  max-width: 600px;
+}
 .exams-hero {
   display: flex;
-  justify-content: space-between;
+  flex-direction: row;
   gap: 2rem;
 }
 
@@ -240,88 +271,161 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  flex: 1;
-  width: 20%;
-  overflow: auto;
+  width: 30%;
+}
+
+.exams-summary {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.content-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 70%;
 }
 
 .exams-cards {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.exams-card {
+  background-color: white;
+  border-radius: 12px;
   padding: 1.5rem;
-  border-radius: 8px;
-  background: #d9d9d9;
-  cursor: pointer;
-  color: black;
-  font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-.exams-card h3 {
-  font-size: 17px;
-  font-weight: 600;
-  color: #000000d2;
-}
-.exams-card:hover {
-  background: #d9d9d9;
-}
-.exams-card p {
-  font-size: 1.1rem;
-  color: #444;
-}
-.completed {
-  background: #d9d9d9;
-}
-
-.content-right {
-  flex: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 h3 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
   color: #2c3e50;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.75rem;
+}
+
+
+
+.exams-card {
+  padding: 1.2rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  position: relative;
+  overflow: hidden;
+  padding-left: 1.5rem;
+}
+
+.exams-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #f0f4f9;
+}
+
+.exams-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+  border: none;
+  padding: 0;
+}
+
+.exams-card p {
+  font-size: 0.9rem;
+  color: #495057;
+  margin: 0;
+}
+
+.exams-card.completed {
+  border-left: 4px solid #28a745;
 }
 
 .exam-cards {
-  display: grid;
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .exam-card {
-  background-color: #d9d9d9;
-  border-radius: 8px;
-  height: 80px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  flex-direction: row;
-  padding: 1rem;
-  gap: 10px;
   display: flex;
   align-items: center;
+  padding: 1rem 1rem 1rem 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  height: auto;
+  min-height: 60px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid #FD7E14;
+  position: relative;
+}
+
+.exam-card::before {
+  content: "\e90c"; /* PrimeIcons check-square icon */
+  font-family: 'primeicons';
+  position: absolute;
+  top: 1rem;
+  left: -2px;
+  color: #FD7E14;
+  font-size: 0.9rem;
+  transform: translateX(-50%);
+  background-color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .exam-card:hover {
-  transform: translateY(-5px);
-}
-
-.exam-card h4 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #333;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #f0f4f9;
 }
 
 .card-header {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-  color: #333;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #495057;
+  width: 100%;
+}
+
+.card-header h4 {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #6c757d;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 1024px) {
+  .exams-hero {
+    flex-direction: column;
+  }
+
+  .content-left,
+  .content-right {
+    width: 100%;
+  }
 }
 </style>

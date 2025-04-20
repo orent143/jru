@@ -179,7 +179,7 @@ export default {
 <style scoped>
 .posted-at {
   font-size: 1rem;
-  color: #777;
+  color: #718096;
   margin-top: 0.5rem;
 }
 
@@ -188,22 +188,24 @@ export default {
   flex-direction: column;
   height: 100vh;
   overflow: hidden; 
+  font-family: 'Roboto', sans-serif;
 }
 
 .course-content {
   display: flex;
   flex: 1;
   overflow: hidden; 
+  background-color: #f5f7fa;
 }
 
 .material-detail-container {
   flex: 1;
-  padding: 1rem;
+  padding: 1.5rem;
   max-width: 100%;
   margin: 0 auto;
   overflow-y: auto; 
   max-height: calc(100vh - 64px);
-  background-color: #fff;
+  background-color: #f5f7fa;
   position: relative; 
 }
 
@@ -214,17 +216,23 @@ export default {
   background: none;
   border: none;
   cursor: pointer;
-  margin-bottom: 1rem;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #4a5568;
 }
 
 .back-btn:hover {
-  background-color: #f0f0f0;
+  background-color: rgba(0, 123, 246, 0.8);
+  color: #ffffff;
+  transform: translateX(5px);
 }
 
 .material-content {
@@ -237,56 +245,79 @@ export default {
 .main-content {
   display: flex;
   flex-direction: column;
-  border-radius: 20px;
-  background-color: #D9D9D9;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+  border-radius: 16px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
+
 .course-header {
-    background-color: #D9D9D9;
-    padding: 2rem;
-    border-radius: 8px;
-    position: relative;
+  background-color: #ffffff;
+  padding: 2rem;
+  position: relative;
+  border-bottom: 1px solid #edf2f7;
 }
 
 .header-content h1 {
-    color: #333;
-    font-weight: bold;
+  color: #1a202c;
+  font-weight: 700;
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .edit-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #4299e1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+  background-color: #ebf8ff;
 }
 
 .course-meta {
-    display: flex;
-    gap: 2rem;
-    margin-top: 1rem;
-    color: #666;
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  color: #718096;
 }
+
+.course-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .side-content {
   flex: 1;
 }
 
 .title-section {
-  background-color: #D9D9D9;
-  padding: 1.5rem;
-  border-radius: 8px;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .title-section h1 {
-  color: #333;
-  font-weight: bold;
+  color: #1a202c;
+  font-weight: 700;
 }
 
 .content-section {
-  background-color: #D9D9D9;
-  padding: 1.5rem;
+  background-color: #ffffff;
+  padding: 2rem;
   border-radius: 8px;
   min-height: 300px;
   color: #212121;
@@ -294,19 +325,21 @@ export default {
 
 .content-section h2 {
   font-size: 1.25rem;
-  color: #333;
-  font-weight: bold;
+  color: #2d3748;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
 }
 
 .content-section p {
   margin-bottom: 1.5rem;
-  font-size: 1.25rem;
-  color: #333;
+  font-size: 1.1rem;
+  color: #4a5568;
+  line-height: 1.6;
 }
 
 .uploaded-materials {
-  background-color: #D9D9D9;
-  padding: 1.5rem;
+  background-color: #ffffff;
+  padding: 2rem;
   border-radius: 8px;
   min-height: 300px;
   color: #212121;
@@ -315,27 +348,36 @@ export default {
 .material-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background-color: #fff;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
   cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #edf2f7;
+}
+
+.material-item:hover {
+  background-color: #edf2f7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .uploaded-materials .material-item i {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  color: #4a5568;
 }
 
 .uploaded-materials h2 {
   font-size: 1.25rem;
-  color: #333;
-  margin-bottom: 10px;
-  font-weight: bold;
+  color: #2d3748;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
 }
 
 .file-link {
-  color: #333;
+  color: #3182ce;
   text-decoration: none;
 }
 
@@ -344,49 +386,75 @@ export default {
 }
 
 .messages-section {
-  background-color: #D9D9D9;
+  background-color: #ffffff;
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 12px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.274);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .messages-section h2,
 .messages-section p {
-  color: #333;
+  color: #2d3748;
+}
+
+.messages-section h2 {
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  font-size: 1.25rem;
 }
 
 .message-item {
-  background-color: #fff;
+  background-color: #f9fafb;
   padding: 1rem;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #edf2f7;
+  transition: all 0.2s ease;
+}
+
+.message-item:hover {
+  background-color: #edf2f7;
+  transform: translateX(2px);
 }
 
 .message-input {
   display: flex;
   gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .message-input input {
   flex: 1;
-  padding: 0.75rem;
-  border: 1px solid #D9D9D9;
-  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.message-input input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+  background-color: white;
 }
 
 .message-input button {
   padding: 0.75rem 1.5rem;
-  background-color: #007BF6;
+  background-color: #4299e1;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .message-input button:hover {
-  background-color: #0056b3;
+  background-color: #3182ce;
+  transform: translateY(-1px);
 }
 </style>

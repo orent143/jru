@@ -6,6 +6,7 @@ import Login from '@/views/Login.vue';
 
 // Student Views
 import StudentDashboard from '@/views/student/StudentDashboard.vue';
+import StudentCourses from '@/views/student/Courses.vue';
 import CourseContent from '@/components/student/course/CourseContent.vue'; 
 import CourseMaterialDetail from '@/components/student/course/CourseMaterialDetail.vue';
 import AssignmentDashboard from '@/views/student/Assignment.vue';
@@ -58,6 +59,7 @@ const routes = [
 
   // Student Routes
   { path: '/student-dashboard', name: 'StudentDashboard', component: StudentDashboard },
+  { path: '/student/courses', name: 'StudentCourses', component: StudentCourses },
   { path: '/student/course/:courseId', name: 'StudentCourseContent', component: CourseContent, props: true },
   { path: '/course/:courseId/material/:materialId', name: 'StudentMaterialDetail', component: CourseMaterialDetail, props: true },
   { path: '/student/course/:courseId/assignments', name: 'AssignmentContent', component: AssignmentContent, props: true },
